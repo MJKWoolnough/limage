@@ -37,17 +37,29 @@ type imageStack struct {
 	Stack                     []stackItem
 }
 
+func (i *imageStack) Get(name string) stackItem {
+	s := stack{
+		Items: i.Stack,
+	}
+	return s.Get(name)
+}
+
 type stackItem interface {
 	Process(*xml.Decoder) error
 	ProcessAttrs([]xml.Attr) error
+	Name() string
 }
 
 type props struct {
 	X, Y      int
-	Name      string
+	name      string
 	Opacity   float32
 	Invisible bool
 	Composite composite
+}
+
+func (p props) Name() string {
+	return p.name
 }
 
 func (p *props) ProcessAttrs(attrs []xml.Attr) error {
@@ -67,7 +79,7 @@ func (p *props) ProcessAttrs(attrs []xml.Attr) error {
 			}
 			p.Y = v
 		case "name":
-			p.Name = a.Value
+			p.name = a.Value
 		case "opacity":
 			v, err := strconv.ParseFloat(a.Value, 32)
 			if err != nil {
@@ -176,6 +188,21 @@ func (s *stack) Process(x *xml.Decoder) error {
 			return nil
 		}
 	}
+}
+
+func (s *stack) Get(name string) stackItem {
+	for _, i := range s.Items {
+		if i.Name() == name {
+			return i
+		}
+		if st, ok := i.(*stack); ok {
+			si := st.Get(name)
+			if si != nil {
+				return si
+			}
+		}
+	}
+	return nil
 }
 
 type layer struct {

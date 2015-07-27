@@ -29,7 +29,7 @@ func TestProcessStack(t *testing.T) {
 						props{
 							X:         0,
 							Y:         0,
-							Name:      "New Layer",
+							name:      "New Layer",
 							Opacity:   1,
 							Composite: CompositeSrcOver,
 						},
@@ -39,7 +39,7 @@ func TestProcessStack(t *testing.T) {
 						props{
 							X:         -12,
 							Y:         2,
-							Name:      "@$%^*£",
+							name:      "@$%^*£",
 							Opacity:   0.5,
 							Invisible: true,
 							Composite: CompositeSrcAtop,
