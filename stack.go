@@ -45,13 +45,13 @@ type stackItem interface {
 type props struct {
 	X, Y      int
 	Name      string
-	Opactity  float32
+	Opacity   float32
 	Invisible bool
 	Composite composite
 }
 
 func (p *props) ProcessAttrs(attrs []xml.Attr) error {
-	p.Opactity = 1
+	p.Opacity = 1
 	for _, a := range attrs {
 		switch a.Name.Local {
 		case "x":
@@ -76,7 +76,7 @@ func (p *props) ProcessAttrs(attrs []xml.Attr) error {
 			if v < 0 || v > 1 {
 				return ErrInvalidOpacity
 			}
-			p.Opactity = float32(v)
+			p.Opacity = float32(v)
 		case "visibility":
 			switch a.Value {
 			case "visible":
