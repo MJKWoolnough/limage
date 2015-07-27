@@ -67,7 +67,7 @@ func (p *props) ProcessAttrs(attrs []xml.Attr) error {
 			}
 			p.Y = v
 		case "name":
-			p.Name = a.Name.Local
+			p.Name = a.Value
 		case "opacity":
 			v, err := strconv.ParseFloat(a.Value, 32)
 			if err != nil {
