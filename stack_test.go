@@ -1,7 +1,6 @@
 package ora
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -57,12 +56,6 @@ func TestProcessStack(t *testing.T) {
 		if err != nil {
 			t.Errorf("test %d: unexpected error: %s", n+1, err)
 		} else if !reflect.DeepEqual(i, test.image) {
-			for _, s := range i.Stack {
-				fmt.Println(s)
-			}
-			for _, s := range test.image.Stack {
-				fmt.Println(s)
-			}
 			t.Errorf("test %d: output not as expected", n+1)
 		}
 	}
