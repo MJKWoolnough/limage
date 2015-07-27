@@ -245,51 +245,54 @@ func processLayerStack(r io.Reader) (*imageStack, error) {
 		XRes: 72,
 		YRes: 72,
 	}
-	t, err := x.Token()
-	if err != nil {
-		return nil, err
-	}
-	if t, ok := t.(xml.StartElement); ok {
-		if t.Name.Local != "image" {
-			return nil, ErrInvalidLayerStack
+	for {
+		t, err := x.Token()
+		if err != nil {
+			return nil, err
 		}
-		for _, a := range t.Attr {
-			switch a.Name.Local {
-			case "w":
-				v, err := strconv.ParseUint(a.Value, 10, 0)
-				if err != nil {
-					return nil, err
-				}
-				i.Width = uint(v)
-			case "h":
-				v, err := strconv.ParseUint(a.Value, 10, 0)
-				if err != nil {
-					return nil, err
-				}
-				i.Height = uint(v)
-			case "xres":
-				v, err := strconv.ParseUint(a.Value, 10, 0)
-				if err != nil {
-					return nil, err
-				}
-				if v < 1 {
-					return nil, ErrInvalidResolution
-				}
-				i.XRes = uint(v)
-			case "yres":
-				v, err := strconv.ParseUint(a.Value, 10, 0)
-				if err != nil {
-					return nil, err
-				}
-				if v < 1 {
-					return nil, ErrInvalidResolution
-				}
-				i.YRes = uint(v)
+		if t, ok := t.(xml.StartElement); ok {
+			if t.Name.Local != "image" {
+				return nil, ErrInvalidLayerStack
 			}
+			for _, a := range t.Attr {
+				switch a.Name.Local {
+				case "w":
+					v, err := strconv.ParseUint(a.Value, 10, 0)
+					if err != nil {
+						return nil, err
+					}
+					i.Width = uint(v)
+				case "h":
+					v, err := strconv.ParseUint(a.Value, 10, 0)
+					if err != nil {
+						return nil, err
+					}
+					i.Height = uint(v)
+				case "xres":
+					v, err := strconv.ParseUint(a.Value, 10, 0)
+					if err != nil {
+						return nil, err
+					}
+					if v < 1 {
+						return nil, ErrInvalidResolution
+					}
+					i.XRes = uint(v)
+				case "yres":
+					v, err := strconv.ParseUint(a.Value, 10, 0)
+					if err != nil {
+						return nil, err
+					}
+					if v < 1 {
+						return nil, ErrInvalidResolution
+					}
+					i.YRes = uint(v)
+				}
+			}
+			break
 		}
 	}
 	for {
-		t, err = x.Token()
+		t, err := x.Token()
 		if err != nil {
 			return nil, err
 		}
@@ -301,6 +304,7 @@ func processLayerStack(r io.Reader) (*imageStack, error) {
 					return nil, err
 				}
 				i.Stack = s.Items
+				return i, nil
 			} else {
 				x.Skip()
 			}
