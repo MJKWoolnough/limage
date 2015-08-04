@@ -37,7 +37,7 @@ type imageStack struct {
 	Stack                     []stackItem
 }
 
-func (i *imageStack) Get(name string) stackItem {
+func (i *imageStack) Get(name string) (stackItem, int, int) {
 	s := stack{
 		Items: i.Stack,
 	}
@@ -48,6 +48,7 @@ type stackItem interface {
 	Process(*xml.Decoder) error
 	ProcessAttrs([]xml.Attr) error
 	Name() string
+	Offsets() (int, int)
 }
 
 type props struct {
@@ -147,6 +148,10 @@ func (p *props) ProcessAttrs(attrs []xml.Attr) error {
 	return nil
 }
 
+func (p *props) Offsets() (int, int) {
+	return p.X, p.Y
+}
+
 type stack struct {
 	props
 	Items []stackItem
@@ -190,7 +195,7 @@ func (s *stack) Process(x *xml.Decoder) error {
 	}
 }
 
-func (s *stack) Get(name string) stackItem {
+func (s *stack) Get(name string) (stackItem, int, int) {
 	for _, i := range s.Items {
 		if i.Name() == name {
 			return i
@@ -198,11 +203,12 @@ func (s *stack) Get(name string) stackItem {
 		if st, ok := i.(*stack); ok {
 			si := st.Get(name)
 			if si != nil {
-				return si
+				x, y := si.Offsets()
+				return si, x + s.X, y + s.Y
 			}
 		}
 	}
-	return nil
+	return nil, 0, 0
 }
 
 type layer struct {

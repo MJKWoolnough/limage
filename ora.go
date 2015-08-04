@@ -71,6 +71,10 @@ func open(files []*zip.File) (*ORA, error) {
 	return o, nil
 }
 
+func (o *ORA) Bounds() image.Rectangle {
+	return image.Rectangle{image.Point{}, image.Point{int(o.structure.Width), int(o.structure.Height)}}
+}
+
 func (o *ORA) Thumbnail() (image.Image, error) {
 	f, err := o.files["thumbnail.png"].Open()
 	if err != nil {
@@ -103,11 +107,13 @@ func (o *ORA) Merged() (image.Image, error) {
 
 type Layer struct {
 	layer
-	f *zip.File
+	offsetX, offsetY int
+	f                *zip.File
 }
 
 func (o *ORA) Layer(name string) *Layer {
-	l, _ := o.structure.Get(name).(*layer)
+	l, x, y := o.structure.Get(name)
+	ly, _ := l.(*layer)
 	if l == nil {
 		return nil
 	}
@@ -117,6 +123,7 @@ func (o *ORA) Layer(name string) *Layer {
 	}
 	return &Layer{
 		*l,
+		x, y,
 		f,
 	}
 }
@@ -131,6 +138,10 @@ func (l *Layer) Image() (image.Image, error) {
 		return nil, err
 	}
 	return i, nil
+}
+
+func (l *Layer) Offsets() (int, int) {
+	return l.offsetX, l.offsetY
 }
 
 // Errors
