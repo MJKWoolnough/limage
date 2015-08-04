@@ -198,12 +198,12 @@ func (s *stack) Process(x *xml.Decoder) error {
 func (s *stack) Get(name string) (stackItem, int, int) {
 	for _, i := range s.Items {
 		if i.Name() == name {
-			return i
+			x, y := i.Offsets()
+			return i, x, y
 		}
 		if st, ok := i.(*stack); ok {
-			si := st.Get(name)
+			si, x, y := st.Get(name)
 			if si != nil {
-				x, y := si.Offsets()
 				return si, x + s.X, y + s.Y
 			}
 		}

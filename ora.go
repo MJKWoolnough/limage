@@ -117,12 +117,12 @@ func (o *ORA) Layer(name string) *Layer {
 	if l == nil {
 		return nil
 	}
-	f, ok := o.files[l.Src]
+	f, ok := o.files[ly.Src]
 	if !ok {
 		return nil
 	}
 	return &Layer{
-		*l,
+		*ly,
 		x, y,
 		f,
 	}
