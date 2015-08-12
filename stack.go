@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// Constants for the various composition operations
 const (
 	CompositeSrcOver composite = iota
 	CompositeMultiply
@@ -338,9 +339,8 @@ func processLayerStack(r io.Reader) (*imageStack, error) {
 				}
 				i.Stack = s.Items
 				return i, nil
-			} else {
-				x.Skip()
 			}
+			x.Skip()
 		}
 	}
 	return nil, ErrMissingStack
