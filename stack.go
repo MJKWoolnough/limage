@@ -1,5 +1,7 @@
 package ora
 
+import "encoding/xml"
+
 type image struct {
 	Width  int          `xml:"w,attribute,required"`
 	Height int          `xml:"h,attribute,required`
@@ -9,14 +11,17 @@ type image struct {
 
 type stackContent struct {
 	layerCommonAttributes
-	Stacks  []stackContent  `xml:"stack"`
-	Layers  []layerContent  `xml:"layer"`
-	Filters []filterContent `xml:"filter"`
-	Texts   []textContent   `xml:"text"`
+	Stack []struct {
+		XMLName xml.Name
+		layerCommonAttributes
+		stackContent
+		layerContent
+		filterContent
+		textContent
+	} `xml:",any"`
 }
 
 type layerContent struct {
-	layerCommonAttributes
 	Source      string          `xml:"src,attribute"`
 	CompositeOp string          `xml:"composite-op,attribute"`
 	Opacity     float32         `xml:"opacity,attribute"`
@@ -24,7 +29,6 @@ type layerContent struct {
 }
 
 type filterContent struct {
-	layerCommonAttributes
 	Type   string        `xml:"type,attribute"`
 	Output string        `xml:"type,attribute"`
 	Params paramsContent `xml:"params"`
@@ -32,7 +36,6 @@ type filterContent struct {
 }
 
 type text struct {
-	layerCommonAttributes
 	Data string `xml:",chardata"`
 }
 
