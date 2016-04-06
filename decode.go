@@ -8,8 +8,8 @@ import (
 	"io"
 )
 
-func Decode(r io.ReaderAt) (image.Image, error) {
-	zr, err := zip.NewReader(r)
+func Decode(r io.ReaderAt, size int64) (image.Image, error) {
+	zr, err := zip.NewReader(r, size)
 	if err != nil {
 		return nil, err
 	}
