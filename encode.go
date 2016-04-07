@@ -8,6 +8,8 @@ import (
 	"io"
 )
 
+const mimetypeStr = "image/openraster"
+
 type subimage interface {
 	SubImage(image.Rectangle) image.Image
 }
@@ -19,7 +21,7 @@ func Encode(w io.Writer, m image.Image) error {
 	if err != nil {
 		return err
 	}
-	_, err = fw.Write([]byte("image/openraster"))
+	_, err = fw.Write([]byte(mimetypeStr))
 	if err != nil {
 		return err
 	}
