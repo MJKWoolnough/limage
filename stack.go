@@ -35,7 +35,7 @@ type filterContent struct {
 	Stack  stackContent  `xml:"stack"`
 }
 
-type text struct {
+type textContent struct {
 	Data string `xml:",chardata"`
 }
 
