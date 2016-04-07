@@ -2,7 +2,7 @@ package ora
 
 import "encoding/xml"
 
-type image struct {
+type imageContent struct {
 	Width  int          `xml:"w,attribute,required"`
 	Height int          `xml:"h,attribute,required`
 	Name   string       `xml:"name,attribute"`
