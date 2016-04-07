@@ -30,7 +30,7 @@ func Decode(r io.ReaderAt, size int64) (image.Image, error) {
 	if required < 5 {
 		return nil, ErrMissingRequired
 	}
-	if mimetype.UncompressedSize64 != len(mimetypeStr) {
+	if mimetype.UncompressedSize64 != uint64(len(mimetypeStr)) {
 		return nil, ErrInvalidMimeType
 	} else {
 		mr, err := mimetype.Open()
@@ -43,7 +43,7 @@ func Decode(r io.ReaderAt, size int64) (image.Image, error) {
 		if err != nil {
 			return nil, err
 		}
-		if string(mime) != mimetypeStr {
+		if string(mime[:]) != mimetypeStr {
 			return nil, ErrInvalidMimeType
 		}
 	}
