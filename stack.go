@@ -14,10 +14,10 @@ type stackContent struct {
 	Stack []struct {
 		XMLName xml.Name
 		layerCommonAttributes
-		stackContent
-		layerContent
-		filterContent
-		textContent
+		*stackContent  `xml:"stack"`
+		*layerContent  `xml:"layer"`
+		*filterContent `xml:"filter"`
+		*textContent   `xml:"text"`
 	} `xml:",any"`
 }
 
