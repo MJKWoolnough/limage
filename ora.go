@@ -1,6 +1,11 @@
 package ora
 
-import "io"
+import (
+	"image/color"
+	"io"
+)
+
+type composite uint8
 
 const (
 	CompositeSrcOver composite = iota
@@ -25,9 +30,41 @@ const (
 	CompositeDstAtop
 )
 
-type Layers struct {
+type Image struct {
+	Width, Height int
+	Name          string
+	Stack
 }
 
-func DecodeLayers(r io.ReaderAt) (*Layers, error) {
+type Stack struct {
+	X, Y    int
+	Name    string
+	Content []Content
+}
+
+type Content interface{}
+
+type Layer struct {
+	X, Y        int
+	Name        string
+	CompositeOp composite
+	Opacity     float32
+	//Filters     []Filter // Not needed for baseline
+}
+
+type Text struct {
+	X, Y  int
+	Name  string
+	Data  string
+	Font  string
+	Size  uint16
+	Color color.Color
+}
+
+func DecodeStack(r io.ReaderAt, size int64) (*Image, error) {
 	return nil, nil
+}
+
+func EncodeStack(w io.Writer, s *Image) error {
+	return nil
 }
