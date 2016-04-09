@@ -20,22 +20,8 @@ func Decode(r io.ReaderAt, size int64) (image.Image, error) {
 		case "stack.xml", "data", "Thumbnails/thumbnail.png":
 			required++
 		case "mimetype":
-			if f.UncompressedSize64 != uint64(len(mimetypeStr)) {
+			if !checkMime(f) {
 				return nil, ErrInvalidMimeType
-			} else {
-				mr, err := f.Open()
-				if err != nil {
-					return nil, err
-				}
-				var mime [16]byte
-				_, err = io.ReadFull(mr, mime[:])
-				mr.Close()
-				if err != nil {
-					return nil, err
-				}
-				if string(mime[:]) != mimetypeStr {
-					return nil, ErrInvalidMimeType
-				}
 			}
 			required++
 		case "mergedimage.png":
@@ -52,6 +38,24 @@ func Decode(r io.ReaderAt, size int64) (image.Image, error) {
 	}
 	defer f.Close()
 	return png.Decode(f)
+}
+
+func checkMime(mimetype *zip.File) bool {
+	if mimetype.UncompressedSize64 != uint64(len(mimetypeStr)) {
+		return false
+	} else {
+		mr, err := mimetype.Open()
+		if err != nil {
+			return nil, err
+		}
+		var mime [16]byte
+		_, err = io.ReadFull(mr, mime[:])
+		mr.Close()
+		if err != nil {
+			return nil, err
+		}
+		return string(mime[:]) == mimetypeStr
+	}
 }
 
 // Errors
