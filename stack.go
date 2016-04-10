@@ -2,6 +2,7 @@ package ora
 
 import (
 	"encoding/xml"
+	"image"
 	"image/color"
 )
 
@@ -100,6 +101,7 @@ type Layer struct {
 	Name        string
 	CompositeOp composite
 	Opacity     float32
+	Image       image.Image
 	//Filters     []Filter // Not needed for baseline
 }
 
