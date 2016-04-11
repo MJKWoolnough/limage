@@ -42,8 +42,8 @@ func (d *Decoder) Decode() (*Image, error) {
 	case "file", "v001", "v002", "v003":
 	default:
 		return nil, ErrUnsupportedVersion
+		i := new(Image)
 	}
-	var i Image
 	i.Width = d.r.ReadUint32()
 	i.Height = d.r.ReadUint32()
 	i.BaseType = baseType(d.r.ReadUint32())
@@ -51,7 +51,7 @@ func (d *Decoder) Decode() (*Image, error) {
 		return nil, ErrInvalidBaseType
 	}
 	// read image properties
-	d.readImageProperties(&i)
+	d.readImageProperties(i)
 	// read layer pointers
 	layers := make([]uint32, 0, 32)
 	for {
@@ -70,7 +70,9 @@ func (d *Decoder) Decode() (*Image, error) {
 		}
 		channels = append(channels, pointer)
 	}
-	return &i, nil
+	// read layers
+	// read channels
+	return i, nil
 }
 
 // Errors
