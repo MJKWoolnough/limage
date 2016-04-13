@@ -19,6 +19,15 @@ func (d *Decoder) readColorMap() color.Palette {
 	return c
 }
 
+type compression uint8
+
+const (
+	compNone    compression = 0
+	compRLE     compression = 1
+	compZlib    compression = 2
+	compFractal compression = 3
+)
+
 func (d *Decoder) readCompression() compression {
 	return compression(d.r.ReadUint8())
 }

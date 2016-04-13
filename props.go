@@ -41,15 +41,6 @@ const (
 	propFloatOpacity      property = 33
 )
 
-type compression uint8
-
-const (
-	compNone    compression = 0
-	compRLE     compression = 1
-	compZlib    compression = 2
-	compFractal compression = 3
-)
-
 func (d *Decoder) readImageProperties(i *Image) {
 	for {
 		propID := d.r.ReadUint32()
