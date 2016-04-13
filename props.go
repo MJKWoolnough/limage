@@ -62,7 +62,7 @@ func (d *Decoder) readImageProperties(i *Image) {
 		case propCompression:
 			c := d.readCompression()
 		case propGuides:
-			g := d.readGuides()
+			g := d.readGuides(propLength)
 		case propResolution:
 			r := d.readResolution()
 		case propTattoo:
