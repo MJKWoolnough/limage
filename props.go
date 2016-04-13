@@ -54,15 +54,25 @@ func (d *Decoder) readImageProperties(i *Image) {
 		case propEnd:
 			return
 		case propColormap:
+			c := d.readColorMap()
 		case propCompression:
+			c := d.readCompression()
 		case propGuides:
+			g := d.readGuides()
 		case propResolution:
+			r := d.readResolution()
 		case propTattoo:
+			t := d.readTattoo()
 		case propParasites:
+			p := d.readParasites()
 		case propUnit:
+			u := d.readUnit()
 		case propPaths:
+			p := d.readPaths()
 		case propUserUnit:
+			u := d.readUserUnit()
 		case propVectors:
+			v := d.readVectors()
 		default:
 			d.s.Seek(int64(propLength), os.SEEK_CUR)
 		}
@@ -77,15 +87,25 @@ func (d *Decoder) readChannelProperties() {
 		case propEnd:
 			return
 		case propActiveChannel:
+			a := d.readActiveChannel()
 		case propSelection:
+			s := d.readSelection()
 		case propOpacity:
+			o := d.readOpacity()
 		case propVisible:
+			v := d.readVisible()
 		case propLinked:
+			l := d.readLinked()
 		case propShowMasked:
+			s := d.readShowMasked()
 		case propColor:
+			c := d.readColor()
 		case propTattoo:
+			t := d.readTattoo()
 		case propParasites:
+			p := d.readParasites()
 		case propLockContent:
+			l := d.readLockContent()
 		default:
 			d.s.Seek(int64(propLength), os.SEEK_CUR)
 		}
@@ -100,23 +120,41 @@ func (d *Decoder) readLayerProperties() {
 		case propEnd:
 			return
 		case propActiveLayer:
+			a := d.readActiveLayer()
 		case propFloatingSelection:
+			f := d.readFloatingSelection()
 		case propOpacity:
+			o := d.readOpacity()
 		case propApplyMask:
+			a := d.readApplyMask()
 		case propEditMask:
+			e := d.readEditMask()
 		case propMode:
+			m := d.readPropMode()
 		case propLinked:
+			l := d.readLinked()
 		case propLockAlpha:
+			l := d.readLockAlpha()
 		case propOffsets:
+			o := d.readOffsets()
 		case propShowMask:
+			s := d.readShowMask()
 		case propTattoo:
+			t := d.readTattoo()
 		case propParasites:
+			p := d.readParasites()
 		case propTextLayerFlags:
+			t := d.readTextLayerFlags()
 		case propLockContent:
+			l := d.readLockContent()
 		case propVisible:
+			v := d.readVisible()
 		case propGroupItem:
+			g := d.readGroupItem()
 		case propItemPath:
+			i := d.readItemPath()
 		case propGroupItemFlags:
+			g := d.readGroupItemFlags()
 		default:
 			d.s.Seek(int64(propLength), os.SEEK_CUR)
 		}
