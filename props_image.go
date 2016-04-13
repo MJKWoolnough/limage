@@ -29,7 +29,12 @@ const (
 )
 
 func (d *Decoder) readCompression() compression {
-	return compression(d.r.ReadUint8())
+	switch c := d.r.ReadUint8(); c {
+	case 0, 1, 2, 3:
+		return compression(c)
+	}
+	d.r.Err = ErrInvalidState
+	return 0
 }
 
 type orientation byte
