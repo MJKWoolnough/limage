@@ -2,48 +2,52 @@ package xcf
 
 import "os"
 
-const (
-	propEnd               = 0
-	propColormap          = 1
-	propActiveLayer       = 2
-	propActiveChannel     = 3
-	propSelection         = 4
-	propFloatingSelection = 5
-	propOpacity           = 6
-	propMode              = 7
-	propVisible           = 8
-	propLinked            = 9
-	propLockAlpha         = 10
-	propApplyMask         = 11
-	propEditMask          = 12
-	propShowMask          = 13
-	propShowMasked        = 14
-	propOffsets           = 15
-	propColor             = 16
-	propCompression       = 17
-	propGuides            = 18
-	propResolution        = 19
-	propTattoo            = 20
-	propParasites         = 21
-	propUnit              = 22
-	propPaths             = 23
-	propUserUnit          = 24
-	propVectors           = 25
-	propTextLayerFlags    = 26
-	propSamplePoints      = 27
-	propLockContent       = 28
-	propGroupItem         = 29
-	propItemPath          = 30
-	propGroupItemFlags    = 31
-	propLockPosition      = 32
-	propFloatOpacity      = 33
-)
+type property uint8
 
 const (
-	compNone    = 0
-	compRLE     = 1
-	compZlib    = 2
-	compFractal = 3
+	propEnd               property = 0
+	propColormap          property = 1
+	propActiveLayer       property = 2
+	propActiveChannel     property = 3
+	propSelection         property = 4
+	propFloatingSelection property = 5
+	propOpacity           property = 6
+	propMode              property = 7
+	propVisible           property = 8
+	propLinked            property = 9
+	propLockAlpha         property = 10
+	propApplyMask         property = 11
+	propEditMask          property = 12
+	propShowMask          property = 13
+	propShowMasked        property = 14
+	propOffsets           property = 15
+	propColor             property = 16
+	propCompression       property = 17
+	propGuides            property = 18
+	propResolution        property = 19
+	propTattoo            property = 20
+	propParasites         property = 21
+	propUnit              property = 22
+	propPaths             property = 23
+	propUserUnit          property = 24
+	propVectors           property = 25
+	propTextLayerFlags    property = 26
+	propSamplePoints      property = 27
+	propLockContent       property = 28
+	propGroupItem         property = 29
+	propItemPath          property = 30
+	propGroupItemFlags    property = 31
+	propLockPosition      property = 32
+	propFloatOpacity      property = 33
+)
+
+type compression uint8
+
+const (
+	compNone    compression = 0
+	compRLE     compression = 1
+	compZlib    compression = 2
+	compFractal compression = 3
 )
 
 func (d *Decoder) readImageProperties(i *Image) {
