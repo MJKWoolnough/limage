@@ -66,7 +66,7 @@ func (d *Decoder) readGuides(size uint32) []guide {
 		coord := d.r.ReadInt32()
 		o := d.r.ReadUint8()
 		if o != 1 && o != 2 {
-			if d.r.Err != nil {
+			if d.r.Err == nil {
 				d.r.Err = ErrInvalidState
 			}
 			return g
@@ -167,7 +167,7 @@ func (d *Decoder) readPaths() paths {
 				pt.tattoo = d.r.ReadUint32()
 			}
 		} else if version != 1 {
-			if d.r.Err != nil {
+			if d.r.Err == nil {
 				return ErrInvalidState
 			}
 			return p
@@ -239,7 +239,7 @@ type vectors struct {
 func (d *Decoder) readVectors() vectors {
 	var v vectors
 	if d.r.ReadUint32() != 1 {
-		if d.r.Err != nil {
+		if d.r.Err == nil {
 			d.r.Err = ErrInvalidState
 		}
 		return v
@@ -278,7 +278,7 @@ func (d *Decoder) readVectors() vectors {
 		vp.strokes = make([]stroke, k)
 		for j := uint32(0); j < l; j++ {
 			if d.r.ReadUint32() != 1 { // should be 1, bezier curve
-				if d.r.Err != nil {
+				if d.r.Err == nil {
 					d.r.Err = ErrInvalidState
 				}
 				return v
