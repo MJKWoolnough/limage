@@ -123,23 +123,24 @@ func (d *Decoder) readLayerProperties() {
 			// a := d.readActiveLayer()
 			// no data, just set as active layer
 		case propFloatingSelection:
-			f := d.readFloatingSelection()
+			f := d.r.ReadUint32()
 		case propOpacity:
 			o := d.readOpacity()
 		case propApplyMask:
-			a := d.readApplyMask()
+			a := d.readBool()
 		case propEditMask:
-			e := d.readEditMask()
+			e := d.readBool()
 		case propMode:
 			m := d.readPropMode()
 		case propLinked:
 			l := d.readBool()
 		case propLockAlpha:
-			l := d.readLockAlpha()
+			l := d.readBool()
 		case propOffsets:
-			o := d.readOffsets()
+			x := d.r.ReadInt32()
+			y := d.r.ReadInt32()
 		case propShowMask:
-			s := d.readShowMask()
+			s := d.readBool()
 		case propTattoo:
 			t := d.readTattoo()
 		case propParasites:
@@ -156,7 +157,7 @@ func (d *Decoder) readLayerProperties() {
 		case propItemPath:
 			i := d.readItemPath(propLength)
 		case propGroupItemFlags:
-			g := d.readGroupItemFlags()
+			g := d.r.ReadUint32() | 1
 		default:
 			d.s.Seek(int64(propLength), os.SEEK_CUR)
 		}
