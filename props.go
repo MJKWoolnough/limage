@@ -117,7 +117,8 @@ func (d *Decoder) readLayerProperties() {
 		case propEnd:
 			return
 		case propActiveLayer:
-			a := d.readActiveLayer()
+			// a := d.readActiveLayer()
+			// no data, just set as active layer
 		case propFloatingSelection:
 			f := d.readFloatingSelection()
 		case propOpacity:
@@ -147,7 +148,8 @@ func (d *Decoder) readLayerProperties() {
 		case propVisible:
 			v := d.readVisible()
 		case propGroupItem:
-			g := d.readGroupItem()
+			// g := d.readGroupItem()
+			// no data, just set as item group
 		case propItemPath:
 			i := d.readItemPath()
 		case propGroupItemFlags:
