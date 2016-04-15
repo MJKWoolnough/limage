@@ -59,7 +59,7 @@ func (d *Decoder) readImageProperties(i *Image) {
 		case propTattoo:
 			t := d.readTattoo()
 		case propParasites:
-			p := d.readParasites()
+			p := d.readParasites(propLength)
 		case propUnit:
 			u := d.readUnit()
 		case propPaths:
@@ -98,7 +98,7 @@ func (d *Decoder) readChannelProperties() {
 		case propTattoo:
 			t := d.readTattoo()
 		case propParasites:
-			p := d.readParasites()
+			p := d.readParasites(propLength)
 		case propLockContent:
 			l := d.readLockContent()
 		default:
@@ -137,7 +137,7 @@ func (d *Decoder) readLayerProperties() {
 		case propTattoo:
 			t := d.readTattoo()
 		case propParasites:
-			p := d.readParasites()
+			p := d.readParasites(propLength)
 		case propTextLayerFlags:
 			t := d.readTextLayerFlags()
 		case propLockContent:
