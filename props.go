@@ -94,9 +94,11 @@ func (d *Decoder) readChannelProperties() {
 		case propLinked:
 			l := d.readLinked()
 		case propShowMasked:
-			s := d.readShowMasked()
+			s := d.readBool()
 		case propColor:
-			c := d.readColor()
+			r := d.r.ReadUint8()
+			g := d.r.ReadUint8()
+			b := d.r.ReadUint8()
 		case propTattoo:
 			t := d.readTattoo()
 		case propParasites:
@@ -158,4 +160,15 @@ func (d *Decoder) readLayerProperties() {
 			d.s.Seek(int64(propLength), os.SEEK_CUR)
 		}
 	}
+}
+
+func (d *Decoder) readBool() bool {
+	switch d.r.ReadUint32() {
+	case 0:
+		return false
+	case 1:
+		return true
+	}
+	d.r.Err = ErrInvalidState
+	return false
 }
