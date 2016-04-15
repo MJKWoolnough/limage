@@ -82,7 +82,8 @@ func (d *Decoder) readChannelProperties() {
 		case propEnd:
 			return
 		case propActiveChannel:
-			a := d.readActiveChannel()
+			//a := d.readActiveChannel()
+			// no data, just set as active
 		case propSelection:
 			s := d.readSelection()
 		case propOpacity:
