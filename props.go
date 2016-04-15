@@ -151,7 +151,7 @@ func (d *Decoder) readLayerProperties() {
 			// g := d.readGroupItem()
 			// no data, just set as item group
 		case propItemPath:
-			i := d.readItemPath()
+			i := d.readItemPath(propLength)
 		case propGroupItemFlags:
 			g := d.readGroupItemFlags()
 		default:
