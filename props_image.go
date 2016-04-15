@@ -273,7 +273,13 @@ func (d *Decoder) readVectors() vectors {
 		k := d.r.ReadUint32()
 		vp.parasites = make([]parasite, m)
 		for j := uint32(0); j < m; j++ {
-			vp.parasites[j] = d.readParasites()
+			// TODO: the following could be incorrect, needs checking
+			if d.r.ReadUint32() != propParasites {
+				if d.r.Err == nil {
+					d.r.Err = ErrInvalidState
+				}
+			}
+			vp.parasites[j] = d.readParasites(d.r.ReadUint32())
 		}
 		vp.strokes = make([]stroke, k)
 		for j := uint32(0); j < l; j++ {
