@@ -1,9 +1,6 @@
 package xcf
 
-import (
-	"errors"
-	"image/color"
-)
+import "image/color"
 
 func (d *Decoder) readColorMap() color.Palette {
 	num := d.r.ReadUint32()
@@ -324,9 +321,3 @@ func (d *Decoder) readVectors() vectors {
 	}
 	return v
 }
-
-// Errors
-
-var (
-	ErrInvalidState = errors.New("invalid state")
-)

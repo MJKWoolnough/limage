@@ -1,6 +1,9 @@
 package xcf
 
-import "os"
+import (
+	"errors"
+	"os"
+)
 
 type property uint8
 
@@ -174,3 +177,8 @@ func (d *Decoder) readBool() bool {
 	d.r.Err = ErrInvalidState
 	return false
 }
+
+// Errors
+var (
+	ErrInvalidState = errors.New("invalid state")
+)
