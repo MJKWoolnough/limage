@@ -55,7 +55,8 @@ func (d *Decoder) readImageProperties(i *Image) {
 		case propGuides:
 			g := d.readGuides(propLength)
 		case propResolution:
-			r := d.readResolution()
+			h := d.r.ReadFloat32()
+			v := d.r.ReadFloat32()
 		case propTattoo:
 			t := d.readTattoo()
 		case propParasites:

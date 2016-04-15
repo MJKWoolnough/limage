@@ -79,17 +79,6 @@ func (d *Decoder) readGuides(size uint32) []guide {
 	return g
 }
 
-type resolution struct {
-	hres, vres float32
-}
-
-func (d *Decoder) readResolution() resolution {
-	return resolution{
-		d.r.ReadFloat32(),
-		d.r.ReadFloat32(),
-	}
-}
-
 type unit uint8
 
 const (
