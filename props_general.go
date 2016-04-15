@@ -2,32 +2,6 @@ package xcf
 
 import "image/color"
 
-type linked bool
-
-func (d *Decoder) readLinked() linked {
-	switch d.r.ReadUint32() {
-	case 0:
-		return false
-	case 1:
-		return true
-	}
-	d.r.Err = ErrInvalidState
-	return false
-}
-
-type locked bool
-
-func (d *Decoder) readLockContent() locked {
-	switch d.r.ReadUint32() {
-	case 0:
-		return false
-	case 1:
-		return true
-	}
-	d.r.Err = ErrInvalidState
-	return false
-}
-
 func (d *Decoder) readOpacity() color.Alpha {
 	a := d.r.ReadUint32()
 	if a > 255 {
@@ -75,17 +49,4 @@ func (d *Decoder) readTattoo() tattoo {
 		return 0
 	}
 	return tattoo(t)
-}
-
-type visible bool
-
-func (d *Decoder) readVisible() visible {
-	switch d.r.ReadUint32() {
-	case 0:
-		return false
-	case 1:
-		return true
-	}
-	d.r.Err = ErrInvalidState
-	return false
 }

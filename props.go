@@ -90,9 +90,9 @@ func (d *Decoder) readChannelProperties() {
 		case propOpacity:
 			o := d.readOpacity()
 		case propVisible:
-			v := d.readVisible()
+			v := d.readBool()
 		case propLinked:
-			l := d.readLinked()
+			l := d.readBool()
 		case propShowMasked:
 			s := d.readBool()
 		case propColor:
@@ -104,7 +104,7 @@ func (d *Decoder) readChannelProperties() {
 		case propParasites:
 			p := d.readParasites(propLength)
 		case propLockContent:
-			l := d.readLockContent()
+			l := d.readBool()
 		default:
 			d.s.Seek(int64(propLength), os.SEEK_CUR)
 		}
@@ -132,7 +132,7 @@ func (d *Decoder) readLayerProperties() {
 		case propMode:
 			m := d.readPropMode()
 		case propLinked:
-			l := d.readLinked()
+			l := d.readBool()
 		case propLockAlpha:
 			l := d.readLockAlpha()
 		case propOffsets:
@@ -146,9 +146,9 @@ func (d *Decoder) readLayerProperties() {
 		case propTextLayerFlags:
 			t := d.readTextLayerFlags()
 		case propLockContent:
-			l := d.readLockContent()
+			l := d.readBool()
 		case propVisible:
-			v := d.readVisible()
+			v := d.readBool()
 		case propGroupItem:
 			// g := d.readGroupItem()
 			// no data, just set as item group
