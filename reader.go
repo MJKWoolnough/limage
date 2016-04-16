@@ -11,10 +11,12 @@ type reader struct {
 	byteio.StickyReader
 }
 
-func newReader(r io.Reader) *reader {
-	var read reader
-	read.Reader = byteio.BigEndianReader{r}
-	return &read
+func newReader(r io.Reader) reader {
+	return reader{
+		StickyReader: byteio.StickyReader{
+			Reader: byteio.BigEndianReader{r},
+		},
+	}
 }
 
 func (r *reader) ReadString() string {
@@ -29,7 +31,7 @@ func (r *reader) ReadString() string {
 		return ""
 	}
 	if b[length+1] != 0 {
-		r.err = ErrInvalidString
+		r.Err = ErrInvalidString
 		return ""
 	}
 	return string(b[:length])

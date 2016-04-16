@@ -34,14 +34,14 @@ func (d *Decoder) readCompression() compression {
 	return 0
 }
 
-type orientation byte
+type orientation bool
 
 func (o orientation) IsHorizontal() bool {
-	return !o
+	return bool(!o)
 }
 
 func (o orientation) IsVertical() bool {
-	return o
+	return bool(o)
 }
 
 func (o orientation) String() string {
@@ -70,7 +70,7 @@ func (d *Decoder) readGuides(size uint32) []guide {
 		}
 		g[num] = guide{
 			coord:       coord,
-			orientation: orientation(o == 2),
+			orientation: o == 2,
 		}
 	}
 	return g
@@ -138,8 +138,16 @@ func (d *Decoder) readPaths() paths {
 		state := d.r.ReadUint8()
 		switch d.r.ReadUint32() {
 		case 0:
+			if state != 4 {
+				d.r.Err = ErrInvalidState
+				return p
+			}
 			pt.closed = false
 		case 1:
+			if state != 2 {
+				d.r.Err = ErrInvalidState
+				return p
+			}
 			pt.closed = true
 		default:
 			d.r.Err = ErrInvalidState
@@ -154,7 +162,7 @@ func (d *Decoder) readPaths() paths {
 			}
 		} else if version != 1 {
 			if d.r.Err == nil {
-				return ErrInvalidState
+				d.r.Err = ErrInvalidState
 			}
 			return p
 		}
@@ -213,7 +221,7 @@ type vectorpath struct {
 	name            string
 	tattoo          uint32
 	visible, linked bool
-	parasites       []parasite
+	parasites       [][]parasite
 	strokes         []stroke
 }
 
@@ -257,10 +265,10 @@ func (d *Decoder) readVectors() vectors {
 		}
 		m := d.r.ReadUint32()
 		k := d.r.ReadUint32()
-		vp.parasites = make([]parasite, m)
+		vp.parasites = make([][]parasite, m)
 		for j := uint32(0); j < m; j++ {
 			// TODO: the following could be incorrect, needs checking
-			if d.r.ReadUint32() != propParasites {
+			if property(d.r.ReadUint32()) != propParasites {
 				if d.r.Err == nil {
 					d.r.Err = ErrInvalidState
 				}
@@ -268,7 +276,7 @@ func (d *Decoder) readVectors() vectors {
 			vp.parasites[j] = d.readParasites(d.r.ReadUint32())
 		}
 		vp.strokes = make([]stroke, k)
-		for j := uint32(0); j < l; j++ {
+		for j := uint32(0); j < k; j++ {
 			if d.r.ReadUint32() != 1 { // should be 1, bezier curve
 				if d.r.Err == nil {
 					d.r.Err = ErrInvalidState
@@ -292,7 +300,7 @@ func (d *Decoder) readVectors() vectors {
 			np := d.r.ReadUint32()
 			vp.strokes[j].points = make([]vectorpoint, np)
 			for k := uint32(0); k < np; k++ {
-				p := &vp.strokes[h].points[k]
+				p := &vp.strokes[j].points[k]
 				switch d.r.ReadUint32() {
 				case 0:
 					p.anchorControl = false
