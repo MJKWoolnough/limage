@@ -42,8 +42,8 @@ func (d *Decoder) Decode() (*Image, error) {
 	case "file", "v001", "v002", "v003":
 	default:
 		return nil, ErrUnsupportedVersion
-		i := new(Image)
 	}
+	i := new(Image)
 	i.Width = d.r.ReadUint32()
 	i.Height = d.r.ReadUint32()
 	i.BaseType = baseType(d.r.ReadUint32())
