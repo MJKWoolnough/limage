@@ -52,9 +52,6 @@ func (d *Decoder) Decode() (*Image, error) {
 	}
 	// read image properties
 	d.readImageProperties(i)
-	if d.r.Err != nil {
-		return nil, d.r.Err
-	}
 	// read layer pointers
 	layers := make([]uint32, 0, 32)
 	for {
@@ -63,9 +60,6 @@ func (d *Decoder) Decode() (*Image, error) {
 			break
 		}
 		layers = append(layers, pointer)
-	}
-	if d.r.Err != nil {
-		return nil, d.r.Err
 	}
 	// read channel pointers
 	channels := make([]uint32, 0, 32)
