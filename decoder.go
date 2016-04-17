@@ -3,6 +3,7 @@ package xcf
 import (
 	"errors"
 	"image/color"
+	"image/draw"
 	"io"
 )
 
@@ -76,6 +77,67 @@ func (d *Decoder) Decode() (*Image, error) {
 	// read layers
 	// read channels
 	return i, nil
+}
+
+type layer struct{}
+
+func (d *Decoder) readLayer() layer {
+	width := d.r.ReadUint32()
+	height := d.r.ReadUint32()
+	typ := d.r.ReadUint32()
+	if typ > 5 {
+		d.r.Err = ErrInvalidState
+		return
+	}
+	name := d.r.ReadString()
+	d.readLayerProperties()
+	hptr := d.r.ReadUint32()
+	mptr := d.r.ReadUint32()
+}
+
+type channel struct{}
+
+func (d *Decoder) readChannel() channel {
+	width := d.r.ReadUint32()
+	height := d.r.ReadUint32()
+	name := d.r.ReadString()
+	d.readChannelProperties()
+	hptr := d.r.ReadUint32() //
+}
+
+type hierarchy struct{}
+
+func (d *Decoder) readHierarchy() hierarchy {
+	width := d.r.ReadUint32()
+	height := d.r.ReadUint32()
+	bpp := d.r.ReadUint32()
+	lptr := d.r.ReadUint32()
+	for {
+		if d.r.ReadUint32() == 0 {
+			break
+		}
+	}
+}
+
+type level struct{}
+
+func (d *Decoder) readLevel() level {
+	width := d.r.ReadUint32()
+	height := d.r.ReadUint32()
+	for {
+		if d.r.ReadUint32() == 0 {
+			break
+		}
+	}
+}
+
+func (d *Decoder) readTile(i draw.Image) {
+	b := i.Bounds()
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+
+		}
+	}
 }
 
 // Errors
