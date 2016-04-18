@@ -53,7 +53,7 @@ func (d *Decoder) Decode() (*Image, error) {
 	if d.r.Err != nil {
 		return nil, d.r.Err
 	}
-	if string(header[:9]) != "gimp xcf" || header[13] != 0 {
+	if string(header[:9]) != "gimp xcf " || header[13] != 0 {
 		return nil, ErrInvalidHeader
 	}
 	switch string(header[8:12]) {
