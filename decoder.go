@@ -7,9 +7,24 @@ import (
 	"io"
 )
 
+type props struct {
+	baseType    baseType
+	colours     color.Palette
+	compression compression
+	guides      []guide
+	hres, vres  float32
+	tatoo       tatoo
+	parasites   []parasite
+	unit        unit
+	paths       []path
+	userUnit    userUnit
+	vectors     vectors
+}
+
 type Decoder struct {
 	r reader
 	s io.Seeker
+	props
 }
 
 func NewDecoder(r io.ReadSeeker) *Decoder {
@@ -24,10 +39,12 @@ const (
 	BaseIndexed   baseType = 2
 )
 
+type Layer struct {
+}
+
 type Image struct {
 	Width, Height uint32
-	BaseType      baseType
-	Colours       []color.Color
+	Layers        []Layer
 }
 
 func (d *Decoder) Decode() (*Image, error) {
@@ -52,7 +69,7 @@ func (d *Decoder) Decode() (*Image, error) {
 		return nil, ErrInvalidBaseType
 	}
 	// read image properties
-	d.readImageProperties(i)
+	d.readImageProperties()
 	// read layer pointers
 	layers := make([]uint32, 0, 32)
 	for {

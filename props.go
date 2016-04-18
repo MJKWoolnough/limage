@@ -52,36 +52,26 @@ func (d *Decoder) readImageProperties(i *Image) {
 		case propEnd:
 			return
 		case propColormap:
-			c := d.readColorMap()
-			_ = c
+			d.colours = d.readColorMap()
 		case propCompression:
-			c := d.readCompression()
-			_ = c
+			d.compression = d.readCompression()
 		case propGuides:
-			g := d.readGuides(propLength)
-			_ = g
+			d.guides = d.readGuides(propLength)
 		case propResolution:
-			h := d.r.ReadFloat32()
-			v := d.r.ReadFloat32()
-			_, _ = h, v
+			d.hres = d.r.ReadFloat32()
+			d.vres = d.r.ReadFloat32()
 		case propTattoo:
-			t := d.readTattoo()
-			_ = t
+			d.tatoo = d.readTattoo()
 		case propParasites:
-			p := d.readParasites(propLength)
-			_ = p
+			d.parasites = d.readParasites(propLength)
 		case propUnit:
-			u := d.readUnit()
-			_ = u
+			d.unit = d.readUnit()
 		case propPaths:
-			p := d.readPaths()
-			_ = p
+			d.paths = d.readPaths()
 		case propUserUnit:
-			u := d.readUserUnit()
-			_ = u
+			d.userUnit = d.readUserUnit()
 		case propVectors:
-			v := d.readVectors()
-			_ = v
+			d.vectors = d.readVectors()
 		default:
 			d.s.Seek(int64(propLength), os.SEEK_CUR)
 		}
