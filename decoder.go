@@ -8,17 +8,18 @@ import (
 )
 
 type props struct {
-	baseType    baseType
-	colours     color.Palette
-	compression compression
-	guides      []guide
-	hres, vres  float32
-	tatoo       tatoo
-	parasites   []parasite
-	unit        unit
-	paths       []path
-	userUnit    userUnit
-	vectors     vectors
+	width, height uint32
+	baseType      baseType
+	colours       color.Palette
+	compression   compression
+	guides        []guide
+	hres, vres    float32
+	tatoo         tatoo
+	parasites     []parasite
+	unit          unit
+	paths         []path
+	userUnit      userUnit
+	vectors       vectors
 }
 
 type Decoder struct {
@@ -61,10 +62,13 @@ func (d *Decoder) Decode() (*Image, error) {
 	default:
 		return nil, ErrUnsupportedVersion
 	}
+	d.props = props{}
 	i := new(Image)
 	i.Width = d.r.ReadUint32()
 	i.Height = d.r.ReadUint32()
-	i.BaseType = baseType(d.r.ReadUint32())
+	d.width = i.Width
+	d.height = i.Height
+	d.baseType = baseType(d.r.ReadUint32())
 	if i.BaseType > BaseIndexed {
 		return nil, ErrInvalidBaseType
 	}
