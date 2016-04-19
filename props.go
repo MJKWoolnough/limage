@@ -183,7 +183,7 @@ func (d *Decoder) readLayerProperties() {
 			i := d.readItemPath(propLength)
 			_ = i
 		case propGroupItemFlags:
-			g := d.r.ReadUint32() | 1
+			g := d.r.ReadUint32()
 			_ = g
 		default:
 			d.s.Seek(int64(propLength), os.SEEK_CUR)
