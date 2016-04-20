@@ -106,14 +106,27 @@ func (d *Decoder) readLayer() layer {
 	width := d.r.ReadUint32()
 	height := d.r.ReadUint32()
 	typ := d.r.ReadUint32()
-	if typ > 5 {
-		d.r.Err = ErrInvalidState
-		return
-	}
 	name := d.r.ReadString()
 	d.readLayerProperties()
 	hptr := d.r.ReadUint32()
 	mptr := d.r.ReadUint32()
+	switch typ {
+	case 0:
+		//RGB
+	case 1:
+		//RGBA
+	case 2:
+		//Y
+	case 3:
+		//YA
+	case 4:
+		//I
+	case 5:
+		//IA
+	default:
+		d.r.Err = ErrInvalidState
+		return
+	}
 }
 
 type channel struct{}
