@@ -102,11 +102,11 @@ func (d *Decoder) Decode() (*Image, error) {
 }
 
 type layer struct {
-	offsetX, offsetY                    int32
-	width, height                       uint32
-	name                                string
-	alpha                               bool
-	editMask, showMask, visible, locked bool
+	offsetX, offsetY                            int32
+	width, height                               uint32
+	name                                        string
+	alpha                                       bool
+	editMask, showMask, visible, locked, active bool
 }
 
 func (d *Decoder) readLayer() layer {
@@ -124,8 +124,7 @@ Props:
 		case propEnd:
 			break Props
 		case propActiveLayer:
-			// a := d.readActiveLayer()
-			// no data, just set as active layer
+			l.active = true
 		case propFloatingSelection:
 			f := d.r.ReadUint32()
 			_ = f
