@@ -44,40 +44,6 @@ const (
 	propFloatOpacity      property = 33
 )
 
-func (d *Decoder) readImageProperties(i *Image) {
-	for {
-		propID := property(d.r.ReadUint32())
-		propLength := d.r.ReadUint32()
-		switch propID {
-		case propEnd:
-			return
-		case propColormap:
-			d.colours = d.readColorMap()
-		case propCompression:
-			d.compression = d.readCompression()
-		case propGuides:
-			d.guides = d.readGuides(propLength)
-		case propResolution:
-			d.hres = d.r.ReadFloat32()
-			d.vres = d.r.ReadFloat32()
-		case propTattoo:
-			d.tatoo = d.readTattoo()
-		case propParasites:
-			d.parasites = d.readParasites(propLength)
-		case propUnit:
-			d.unit = d.readUnit()
-		case propPaths:
-			d.paths = d.readPaths()
-		case propUserUnit:
-			d.userUnit = d.readUserUnit()
-		case propVectors:
-			d.vectors = d.readVectors()
-		default:
-			d.s.Seek(int64(propLength), os.SEEK_CUR)
-		}
-	}
-}
-
 func (d *Decoder) readChannelProperties() {
 	for {
 		propID := property(d.r.ReadUint32())

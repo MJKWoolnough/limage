@@ -74,7 +74,37 @@ func (d *Decoder) Decode() (*Image, error) {
 		return nil, ErrInvalidBaseType
 	}
 	// read image properties
-	d.readImageProperties()
+	for {
+		propID := property(d.r.ReadUint32())
+		propLength := d.r.ReadUint32()
+		switch propID {
+		case propEnd:
+			return
+		case propColormap:
+			d.colours = d.readColorMap()
+		case propCompression:
+			d.compression = d.readCompression()
+		case propGuides:
+			d.guides = d.readGuides(propLength)
+		case propResolution:
+			d.hres = d.r.ReadFloat32()
+			d.vres = d.r.ReadFloat32()
+		case propTattoo:
+			d.tatoo = d.readTattoo()
+		case propParasites:
+			d.parasites = d.readParasites(propLength)
+		case propUnit:
+			d.unit = d.readUnit()
+		case propPaths:
+			d.paths = d.readPaths()
+		case propUserUnit:
+			d.userUnit = d.readUserUnit()
+		case propVectors:
+			d.vectors = d.readVectors()
+		default:
+			d.s.Seek(int64(propLength), os.SEEK_CUR)
+		}
+	}
 	// read layer pointers
 	layers := make([]uint32, 0, 32)
 	for {
