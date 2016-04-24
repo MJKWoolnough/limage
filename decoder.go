@@ -74,12 +74,13 @@ func (d *Decoder) Decode() (*Image, error) {
 		return nil, ErrInvalidBaseType
 	}
 	// read image properties
+Props:
 	for {
 		propID := property(d.r.ReadUint32())
 		propLength := d.r.ReadUint32()
 		switch propID {
 		case propEnd:
-			return
+			break Props
 		case propColormap:
 			d.colours = d.readColorMap()
 		case propCompression:
@@ -236,12 +237,13 @@ func (d *Decoder) readChannel() channel {
 	width := d.r.ReadUint32()
 	height := d.r.ReadUint32()
 	name := d.r.ReadString()
+Props:
 	for {
 		propID := property(d.r.ReadUint32())
 		propLength := d.r.ReadUint32()
 		switch propID {
 		case propEnd:
-			return
+			break Props
 		case propActiveChannel:
 			//a := d.readActiveChannel()
 			// no data, just set as active
