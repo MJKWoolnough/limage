@@ -71,6 +71,15 @@ func (p *PalettedAlpha) Set(x, y int, c color.Color) {
 	p.alpha[i].A = uint8(a)
 }
 
+func (p *PalettedAlpha) SetColorIndexAlpha(x, y int, index, alpha uint8) {
+	if !(image.Point{x, y}.In(p.Rect)) {
+		return
+	}
+	i := p.PixOffset(x, y)
+	p.Pix[i] = index
+	p.alpha[i].A = alpha
+}
+
 func (p *PalettedAlpha) SubImage(r Rectangle) image.Image {
 	r = r.Intersect(p.Rect)
 	if r.Empty() {
