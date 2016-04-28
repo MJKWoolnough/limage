@@ -62,13 +62,8 @@ func (p *PalettedAlpha) Opaque() bool {
 }
 
 func (p *PalettedAlpha) Set(x, y int, c color.Color) {
-	if !(image.Point{x, y}.In(p.Rect)) {
-		return
-	}
-	i := p.PixOffset(x, y)
 	r, g, b, a := c.RGBA()
-	p.Pix[i] = uint8(p.Palette.Index(rgb{uint8(r), uint8(g), uint8(b)}))
-	p.alpha[i].A = uint8(a)
+	p.SetColorIndexAlpha(x, y, p.Palette.Index(rgb{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)}), uint8(a>>8))
 }
 
 func (p *PalettedAlpha) SetColorIndexAlpha(x, y int, index, alpha uint8) {
