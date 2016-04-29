@@ -309,13 +309,59 @@ func (d *Decoder) readLevel() level {
 	}
 }
 
-func (d *Decoder) readTile(i draw.Image) {
+func (d *Decoder) readTile(i draw.Image, alpha bool) {
 	b := i.Bounds()
+	var r byteReader
+	switch d.compression {
+	case 0:
+		r = d.r
+	case 1:
+		r = &rle{r: &d.r.StickyReader}
+	}
 	for y := b.Min.Y; y < b.Max.Y; y++ {
 		for x := b.Min.X; x < b.Max.X; x++ {
-
+			i.Set(x, y, d.readColor(r, alpha))
 		}
 	}
+}
+
+func (d *Decoder) readColor(reader byteReader, alpha bool) color.Color {
+	var (
+		r, g, b uint8
+		a       uint8 = 255
+	)
+	switch d.props.baseType {
+	case BaseRGB:
+		r = reader.ReadByte()
+		g = reader.ReadByte()
+		b = reader.ReadByte()
+	case BaseGrayScale:
+		r := reader.ReadByte()
+		g, b = r, r
+	case BaseIndexed:
+		i := reader.ReadByte()
+		if i >= len(d.colours) {
+			i = 0
+		}
+		c := d.colours[i]
+		dr, dg, db, _ := c.RGBA()
+		r = uint8(dr >> 8)
+		g = uint8(dg >> 8)
+		b = uint8(db >> 8)
+	}
+	if alpha {
+		a = reader.ReadByte()
+	}
+	return color.RGBA{
+		R: r,
+		G: g,
+		B: b,
+		A: a,
+	}
+}
+
+type byteReader interface {
+	ReadByte() byte
 }
 
 // Errors
