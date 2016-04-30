@@ -3,7 +3,7 @@ package xcf
 import "github.com/MJKWoolnough/byteio"
 
 type rle struct {
-	r     byteio.StickyReader
+	r     *byteio.StickyReader
 	mode  byte
 	data  byte
 	count uint16
