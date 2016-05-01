@@ -2,6 +2,42 @@ package xcf
 
 import "os"
 
+type Layer interface {
+	IsGroup() bool
+	AsGroup() *LayerGroup
+	AsImage() *LayerImage
+}
+
+type LayerGroup struct {
+}
+
+func (LayerGroup) IsGroup() bool {
+	return true
+}
+
+func (l *LayerGroup) AsGroup() *LayerGroup {
+	return l
+}
+
+func (LayerGroup) AsImage() *LayerImage {
+	return nil
+}
+
+type LayerImage struct {
+}
+
+func (LayerImage) IsGroup() bool {
+	return true
+}
+
+func (LayerImage) AsGroup() *LayerGroup {
+	return nil
+}
+
+func (l *LayerImage) AsImage() *LayerImage {
+	return l
+}
+
 type layer struct {
 	offsetX, offsetY                            int32
 	width, height                               uint32
