@@ -9,12 +9,14 @@ import (
 
 type reader struct {
 	byteio.StickyReader
+	io.Seeker
 }
 
-func newReader(r io.Reader) reader {
+func newReader(r io.ReadSeeker) reader {
 	return reader{
 		StickyReader: byteio.StickyReader{
 			Reader: byteio.BigEndianReader{r},
+			Seeker: r,
 		},
 	}
 }
@@ -35,6 +37,17 @@ func (r *reader) ReadString() string {
 		return ""
 	}
 	return string(b[:length])
+}
+
+func (r *reader) Seek(offset int64, whence int) (int64, error) {
+	if r.Err != nil {
+		return 0, r.Err
+	}
+	n, err := r.Seeker.Seek(offset, whence)
+	if err != nil {
+		r.Err = err
+	}
+	return n, err
 }
 
 // Errors
