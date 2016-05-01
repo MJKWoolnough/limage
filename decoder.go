@@ -47,6 +47,7 @@ type Layer struct {
 type Image struct {
 	Width, Height uint32
 	Layers        []Layer
+	channels      []Channel
 }
 
 func (d *Decoder) Decode() (*Image, error) {
@@ -128,8 +129,18 @@ Props:
 		return nil, d.r.Err
 	}
 	// read layers
+	i.Layers = make([]Layer, len(layers))
+	for n, ptr := range layers {
+		d.r.Seek(ptr, os.SEEK_SET)
+		i.Layers[n] = d.readLayer()
+	}
 	// read channels
-	return i, nil
+	i.channels = make([]Channel, len(channels))
+	for n, ptr := range channels {
+		d.r.Seek(ptr, os.SEEK_SET)
+		i.channels[n] = d.readChannel()
+	}
+	return i, d.r.Err
 }
 
 type hierarchy struct{}
