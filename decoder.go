@@ -56,7 +56,7 @@ func (d *Decoder) Decode() (*Image, error) {
 	if string(header[:9]) != "gimp xcf " || header[13] != 0 {
 		return nil, ErrInvalidHeader
 	}
-	switch string(header[8:12]) {
+	switch string(header[9:13]) {
 	case "file", "v001", "v002", "v003":
 	default:
 		return nil, ErrUnsupportedVersion
