@@ -11,11 +11,11 @@ type rgb struct {
 
 func (c rgb) RGBA() (uint32, uint32, uint32, uint32) {
 	r := uint32(c.R)
-	r |= c.R
+	r |= r << 8
 	g := uint32(c.G)
-	g |= c.G
+	g |= g << 8
 	b := uint32(c.B)
-	b |= c.B
+	b |= b << 8
 	return r, g, b, 65535
 }
 
@@ -38,7 +38,7 @@ func (p *PalettedAlpha) At(x, y int) color.Color {
 	if len(p.Palette) == 0 {
 		return nil
 	}
-	if !(Point{x, y}.In(p.Rect)) {
+	if !(image.Point{x, y}.In(p.Rect)) {
 		return p.Palette[0]
 	}
 	i := p.PixOffset(x, y)
@@ -54,7 +54,7 @@ func (p *PalettedAlpha) At(x, y int) color.Color {
 
 func (p *PalettedAlpha) Opaque() bool {
 	for _, a := range p.alpha {
-		if a != 255 {
+		if a.A != 255 {
 			return false
 		}
 	}
@@ -63,7 +63,7 @@ func (p *PalettedAlpha) Opaque() bool {
 
 func (p *PalettedAlpha) Set(x, y int, c color.Color) {
 	r, g, b, a := c.RGBA()
-	p.SetColorIndexAlpha(x, y, p.Palette.Index(rgb{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)}), uint8(a>>8))
+	p.SetColorIndexAlpha(x, y, uint8(p.Palette.Index(rgb{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)})), uint8(a>>8))
 }
 
 func (p *PalettedAlpha) SetColorIndexAlpha(x, y int, index, alpha uint8) {
@@ -75,7 +75,7 @@ func (p *PalettedAlpha) SetColorIndexAlpha(x, y int, index, alpha uint8) {
 	p.alpha[i].A = alpha
 }
 
-func (p *PalettedAlpha) SubImage(r Rectangle) image.Image {
+func (p *PalettedAlpha) SubImage(r image.Rectangle) image.Image {
 	r = r.Intersect(p.Rect)
 	if r.Empty() {
 		return &PalettedAlpha{
@@ -86,7 +86,7 @@ func (p *PalettedAlpha) SubImage(r Rectangle) image.Image {
 	}
 	i := p.PixOffset(r.Min.X, r.Min.Y)
 	return &PalettedAlpha{
-		Palette: image.Palette{
+		Paletted: image.Paletted{
 			Pix:     p.Pix[i:],
 			Stride:  p.Stride,
 			Rect:    p.Rect.Intersect(r),

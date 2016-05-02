@@ -2,12 +2,16 @@ package xcf
 
 import "os"
 
-type channel struct{}
+type Channel struct {
+	Width, Height uint32
+	Name          string
+}
 
-func (d *Decoder) readChannel() channel {
-	width := d.r.ReadUint32()
-	height := d.r.ReadUint32()
-	name := d.r.ReadString()
+func (d *Decoder) readChannel() Channel {
+	var c Channel
+	c.Width = d.r.ReadUint32()
+	c.Height = d.r.ReadUint32()
+	c.Name = d.r.ReadString()
 Props:
 	for {
 		propID := property(d.r.ReadUint32())
@@ -52,4 +56,6 @@ Props:
 		}
 	}
 	hptr := d.r.ReadUint32() //
+	_ = hptr
+	return c
 }

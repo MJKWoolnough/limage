@@ -16,8 +16,8 @@ func newReader(r io.ReadSeeker) reader {
 	return reader{
 		StickyReader: byteio.StickyReader{
 			Reader: byteio.BigEndianReader{r},
-			Seeker: r,
 		},
+		Seeker: r,
 	}
 }
 
@@ -37,6 +37,10 @@ func (r *reader) ReadString() string {
 		return ""
 	}
 	return string(b[:length])
+}
+
+func (r *reader) ReadByte() byte {
+	return r.ReadUint8()
 }
 
 func (r *reader) Seek(offset int64, whence int) (int64, error) {

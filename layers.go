@@ -48,7 +48,7 @@ type layer struct {
 	editMask, showMask, visible, locked, active bool
 }
 
-func (d *Decoder) readLayer() layer {
+func (d *Decoder) readLayer() Layer {
 	var l layer
 	l.Width = d.r.ReadUint32()
 	l.Height = d.r.ReadUint32()
@@ -75,7 +75,6 @@ Props:
 			_ = a
 		case propEditMask:
 			l.editMask = d.readBool()
-			_ = e
 		case propMode:
 			m := d.readMode()
 			_ = m
@@ -90,7 +89,6 @@ Props:
 			l.OffsetY = d.r.ReadInt32()
 		case propShowMask:
 			l.showMask = d.readBool()
-			_ = s
 		case propTattoo:
 			t := d.readTattoo()
 			_ = t
@@ -120,6 +118,7 @@ Props:
 
 	hptr := d.r.ReadUint32()
 	mptr := d.r.ReadUint32()
+	_, _ = hptr, mptr
 	switch typ {
 	case 0:
 		//RGB
@@ -135,6 +134,9 @@ Props:
 		//IA
 	default:
 		d.r.Err = ErrInvalidState
-		return
+		return nil
+	}
+	return &LayerImage{
+		layer: l,
 	}
 }

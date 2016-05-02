@@ -15,10 +15,10 @@ type props struct {
 	compression   compression
 	guides        []guide
 	hres, vres    float32
-	tatoo         tatoo
+	tattoo        tattoo
 	parasites     []parasite
 	unit          unit
-	paths         []path
+	paths         paths
 	userUnit      userUnit
 	vectors       vectors
 }
@@ -40,9 +40,6 @@ const (
 	BaseGrayScale baseType = 1
 	BaseIndexed   baseType = 2
 )
-
-type Layer struct {
-}
 
 type Image struct {
 	Width, Height uint32
@@ -71,7 +68,7 @@ func (d *Decoder) Decode() (*Image, error) {
 	d.width = i.Width
 	d.height = i.Height
 	d.baseType = baseType(d.r.ReadUint32())
-	if i.BaseType > BaseIndexed {
+	if d.baseType > BaseIndexed {
 		return nil, ErrInvalidBaseType
 	}
 	// read image properties
@@ -92,7 +89,7 @@ Props:
 			d.hres = d.r.ReadFloat32()
 			d.vres = d.r.ReadFloat32()
 		case propTattoo:
-			d.tatoo = d.readTattoo()
+			d.tattoo = d.readTattoo()
 		case propParasites:
 			d.parasites = d.readParasites(propLength)
 		case propUnit:
@@ -131,13 +128,13 @@ Props:
 	// read layers
 	i.Layers = make([]Layer, len(layers))
 	for n, ptr := range layers {
-		d.r.Seek(ptr, os.SEEK_SET)
+		d.r.Seek(int64(ptr), os.SEEK_SET)
 		i.Layers[n] = d.readLayer()
 	}
 	// read channels
 	i.channels = make([]Channel, len(channels))
 	for n, ptr := range channels {
-		d.r.Seek(ptr, os.SEEK_SET)
+		d.r.Seek(int64(ptr), os.SEEK_SET)
 		i.channels[n] = d.readChannel()
 	}
 	return i, d.r.Err
@@ -150,11 +147,13 @@ func (d *Decoder) readHierarchy() hierarchy {
 	height := d.r.ReadUint32()
 	bpp := d.r.ReadUint32()
 	lptr := d.r.ReadUint32()
+	_, _, _, _ = width, height, bpp, lptr
 	for {
 		if d.r.ReadUint32() == 0 {
 			break
 		}
 	}
+	return hierarchy{}
 }
 
 type level struct{}
@@ -162,11 +161,13 @@ type level struct{}
 func (d *Decoder) readLevel() level {
 	width := d.r.ReadUint32()
 	height := d.r.ReadUint32()
+	_, _ = width, height
 	for {
 		if d.r.ReadUint32() == 0 {
 			break
 		}
 	}
+	return level{}
 }
 
 func (d *Decoder) readTile(i draw.Image, alpha bool) {
@@ -174,7 +175,7 @@ func (d *Decoder) readTile(i draw.Image, alpha bool) {
 	var r byteReader
 	switch d.compression {
 	case 0:
-		r = d.r
+		r = &d.r
 	case 1:
 		r = &rle{r: &d.r.StickyReader}
 	}
@@ -200,7 +201,7 @@ func (d *Decoder) readColor(reader byteReader, alpha bool) color.Color {
 		g, b = r, r
 	case BaseIndexed:
 		i := reader.ReadByte()
-		if i >= len(d.colours) {
+		if int(i) >= len(d.colours) {
 			i = 0
 		}
 		c := d.colours[i]
