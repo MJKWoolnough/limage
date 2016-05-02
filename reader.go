@@ -26,17 +26,17 @@ func (r *reader) ReadString() string {
 	if length == 0 {
 		return ""
 	}
-	b := make([]byte, length+1)
+	b := make([]byte, length)
 	_, err := io.ReadFull(r, b)
 	if err != nil {
 		r.Err = err
 		return ""
 	}
-	if b[length] != 0 {
+	if b[length-1] != 0 {
 		r.Err = ErrInvalidString
 		return ""
 	}
-	return string(b[:length])
+	return string(b[:length-1])
 }
 
 func (r *reader) ReadByte() byte {
