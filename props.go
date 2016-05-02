@@ -72,7 +72,8 @@ type parasite struct {
 func (d *Decoder) readParasites(length uint32) []parasite {
 	o := d.r.Count
 	ps := make([]parasite, 0)
-	for length > 0 {
+	l := int64(length)
+	for l > 0 && d.r.Err == nil {
 		d.r.Count = 0
 		name := d.r.ReadString()
 		flags := d.r.ReadUint32()
@@ -84,7 +85,7 @@ func (d *Decoder) readParasites(length uint32) []parasite {
 			flags: flags,
 			data:  data,
 		})
-		length -= uint32(d.r.Count)
+		l -= d.r.Count
 		o += d.r.Count
 	}
 	d.r.Count = o
