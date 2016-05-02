@@ -9,6 +9,7 @@ type Layer interface {
 }
 
 type LayerGroup struct {
+	layer
 }
 
 func (LayerGroup) IsGroup() bool {
@@ -24,6 +25,8 @@ func (LayerGroup) AsImage() *LayerImage {
 }
 
 type LayerImage struct {
+	layer
+	alpha bool
 }
 
 func (LayerImage) IsGroup() bool {
@@ -39,19 +42,18 @@ func (l *LayerImage) AsImage() *LayerImage {
 }
 
 type layer struct {
-	offsetX, offsetY                            int32
-	width, height                               uint32
-	name                                        string
-	alpha                                       bool
+	OffsetX, OffsetY                            int32
+	Width, Height                               uint32
+	Name                                        string
 	editMask, showMask, visible, locked, active bool
 }
 
 func (d *Decoder) readLayer() layer {
 	var l layer
-	l.width = d.r.ReadUint32()
-	l.height = d.r.ReadUint32()
+	l.Width = d.r.ReadUint32()
+	l.Height = d.r.ReadUint32()
 	typ := d.r.ReadUint32()
-	l.name = d.r.ReadString()
+	l.Name = d.r.ReadString()
 
 Props:
 	for {
@@ -84,8 +86,8 @@ Props:
 			l := d.readBool()
 			_ = l
 		case propOffsets:
-			l.offsetX = d.r.ReadInt32()
-			l.offsetY = d.r.ReadInt32()
+			l.OffsetX = d.r.ReadInt32()
+			l.OffsetY = d.r.ReadInt32()
 		case propShowMask:
 			l.showMask = d.readBool()
 			_ = s
