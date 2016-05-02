@@ -19,6 +19,6 @@ func newWriter(w io.Writer) *writer {
 func (w writer) WriteString(s string) {
 	b := make([]byte, len(s)+1)
 	copy(b, s)
-	w.WriteUint32(uint32(len(s)))
+	w.WriteUint32(uint32(len(b)))
 	w.Write(b)
 }
