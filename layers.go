@@ -4,6 +4,8 @@ import "os"
 
 type Layer interface {
 	IsGroup() bool
+	IsImage() bool
+	IsText() bool
 	AsGroup() *LayerGroup
 	AsImage() *LayerImage
 }
@@ -20,24 +22,24 @@ func (l *LayerGroup) AsGroup() *LayerGroup {
 	return l
 }
 
-func (LayerGroup) AsImage() *LayerImage {
-	return nil
-}
-
 type LayerImage struct {
 	layer
 	alpha bool
 }
 
-func (LayerImage) IsGroup() bool {
-	return false
-}
-
-func (LayerImage) AsGroup() *LayerGroup {
-	return nil
+func (LayerImage) IsImage() bool {
+	return true
 }
 
 func (l *LayerImage) AsImage() *LayerImage {
+	return l
+}
+
+type LayerText struct {
+	layer
+}
+
+func (l *LayerText) AsText() *LayerText {
 	return l
 }
 
@@ -48,8 +50,36 @@ type layer struct {
 	editMask, showMask, visible, locked, active bool
 }
 
+func (layer) IsGroup() bool {
+	return false
+}
+
+func (layer) IsImage() bool {
+	return false
+}
+
+func (layer) IsText() bool {
+	return false
+}
+
+func (layer) AsGroup() *LayerGroup {
+	return nil
+}
+
+func (layer) AsImage() *LayerImage {
+	return nil
+}
+
+func (layer) AsText() *LayerText {
+	return nil
+}
+
 func (d *Decoder) readLayer() Layer {
-	var l layer
+	var (
+		l     layer
+		group bool
+		text  bool
+	)
 	l.Width = d.r.ReadUint32()
 	l.Height = d.r.ReadUint32()
 	typ := d.r.ReadUint32()
@@ -98,13 +128,13 @@ Props:
 		case propTextLayerFlags:
 			t := d.readTextLayerFlags()
 			_ = t
+			text = true
 		case propLockContent:
 			l.locked = d.readBool()
 		case propVisible:
 			l.visible = d.readBool()
 		case propGroupItem:
-			// g := d.readGroupItem()
-			// no data, just set as item group
+			group = true
 		case propItemPath:
 			i := d.readItemPath(propLength)
 			_ = i
@@ -119,6 +149,15 @@ Props:
 	hptr := d.r.ReadUint32()
 	mptr := d.r.ReadUint32()
 	_, _ = hptr, mptr
+	if group {
+		return &LayerGroup{
+			layer: l,
+		}
+	} else if text {
+		return &LayerText{
+			layer: l,
+		}
+	}
 	switch typ {
 	case 0:
 		//RGB
