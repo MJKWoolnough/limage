@@ -21,9 +21,17 @@ func newReader(r io.ReadSeeker) reader {
 	}
 }
 
+const maxString = 16 * 1024 * 1024
+
 func (r *reader) ReadString() string {
 	length := r.ReadUint32()
 	if length == 0 {
+		return ""
+	}
+	if length > mazString {
+		if r.Err == nil {
+			r.Err = ErrStringTooLong
+		}
 		return ""
 	}
 	b := make([]byte, length)
@@ -55,4 +63,7 @@ func (r *reader) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Errors
-var ErrInvalidString = errors.New("string is invalid")
+var (
+	ErrInvalidString = errors.New("string is invalid")
+	ErrStringTooLong = errors.New("string exceeds maximum length")
+)
