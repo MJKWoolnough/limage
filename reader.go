@@ -3,6 +3,7 @@ package xcf
 import (
 	"errors"
 	"io"
+	"unicode/utf8"
 
 	"github.com/MJKWoolnough/byteio"
 )
@@ -40,7 +41,7 @@ func (r *reader) ReadString() string {
 		r.Err = err
 		return ""
 	}
-	if b[length-1] != 0 {
+	if b[length-1] != 0 || !utf8.Valid(b[:length-1]) {
 		r.Err = ErrInvalidString
 		return ""
 	}
