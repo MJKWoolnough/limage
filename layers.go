@@ -30,7 +30,7 @@ type LayerImage struct {
 }
 
 func (LayerImage) IsGroup() bool {
-	return true
+	return false
 }
 
 func (LayerImage) AsGroup() *LayerGroup {
