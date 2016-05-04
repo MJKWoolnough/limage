@@ -29,7 +29,7 @@ func (r *reader) ReadString() string {
 	if length == 0 {
 		return ""
 	}
-	if length > mazString {
+	if length > maxString {
 		if r.Err == nil {
 			r.Err = ErrStringTooLong
 		}
