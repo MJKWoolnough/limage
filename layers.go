@@ -1,6 +1,9 @@
 package xcf
 
-import "os"
+import (
+	"image/color"
+	"os"
+)
 
 type Layer interface {
 	IsGroup() bool
@@ -47,6 +50,8 @@ type layer struct {
 	OffsetX, OffsetY                            int32
 	Width, Height                               uint32
 	Name                                        string
+	Mode                                        uint8
+	Opacity                                     color.Alpha
 	editMask, showMask, visible, locked, active bool
 }
 
@@ -76,9 +81,10 @@ func (layer) AsText() *LayerText {
 
 func (d *Decoder) readLayer() Layer {
 	var (
-		l     layer
-		group bool
-		text  bool
+		l         layer
+		group     bool
+		text      bool
+		parasites []parasite
 	)
 	l.Width = d.r.ReadUint32()
 	l.Height = d.r.ReadUint32()
@@ -98,16 +104,14 @@ Props:
 			f := d.r.ReadUint32()
 			_ = f
 		case propOpacity:
-			o := d.readOpacity()
-			_ = o
+			l.Opacity = d.readOpacity()
 		case propApplyMask:
 			a := d.readBool()
 			_ = a
 		case propEditMask:
 			l.editMask = d.readBool()
 		case propMode:
-			m := d.readMode()
-			_ = m
+			l.Mode = d.readMode()
 		case propLinked:
 			l := d.readBool()
 			_ = l
@@ -123,8 +127,7 @@ Props:
 			t := d.readTattoo()
 			_ = t
 		case propParasites:
-			p := d.readParasites(propLength)
-			_ = p
+			parasites = d.readParasites(propLength)
 		case propTextLayerFlags:
 			t := d.readTextLayerFlags()
 			_ = t
@@ -154,6 +157,12 @@ Props:
 			layer: l,
 		}
 	} else if text {
+		for _, p := range parasites {
+			if p.name == "gimp-text-layer" {
+				// parse data
+				break
+			}
+		}
 		return &LayerText{
 			layer: l,
 		}
