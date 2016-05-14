@@ -3,6 +3,7 @@ package xcf
 import (
 	"errors"
 	"image/color"
+	"strconv"
 	"strings"
 
 	"github.com/MJKWoolnough/parser"
@@ -26,10 +27,6 @@ const (
 	tokenValueNumber
 )
 
-type tokeniser struct {
-	parser.Parser
-}
-
 type TextData []Text
 
 func (t TextData) String() string {
@@ -48,51 +45,114 @@ type Text struct {
 }
 
 func parseTextParasite(data []byte) (TextData, error) {
-	t := tokeniser{
-		Parser: parser.NewByteParser(data),
+	p := parser.New(parser.NewByteTokeniser(data))
+	p.TokeniserState(openTK)
+	for {
+		readTag(&p)
 	}
-	t.State = t.open
-
 	return TextData{}, nil
 }
 
-func (t *tokeniser) readTag() (string, []interface{}) {
+type tag struct {
+	name   string
+	values []interface{}
 }
 
-func (t *tokeniser) open() (parser.Token, parser.StateFn) {
+func readTag(p *parser.Parser) (tag, error) {
+	if !p.Accept(tokenOpen) {
+		return tag{}, ErrInvalidLayout
+	}
+	p.Get()
+	if !p.Accept(tokenName) {
+		return tag{}, ErrInvalidLayout
+	}
+	nt := p.Get()
+	var tg tag
+	tg.name = nt[0].Data
+	for {
+		tt := p.AcceptRun(tokenValueString, tokenValueNumber)
+		for _, v := range p.Get() {
+			switch v.Type {
+			case tokenValueString:
+				tg.values = append(tg.values, v.Data)
+			case tokenValueNumber:
+				num, err := strconv.ParseFloat(v.Data, 64)
+				if err != nil {
+					return tag{}, err
+				}
+				tg.values = append(tg.values, num)
+			}
+		}
+		switch tt {
+		case tokenClose:
+			p.Accept(tokenClose)
+			p.Get()
+			return tg, nil
+		case tokenOpen:
+			ttg, err := readTag(p)
+			if err != nil {
+				return tag{}, err
+			}
+			switch ttg.name {
+			case "rgb":
+				if len(ttg.values) == 3 {
+					r, rok := ttg.values[0].(float64)
+					g, gok := ttg.values[1].(float64)
+					b, bok := ttg.values[2].(float64)
+					if !rok || !gok || !bok {
+						//error
+					}
+					tg.values = append(tg.values, color.RGBA{uint8(r), uint8(g), uint8(b), 255})
+				} else {
+					//error??
+				}
+			}
+		default:
+			return tag{}, ErrInvalidLayout
+		}
+	}
+}
+
+func openTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	t.AcceptRun(whitespace)
 	if !t.Accept(open) {
-		// error
+		t.Err = ErrInvalidLayout
+		return t.Error()
 	}
 	t.Get()
 	return parser.Token{
 		Type: tokenOpen,
-	}, t.name
+	}, nameTK
 }
 
-func (t *tokeniser) name() (parser.Token, parser.StateFn) {
+func nameTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
+	if !t.Accept(valName) {
+		t.Err = ErrInvalidLayout
+		return t.Error()
+	}
 	t.AcceptRun(valName)
 	return parser.Token{
 		Type: tokenName,
 		Data: t.Get(),
-	}, t.value
+	}, valueTK
 }
 
-func (t *tokeniser) value() (parser.Token, parser.StateFn) {
+func valueTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	t.AcceptRun(whitespace)
 	t.Get()
-	switch c := t.Peek(); string(c) {
+	c := t.Peek()
+	switch string(c) {
 	case open:
-		return t.open()
+		return openTK(t)
 	case close:
 		return parser.Token{
 			Type: tokenClose,
-		}, t.value
+		}, valueTK
 	case quoted:
 		return parser.Token{
 			Type: tokenValueString,
-			Data: t.quotedString(),
-		}, t.value
+			Data: quotedString(t),
+		}, valueTK
 	}
 	if strings.ContainsRune(digit, c) {
 		t.AcceptRun(digit)
@@ -101,16 +161,16 @@ func (t *tokeniser) value() (parser.Token, parser.StateFn) {
 		return parser.Token{
 			Type: tokenValueNumber,
 			Data: t.Get(),
-		}, t.value
+		}, valueTK
 	}
 	t.AcceptRun(valName)
 	return parser.Token{
 		Type: tokenValueString,
 		Data: t.Get(),
-	}, t.value
+	}, valueTK
 }
 
-func (t *tokeniser) quotedString() string {
+func quotedString(t *parser.Tokeniser) string {
 	t.Accept(quoted)
 	t.Get()
 	var s string
@@ -118,11 +178,11 @@ func (t *tokeniser) quotedString() string {
 		t.ExceptRun(quoted + "\\")
 		s += t.Get()
 		if t.Accept("\\") {
-			switch c := t.Peek(); c {
+			switch c := string(t.Peek()); c {
 			case "\"", "\\":
-				s += string(c)
+				s += c
 			default:
-				s += "\\" + string(c)
+				s += "\\" + c
 			}
 			continue
 		}
