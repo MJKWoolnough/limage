@@ -94,7 +94,7 @@ func readTag(p *parser.Parser) (tag, error) {
 				return tag{}, err
 			}
 			switch ttg.name {
-			case "rgb":
+			case "color-rgb":
 				if len(ttg.values) == 3 {
 					r, rok := ttg.values[0].(float64)
 					g, gok := ttg.values[1].(float64)
