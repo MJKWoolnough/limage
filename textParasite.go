@@ -178,12 +178,15 @@ func quotedString(t *parser.Tokeniser) string {
 		t.ExceptRun(quoted + "\\")
 		s += t.Get()
 		if t.Accept("\\") {
-			switch c := string(t.Peek()); c {
+			c := string(t.Peek())
+			switch c {
 			case "\"", "\\":
 				s += c
 			default:
 				s += "\\" + c
 			}
+			t.Accept(c)
+			t.Get()
 			continue
 		}
 		break
