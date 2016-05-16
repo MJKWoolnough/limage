@@ -3,6 +3,7 @@ package xcf
 import (
 	"errors"
 	"image/color"
+	"io"
 	"strconv"
 	"strings"
 
@@ -42,15 +43,47 @@ type Text struct {
 	Size, LetterSpacing, Rise              uint
 	Bold, Italic, Underline, Strikethrough bool
 	Data                                   string
+	FontUnit                               uint8
 }
 
 func parseTextParasite(data []byte) (TextData, error) {
 	p := parser.New(parser.NewByteTokeniser(data))
 	p.TokeniserState(openTK)
+	var markup string
 	for {
-		readTag(&p)
+		t, err := readTag(&p)
+		if err != nil {
+			if p.Err != io.EOF {
+				return nil, err
+			}
+			break
+		}
+		switch t.name {
+		case "markup":
+			if len(t.values) != 1 {
+				// Error
+			}
+			str, ok := t.values[0].(string)
+			if !ok {
+				// Error
+			}
+			markup = str
+		case "font":
+		case "font-size":
+		case "font-size-unit":
+		case "antialias":
+		case "language":
+		case "base-direction":
+		case "color":
+		case "justify":
+		case "box-mode":
+		case "box-width":
+		case "box-height":
+		case "box-unit":
+		case "hinting":
+		}
 	}
-	return TextData{}, nil
+	return nil, nil
 }
 
 type tag struct {
@@ -107,6 +140,8 @@ func readTag(p *parser.Parser) (tag, error) {
 					//error??
 				}
 			}
+		case parser.TokenDone:
+			return tag{}, io.EOF
 		default:
 			return tag{}, ErrInvalidLayout
 		}
@@ -125,6 +160,14 @@ func openTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	}, nameTK
 }
 
+func closeTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
+	t.Accept(close)
+	t.Get()
+	return parser.Token{
+		Type: tokenClose,
+	}, valueTK
+}
+
 func nameTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	if !t.Accept(valName) {
 		t.Err = ErrInvalidLayout
@@ -141,13 +184,14 @@ func valueTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	t.AcceptRun(whitespace)
 	t.Get()
 	c := t.Peek()
+	if c == 0 {
+		return t.Done()
+	}
 	switch string(c) {
 	case open:
 		return openTK(t)
 	case close:
-		return parser.Token{
-			Type: tokenClose,
-		}, valueTK
+		return closeTK(t)
 	case quoted:
 		return parser.Token{
 			Type: tokenValueString,
