@@ -40,6 +40,7 @@ func (l *LayerImage) AsImage() *LayerImage {
 
 type LayerText struct {
 	layer
+	TextData TextData
 }
 
 func (l *LayerText) AsText() *LayerText {
@@ -157,14 +158,22 @@ Props:
 			layer: l,
 		}
 	} else if text {
+		var (
+			t   TextData
+			err error
+		)
 		for _, p := range parasites {
 			if p.name == "gimp-text-layer" {
-				// parse data
+				t, err = parseTextParasite(p.data)
+				if err != nil {
+					d.r.Err = err
+				}
 				break
 			}
 		}
 		return &LayerText{
-			layer: l,
+			layer:    l,
+			TextData: t,
 		}
 	}
 	switch typ {
