@@ -1,6 +1,7 @@
 package xcf
 
 import (
+	"encoding/xml"
 	"errors"
 	"image/color"
 	"io"
@@ -40,16 +41,19 @@ func (t TextData) String() string {
 
 type Text struct {
 	FontColor, ForeColor, BackColor        color.Color
-	Size, LetterSpacing, Rise              uint
+	Size, LetterSpacing, Rise              float64
 	Bold, Italic, Underline, Strikethrough bool
-	Data                                   string
+	Font, Data                             string
 	FontUnit                               uint8
 }
 
 func parseTextParasite(data []byte) (TextData, error) {
 	p := parser.New(parser.NewByteTokeniser(data))
 	p.TokeniserState(openTK)
-	var markup string
+	var (
+		markup      string
+		defaultText Text
+	)
 	for {
 		t, err := readTag(&p)
 		if err != nil {
@@ -69,21 +73,75 @@ func parseTextParasite(data []byte) (TextData, error) {
 			}
 			markup = str
 		case "font":
+			if len(t.values) == 1 {
+				defaultText.Font, _ = t.values[0].(string)
+			}
 		case "font-size":
+			if len(t.values) == 1 {
+				defaultText.Size, _ = t.values[0].(float64)
+			}
 		case "font-size-unit":
 		case "antialias":
 		case "language":
 		case "base-direction":
 		case "color":
+			if len(t.values) == 1 {
+				defaultText.FontColor, _ = t.values[0].(color.Color)
+			}
 		case "justify":
-		case "box-mode":
-		case "box-width":
-		case "box-height":
-		case "box-unit":
+			//		case "box-mode":
+			//		case "box-width":
+			//		case "box-height":
+			//		case "box-unit":
 		case "hinting":
 		}
 	}
-	return nil, nil
+	xd := xml.NewDecoder(strings.NewReader(markup))
+	stack := []Text{defaultText}
+	td := make(TextData, 0, 32)
+	for {
+		t, err := xd.Token()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		switch t := t.(type) {
+		case xml.StartElement:
+			nt := stack[len(stack)-1]
+			switch t.Name.Space {
+			case "markup":
+			case "span":
+				for _, a := range t.Attr {
+					switch a.Name.Local {
+					case "font":
+						nt.Font = a.Value
+					case "foreground":
+					case "size":
+					case "letter_spacing":
+					case "rise":
+					}
+				}
+			case "b":
+				nt.Bold = true
+			case "i":
+				nt.Italic = true
+			case "s":
+				nt.Strikethrough = true
+			case "u":
+				nt.Underline = true
+			}
+			stack = append(stack, nt)
+		case xml.CharData:
+			nt := stack[len(stack)-1]
+			nt.Data = string(t)
+			td = append(td, nt)
+		case xml.EndElement:
+			stack = stack[:len(stack)-1]
+		}
+	}
+	return td, nil
 }
 
 type tag struct {
