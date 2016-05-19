@@ -40,7 +40,7 @@ func (t TextData) String() string {
 }
 
 type Text struct {
-	FontColor, ForeColor, BackColor        color.Color
+	ForeColor, BackColor                   color.Color
 	Size, LetterSpacing, Rise              float64
 	Bold, Italic, Underline, Strikethrough bool
 	Font, Data                             string
@@ -118,9 +118,40 @@ func parseTextParasite(data []byte) (TextData, error) {
 					case "font":
 						nt.Font = a.Value
 					case "foreground":
+						if len(a.Value) == 7 && a.Value[0] == '#' {
+							n, err := strconv.ParseUint(a.Value[1:], 16, 32)
+							if err != nil {
+								return nil, err
+							}
+							nt.ForeColor = color.RGBA{n >> 16, (n >> 8) & 255, n & 255, 255}
+						} else if len(a.Value) == 4 && a.Value[0] == '#' {
+							n, err := strconv.ParseUint(a.Value[1:], 16, 32)
+							if err != nil {
+								return nil, err
+							}
+							r := (n >> 4) && 240
+							r |= r >> 4
+							g := n & 240
+							g |= g >> 4
+							b := n & 15
+							b |= b << 4
+							nt.ForeColor = color.RGBA{r, g, b, 255}
+						}
 					case "size":
+						nt.Size, err = strconv.ParseFloat(a.Value, 64)
+						if err != nil {
+							return nil, err
+						}
 					case "letter_spacing":
+						nt.LetterSpacing, err = strconv.ParseFloat(a.Value, 64)
+						if err != nil {
+							return nil, err
+						}
 					case "rise":
+						nt.Rise, err = strconv.ParseFloat(a.Value, 64)
+						if err != nil {
+							return nil, err
+						}
 					}
 				}
 			case "b":
