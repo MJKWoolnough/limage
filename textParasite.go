@@ -112,7 +112,7 @@ func parseTextParasite(data []byte) (TextData, error) {
 		switch t := t.(type) {
 		case xml.StartElement:
 			nt := stack[len(stack)-1]
-			switch t.Name.Space {
+			switch t.Name.Local {
 			case "markup":
 			case "span":
 				for _, a := range t.Attr {
