@@ -1,8 +1,17 @@
 package xcf
 
-import "testing"
+import (
+	"image/color"
+	"testing"
+)
 
 func (t Text) Equal(u Text) bool {
+	if u.ForeColor == nil {
+		u.ForeColor = color.Gray{}
+	}
+	if u.BackColor == nil {
+		u.BackColor = color.Alpha{}
+	}
 	r1, g1, b1, a1 := t.BackColor.RGBA()
 	r2, g2, b2, a2 := u.BackColor.RGBA()
 	r3, g3, b3, a3 := t.ForeColor.RGBA()
