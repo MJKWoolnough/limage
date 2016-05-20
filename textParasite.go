@@ -86,7 +86,7 @@ func parseTextParasite(data []byte) (TextData, error) {
 		case "base-direction":
 		case "color":
 			if len(t.values) == 1 {
-				defaultText.FontColor, _ = t.values[0].(color.Color)
+				defaultText.ForeColor, _ = t.values[0].(color.Color)
 			}
 		case "justify":
 			//		case "box-mode":
@@ -123,19 +123,19 @@ func parseTextParasite(data []byte) (TextData, error) {
 							if err != nil {
 								return nil, err
 							}
-							nt.ForeColor = color.RGBA{n >> 16, (n >> 8) & 255, n & 255, 255}
+							nt.ForeColor = color.RGBA{uint8(n >> 16), uint8((n >> 8) & 255), uint8(n & 255), 255}
 						} else if len(a.Value) == 4 && a.Value[0] == '#' {
 							n, err := strconv.ParseUint(a.Value[1:], 16, 32)
 							if err != nil {
 								return nil, err
 							}
-							r := (n >> 4) && 240
+							r := (n >> 4) & 240
 							r |= r >> 4
 							g := n & 240
 							g |= g >> 4
 							b := n & 15
 							b |= b << 4
-							nt.ForeColor = color.RGBA{r, g, b, 255}
+							nt.ForeColor = color.RGBA{uint8(r), uint8(g), uint8(b), 255}
 						}
 					case "size":
 						nt.Size, err = strconv.ParseFloat(a.Value, 64)
