@@ -56,8 +56,8 @@ func TestParseTextParasite(t *testing.T) {
 				continue
 			}
 			for m := range o {
-				if !test.output[m].Equal(o[m]) {
-					t.Errorf("test %d: expecting %v\ngot: %v", n+1, test.output, o)
+				if !o[m].Equal(test.output[m]) {
+					t.Errorf("test %d: expecting %v\ngot: %v", n+1, []Text(test.output), []Text(o))
 					break
 				}
 			}
