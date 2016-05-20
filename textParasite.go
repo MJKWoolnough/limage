@@ -54,6 +54,8 @@ func parseTextParasite(data []byte) (TextData, error) {
 		markup      string
 		defaultText Text
 	)
+	defaultText.BackColor = color.Alpha{}
+	defaultText.ForeColor = color.Gray{}
 	for {
 		t, err := readTag(&p)
 		if err != nil {
