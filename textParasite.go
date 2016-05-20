@@ -243,6 +243,9 @@ func readTag(p *parser.Parser) (tag, error) {
 
 func openTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	t.AcceptRun(whitespace)
+	if t.Peek() == -1 {
+		return t.Done()
+	}
 	if !t.Accept(open) {
 		t.Err = ErrInvalidLayout
 		return t.Error()
