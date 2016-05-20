@@ -49,6 +49,14 @@ func TestParseTextParasite(t *testing.T) {
 			},
 			nil,
 		},
+		{
+			[]byte("(markup \"<markup>Hello, <b>World</b></markup>\")"),
+			TextData{
+				{Data: "Hello, "},
+				{Data: "World", Bold: true},
+			},
+			nil,
+		},
 	}
 
 	for n, test := range tests {
