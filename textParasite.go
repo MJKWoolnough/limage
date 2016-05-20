@@ -181,12 +181,15 @@ type tag struct {
 }
 
 func readTag(p *parser.Parser) (tag, error) {
+	if p.Accept(parser.TokenDone) {
+		return tag{}, io.EOF
+	}
 	if !p.Accept(tokenOpen) {
-		return tag{}, ErrInvalidLayout
+		return tag{}, ErrNoOpen
 	}
 	p.Get()
 	if !p.Accept(tokenName) {
-		return tag{}, ErrInvalidLayout
+		return tag{}, ErrNoName
 	}
 	nt := p.Get()
 	var tg tag
@@ -207,6 +210,7 @@ func readTag(p *parser.Parser) (tag, error) {
 		}
 		switch tt {
 		case tokenClose:
+			p.TokeniserState(openTK)
 			p.Accept(tokenClose)
 			p.Get()
 			return tg, nil
@@ -331,5 +335,7 @@ func quotedString(t *parser.Tokeniser) string {
 
 // Errors
 var (
+	ErrNoOpen        = errors.New("didn't receive Open token")
+	ErrNoName        = errors.New("didn't receive Name token")
 	ErrInvalidLayout = errors.New("invalid layout")
 )
