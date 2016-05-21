@@ -57,6 +57,18 @@ func TestParseTextParasite(t *testing.T) {
 			},
 			nil,
 		},
+		{
+			[]byte("(markup \"<markup><i>H<b>e</b>l<u>l</u></i>o, <b>World</b></markup>\")\n(hinting true)"),
+			TextData{
+				{Data: "H", Italic: true},
+				{Data: "e", Italic: true, Bold: true},
+				{Data: "l", Italic: true},
+				{Data: "l", Italic: true, Underline: true},
+				{Data: "o, "},
+				{Data: "World", Bold: true},
+			},
+			nil,
+		},
 	}
 
 	for n, test := range tests {
