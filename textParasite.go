@@ -212,12 +212,12 @@ func readTag(p *parser.Parser) (tag, error) {
 		}
 		switch tt {
 		case tokenClose:
-			p.TokeniserState(openTK)
 			p.Accept(tokenClose)
 			p.Get()
 			return tg, nil
 		case tokenOpen:
 			ttg, err := readTag(p)
+			p.TokeniserState(valueTK)
 			if err != nil {
 				return tag{}, err
 			}
@@ -245,7 +245,8 @@ func readTag(p *parser.Parser) (tag, error) {
 
 func openTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	t.AcceptRun(whitespace)
-	if t.Peek() == -1 {
+	switch t.Peek() {
+	case -1, 0:
 		return t.Done()
 	}
 	if !t.Accept(open) {
@@ -263,7 +264,7 @@ func closeTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	t.Get()
 	return parser.Token{
 		Type: tokenClose,
-	}, valueTK
+	}, openTK
 }
 
 func nameTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
