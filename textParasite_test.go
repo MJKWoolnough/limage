@@ -69,6 +69,13 @@ func TestParseTextParasite(t *testing.T) {
 			},
 			nil,
 		},
+		{
+			[]byte("(markup \"<markup>Hello, World</markup>\")\n(color (color-rgb 255 0 0))"),
+			TextData{
+				{Data: "Hello, World", ForeColor: color.RGBA{255, 0, 0, 255}},
+			},
+			nil,
+		},
 	}
 
 	for n, test := range tests {
