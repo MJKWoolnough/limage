@@ -285,6 +285,9 @@ func valueTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	c := t.Peek()
 	if c == 0 {
 		return t.Done()
+	} else if c < 0 {
+		t.Err = ErrInvalidLayout
+		return t.Error()
 	}
 	switch string(c) {
 	case open:
