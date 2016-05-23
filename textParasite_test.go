@@ -38,19 +38,19 @@ func (t Text) Equal(u Text) bool {
 
 func TestParseTextParasite(t *testing.T) {
 	tests := []struct {
-		input  []byte
+		input  string
 		output TextData
 		err    error
 	}{
 		{
-			[]byte("(markup \"<markup>Hello, World</markup>\")"),
+			"(markup \"<markup>Hello, World</markup>\")",
 			TextData{
 				{Data: "Hello, World"},
 			},
 			nil,
 		},
 		{
-			[]byte("(markup \"<markup>Hello, <b>World</b></markup>\")"),
+			"(markup \"<markup>Hello, <b>World</b></markup>\")",
 			TextData{
 				{Data: "Hello, "},
 				{Data: "World", Bold: true},
@@ -58,7 +58,7 @@ func TestParseTextParasite(t *testing.T) {
 			nil,
 		},
 		{
-			[]byte("(markup \"<markup><i>H<b>e</b>l<u>l</u></i>o, <b>World</b></markup>\")\n(hinting true)"),
+			"(markup \"<markup><i>H<b>e</b>l<u>l</u></i>o, <b>World</b></markup>\")\n(hinting true)",
 			TextData{
 				{Data: "H", Italic: true},
 				{Data: "e", Italic: true, Bold: true},
@@ -70,7 +70,7 @@ func TestParseTextParasite(t *testing.T) {
 			nil,
 		},
 		{
-			[]byte("(markup \"<markup>Hello, World</markup>\")\n(color (color-rgb 255 0 0))"),
+			"(markup \"<markup>Hello, World</markup>\")\n(color (color-rgb 255 0 0))",
 			TextData{
 				{Data: "Hello, World", ForeColor: color.RGBA{255, 0, 0, 255}},
 			},

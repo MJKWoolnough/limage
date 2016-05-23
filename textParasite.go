@@ -47,8 +47,8 @@ type Text struct {
 	FontUnit                               uint8
 }
 
-func parseTextParasite(data []byte) (TextData, error) {
-	p := parser.New(parser.NewByteTokeniser(data))
+func parseTextParasite(data string) (TextData, error) {
+	p := parser.New(parser.NewStringTokeniser(data))
 	p.TokeniserState(openTK)
 	var (
 		markup      string

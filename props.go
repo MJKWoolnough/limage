@@ -66,7 +66,7 @@ func (d *Decoder) readOpacity() color.Alpha {
 type parasite struct {
 	name  string
 	flags uint32
-	data  []byte
+	data  string
 }
 
 func (d *Decoder) readParasites(length uint32) []parasite {
@@ -77,9 +77,7 @@ func (d *Decoder) readParasites(length uint32) []parasite {
 		d.r.Count = 0
 		name := d.r.ReadString()
 		flags := d.r.ReadUint32()
-		pplength := d.r.ReadUint32()
-		data := make([]byte, pplength)
-		d.r.Read(data)
+		data := d.r.ReadString()
 		ps = append(ps, parasite{
 			name:  name,
 			flags: flags,
