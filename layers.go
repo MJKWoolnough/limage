@@ -29,6 +29,7 @@ func (l *LayerGroup) AsGroup() *LayerGroup {
 type LayerImage struct {
 	layer
 	alpha bool
+	image.Image
 }
 
 func (LayerImage) IsImage() bool {
@@ -178,34 +179,32 @@ Props:
 		}
 	}
 	r := image.Rect(0, 0, int(l.Width), int(l.Height))
-	alpha := true
-	switch typ {
+	alpha := typ&1 == 1
+	var im image.Image
+	if d.props.baseType != typ>>1 {
+		//incorrect type
+	}
+	switch typ >> 1 {
 	case 0:
 		//RGB
-		alpha = false
-		fallthrough
+		im = image.NewRGBA(r)
 	case 1:
-		//RGBA
-		image.NewRGBA(r)
-	case 2:
 		//Y
-		alpha = false
-		fallthrough
-	case 3:
-		//YA
-		image.NewGray(r)
-	case 4:
-		//I
-		alpha = false
-		image.NewPaletted(r, d.props.colours)
-	case 5:
-		//IA
-		NewPalettedAlpha(r, d.props.colours)
+		im = image.NewGray(r)
+	case 2:
+		//Indexed
+		if alpha {
+			im = NewPalettedAlpha(r, d.props.colours)
+		} else {
+			im = image.NewPaletted(r, d.props.colours)
+		}
 	default:
 		d.r.Err = ErrInvalidState
 		return nil
 	}
+
 	return &LayerImage{
 		layer: l,
+		Image: im,
 	}
 }
