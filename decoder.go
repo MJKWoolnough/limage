@@ -186,7 +186,7 @@ func (d *Decoder) readTile(i draw.Image, alpha bool) {
 	}
 }
 
-func (d *Decoder) readColor(reader byteReader, alpha bool) color.Color {
+func (d *Decoder) readColor(reader byteReader, alpha bool) color.NGBA {
 	var (
 		r, g, b uint8
 		a       uint8 = 255
@@ -213,7 +213,7 @@ func (d *Decoder) readColor(reader byteReader, alpha bool) color.Color {
 	if alpha {
 		a = reader.ReadByte()
 	}
-	return color.RGBA{
+	return color.NRGBA{
 		R: r,
 		G: g,
 		B: b,
