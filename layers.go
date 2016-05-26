@@ -179,12 +179,15 @@ Props:
 			TextData: t,
 		}
 	}
-	r := image.Rect(0, 0, int(l.Width), int(l.Height))
+	d.r.Seek(hptr, os.SEEK_SET)
+	h := d.readHierarchy()
 	alpha := typ&1 == 1
 	typ = typ >> 1
-	if d.props.baseType != typ {
-		//incorrect type
+	if h.bpp != typ || h.width != l.Width || h.height != l.Height || d.props.baseType != typ {
+		d.r.Err = ErrInconsistantData
+		return nil
 	}
+	r := image.Rect(0, 0, int(l.Width), int(l.Height))
 	var im interface {
 		SubImage(r Rectangle) image.Image
 	}
@@ -216,11 +219,13 @@ Props:
 			if mx > int(l.Width) {
 				mx = l.Width
 			}
-			ptr := d.r.ReadUint32()
-			pos, _ := d.r.Seek(0, os.SEEK_SET)
-			d.r.Seek(int64(ptr), os.SEEK_SET)
+			if len(h.ptrs) == 0 {
+				d.r.Err = ErrInconsistantData
+				return nil
+			}
+			d.r.Seek(int64(h.ptrs[0]), os.SEEK_SET)
+			h.ptrs = h.ptrs[1:]
 			d.readTile(im.SubImage(image.Rect(x, y, mx, my)).(draw.Image), alpha)
-			d.r.Seek(pos, os.SEEK_SET)
 		}
 	}
 	return &LayerImage{
