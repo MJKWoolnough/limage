@@ -158,7 +158,9 @@ func (d *Decoder) readHierarchy() hierarchy {
 	d.r.Seek(int64(lptr), os.SEEK_SET)
 	l := d.readLevel()
 	if l.width != h.width || l.height != h.height {
-		d.r.Err = ErrInconsistantData
+		if d.r.Err == nil {
+			d.r.Err = ErrInconsistantData
+		}
 		return h
 	}
 	h.ptrs = l.ptrs
