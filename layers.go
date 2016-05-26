@@ -180,11 +180,14 @@ Props:
 	}
 	r := image.Rect(0, 0, int(l.Width), int(l.Height))
 	alpha := typ&1 == 1
-	var im image.Image
-	if d.props.baseType != typ>>1 {
+	typ = typ >> 1
+	if d.props.baseType != typ {
 		//incorrect type
 	}
-	switch typ >> 1 {
+	var im interface {
+		SubImage(r Rectangle) image.Image
+	}
+	switch typ {
 	case 0:
 		//RGB
 		im = image.NewRGBA(r)
