@@ -3,6 +3,7 @@ package xcf
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"os"
 )
 
@@ -205,7 +206,23 @@ Props:
 		d.r.Err = ErrInvalidState
 		return nil
 	}
-
+	for y := 0; y <= int(l.Height); y += 64 {
+		my := y + 64
+		if my > int(l.Height) {
+			my = l.Height
+		}
+		for x := 0; x <= int(l.Width); x += 64 {
+			mx := x + 64
+			if mx > int(l.Width) {
+				mx = l.Width
+			}
+			ptr := d.r.ReadUint32()
+			pos, _ := d.r.Seek(0, os.SEEK_SET)
+			d.r.Seek(int64(ptr), os.SEEK_SET)
+			d.readTile(im.SubImage(image.Rect(x, y, mx, my)).(draw.Image), alpha)
+			d.r.Seek(pos, os.SEEK_SET)
+		}
+	}
 	return &LayerImage{
 		layer: l,
 		Image: im,
