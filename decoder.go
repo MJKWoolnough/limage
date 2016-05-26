@@ -25,7 +25,6 @@ type props struct {
 
 type Decoder struct {
 	r reader
-	s io.Seeker
 	props
 }
 
@@ -101,7 +100,7 @@ Props:
 		case propVectors:
 			d.vectors = d.readVectors()
 		default:
-			d.s.Seek(int64(propLength), os.SEEK_CUR)
+			d.r.Seek(int64(propLength), os.SEEK_CUR)
 		}
 	}
 	// read layer pointers
