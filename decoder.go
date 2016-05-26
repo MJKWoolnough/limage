@@ -139,34 +139,49 @@ Props:
 	return i, d.r.Err
 }
 
-type hierarchy struct{}
-
-func (d *Decoder) readHierarchy() hierarchy {
-	width := d.r.ReadUint32()
-	height := d.r.ReadUint32()
-	bpp := d.r.ReadUint32()
-	lptr := d.r.ReadUint32()
-	_, _, _, _ = width, height, bpp, lptr
-	for {
-		if d.r.ReadUint32() == 0 {
-			break
-		}
-	}
-	return hierarchy{}
+type hierarchy struct {
+	width, height, bpp uint32
+	ptrs               []uint32
 }
 
-type level struct{}
-
-func (d *Decoder) readLevel() level {
-	width := d.r.ReadUint32()
-	height := d.r.ReadUint32()
-	_, _ = width, height
+func (d *Decoder) readHierarchy() hierarchy {
+	var h hierarchy
+	h.width = d.r.ReadUint32()
+	h.height = d.r.ReadUint32()
+	h.bpp = d.r.ReadUint32()
+	lptr := d.r.ReadUint32()
 	for {
-		if d.r.ReadUint32() == 0 {
+		if d.r.ReadUint32() == 0 { //dummy
 			break
 		}
 	}
-	return level{}
+	d.r.Seek(int64(lptr), os.SEEK_SET)
+	l := d.readLevel()
+	if l.width != h.width || l.height != h.height {
+		d.r.Err = ErrInconsistantData
+		return h
+	}
+	h.ptrs = l.ptrs
+	return h
+}
+
+type level struct {
+	width, height uint32
+	ptrs          []uint32
+}
+
+func (d *Decoder) readLevel() level {
+	var l level
+	l.width = d.r.ReadUint32()
+	l.height = d.r.ReadUint32()
+	for {
+		ptr := d.r.ReadUint32()
+		if ptr == 0 {
+			break
+		}
+		d.ptrs = append(d.ptrs, ptr)
+	}
+	return l
 }
 
 func (d *Decoder) readTile(i draw.Image, alpha bool) {
@@ -229,4 +244,5 @@ var (
 	ErrInvalidHeader      = errors.New("invalid xcf header")
 	ErrUnsupportedVersion = errors.New("unsupported version")
 	ErrInvalidBaseType    = errors.New("invalid basetype")
+	ErrInconsistantData   = errors.New("unequal values that should be identical")
 )
