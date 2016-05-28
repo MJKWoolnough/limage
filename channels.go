@@ -52,7 +52,7 @@ Props:
 			l := d.readBool()
 			_ = l
 		default:
-			d.s.Seek(int64(propLength), os.SEEK_CUR)
+			d.r.Seek(int64(propLength), os.SEEK_CUR)
 		}
 	}
 	hptr := d.r.ReadUint32() //

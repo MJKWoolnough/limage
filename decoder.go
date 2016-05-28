@@ -29,7 +29,7 @@ type Decoder struct {
 }
 
 func NewDecoder(r io.ReadSeeker) *Decoder {
-	return &Decoder{r: newReader(r), s: r}
+	return &Decoder{r: newReader(r)}
 }
 
 type baseType uint8
@@ -181,7 +181,7 @@ func (d *Decoder) readLevel() level {
 		if ptr == 0 {
 			break
 		}
-		d.ptrs = append(d.ptrs, ptr)
+		l.ptrs = append(l.ptrs, ptr)
 	}
 	return l
 }
@@ -202,7 +202,7 @@ func (d *Decoder) readTile(i draw.Image, alpha bool) {
 	}
 }
 
-func (d *Decoder) readColor(reader byteReader, alpha bool) color.NGBA {
+func (d *Decoder) readColor(reader byteReader, alpha bool) color.NRGBA {
 	var (
 		r, g, b uint8
 		a       uint8 = 255

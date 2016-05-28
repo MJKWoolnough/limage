@@ -149,7 +149,7 @@ Props:
 			g := d.r.ReadUint32()
 			_ = g
 		default:
-			d.s.Seek(int64(propLength), os.SEEK_CUR)
+			d.r.Seek(int64(propLength), os.SEEK_CUR)
 		}
 	}
 
@@ -179,17 +179,17 @@ Props:
 			TextData: t,
 		}
 	}
-	d.r.Seek(hptr, os.SEEK_SET)
+	d.r.Seek(int64(hptr), os.SEEK_SET)
 	h := d.readHierarchy()
 	alpha := typ&1 == 1
 	typ = typ >> 1
-	if h.bpp != typ || h.width != l.Width || h.height != l.Height || d.props.baseType != typ {
+	if h.bpp != typ || h.width != l.Width || h.height != l.Height || d.props.baseType != baseType(typ) {
 		d.r.Err = ErrInconsistantData
 		return nil
 	}
 	r := image.Rect(0, 0, int(l.Width), int(l.Height))
 	var im interface {
-		SubImage(r Rectangle) image.Image
+		SubImage(r image.Rectangle) image.Image
 	}
 	switch typ {
 	case 0:
@@ -212,12 +212,12 @@ Props:
 	for y := 0; y <= int(l.Height); y += 64 {
 		my := y + 64
 		if my > int(l.Height) {
-			my = l.Height
+			my = int(l.Height)
 		}
 		for x := 0; x <= int(l.Width); x += 64 {
 			mx := x + 64
 			if mx > int(l.Width) {
-				mx = l.Width
+				mx = int(l.Width)
 			}
 			if len(h.ptrs) == 0 {
 				d.r.Err = ErrInconsistantData
@@ -230,6 +230,6 @@ Props:
 	}
 	return &LayerImage{
 		layer: l,
-		Image: im,
+		Image: im.(image.Image),
 	}
 }
