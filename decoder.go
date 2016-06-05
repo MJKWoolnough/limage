@@ -3,7 +3,9 @@ package xcf
 import (
 	"errors"
 	"image"
+	"image/color"
 	"io"
+	"os"
 )
 
 const (
@@ -14,9 +16,41 @@ const (
 	fileVersion3 = "v003"
 )
 
+const (
+	baseRGB     = 0
+	baseGrey    = 1
+	baseIndexed = 2
+)
+
 type decoder struct {
 	reader
-	width, height, baseType uint32
+	width, height, baseType      uint32
+	linked, lockContent, visible bool
+	opacity                      uint8
+	parasites                    parasites
+	tattoo                       uint32
+	palette                      color.Palette
+	compression                  bool
+	guides                       []guide
+	paths                        paths
+	hres, vres                   float32
+	samplePoints                 []samplePoint
+	unit                         uint32
+	userUnit                     struct {
+		factor                           float32
+		digits                           uint32
+		id, symbol, abbrev, sname, pname string
+	}
+	vectors vectors
+}
+
+type guide struct {
+	coord int32
+	hv    bool
+}
+
+type samplePoint struct {
+	x, y uint32
 }
 
 func Decoder(r io.ReadSeeker) (image.Image, error) {
@@ -43,13 +77,117 @@ func Decoder(r io.ReadSeeker) (image.Image, error) {
 	d.width = d.ReadUint32()
 	d.height = d.ReadUint32()
 	d.baseType = d.ReadUint32()
+	d.parasites = make(map[string][]byte)
+
+	// read image properties
+PropertyLoop:
+	for {
+		typ := d.ReadUint32()
+		plength := d.ReadUint32()
+		switch typ {
+		case 0:
+			if plength != 0 {
+				return nil, ErrInvalidProperties
+			}
+			break PropertyLoop
+
+		//general properties
+		case propLinked:
+			d.linked = d.ReadBoolProperty()
+		case propLockContent:
+			d.lockContent = d.ReadBoolProperty()
+		case propOpacity:
+			o := d.ReadUint32()
+			if o > 255 {
+				return nil, ErrInvalidOpacity
+			}
+			d.opacity = uint8(o)
+		case propParasites:
+			d.parasites = d.ReadParasites(plength)
+		case propTattoo:
+			d.tattoo = d.ReadUint32()
+		case propVisible:
+			d.visible = d.ReadBoolProperty()
+
+		// image properties
+		case propColorMap:
+			if d.baseType != baseIndexed {
+				d.Seek(int64(plength), os.SEEK_CUR) // skip
+			}
+			numColours := d.ReadUint32()
+			d.palette = make(color.Palette, numColours)
+			for i := uint32(0); i < numColours; i++ {
+				r := d.ReadUint8()
+				g := d.ReadUint8()
+				b := d.ReadUint8()
+				d.palette[i] = color.RGBA{
+					R: r,
+					G: g,
+					B: b,
+					A: 255,
+				}
+			}
+		case propCompression:
+			d.compression = d.ReadBoolProperty()
+		case propGuides:
+			ng := plength / 5
+			if ng*5 != plength {
+				return nil, ErrInvalidGuideLength
+			}
+			d.guides = make([]guide, ng)
+			for n := range d.guides {
+				d.guides[n].coord = d.ReadInt32()
+				d.guides[n].hv = d.ReadBoolProperty()
+			}
+		case propPaths:
+			d.paths = d.ReadPaths()
+		case propResolution:
+			d.hres = d.ReadFloat32()
+			d.vres = d.ReadFloat32()
+		case propSamplePoints:
+			if plength&1 == 1 {
+				return nil, ErrInvalidSampleLength
+			}
+			d.samplePoints = make([]samplePoint, plength>>1)
+			for i := uint32(0); i < plength>>1; i++ {
+				d.samplePoints[i].x = d.ReadUint32()
+				d.samplePoints[i].y = d.ReadUint32()
+			}
+		case propUnit:
+			d.unit = d.ReadUint32()
+			if d.unit < 0 || d.unit > 4 {
+				return nil, ErrInvalidUnit
+			}
+		case propUserUnit:
+			d.userUnit.factor = d.ReadFloat32()
+			d.userUnit.digits = d.ReadUint32()
+			d.userUnit.id = d.ReadString()
+			d.userUnit.symbol = d.ReadString()
+			d.userUnit.abbrev = d.ReadString()
+			d.userUnit.sname = d.ReadString()
+			d.userUnit.pname = d.ReadString()
+		case propVectors:
+			d.vectors = d.ReadVectors()
+		default:
+			d.Seek(int64(plength), os.SEEK_CUR)
+		}
+	}
+
+	if d.Err != nil {
+		return nil, d.Err
+	}
 
 	return nil, nil
 }
 
 // Errors
 var (
-	ErrInvalidFileTypeID  = errors.New("invalid file type identification")
-	ErrUnsupportedVersion = errors.New("unsupported file version")
-	ErrInvalidHeader      = errors.New("invalid header")
+	ErrInvalidFileTypeID   = errors.New("invalid file type identification")
+	ErrUnsupportedVersion  = errors.New("unsupported file version")
+	ErrInvalidHeader       = errors.New("invalid header")
+	ErrInvalidProperties   = errors.New("invalid property list")
+	ErrInvalidOpacity      = errors.New("opacity not in valid range")
+	ErrInvalidGuideLength  = errors.New("invalid guide length")
+	ErrInvalidUnit         = errors.New("invalid unit")
+	ErrInvalidSampleLength = errors.New("invalid sample points length")
 )
