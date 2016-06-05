@@ -1,5 +1,7 @@
 package xcf
 
+import "errors"
+
 const (
 	propEnd               = 0
 	propColormap          = 1
@@ -35,4 +37,21 @@ const (
 	propGroupItemFlags    = 31
 	propLockPosition      = 32
 	propFloatOpacity      = 33
+)
+
+func (d *decoder) ReadBoolProperty() bool {
+	switch d.ReadUint32() {
+	case 0:
+		return false
+	case 1:
+		return true
+	default:
+		d.Err = ErrInvalidBoolean
+		return false
+	}
+}
+
+// Errors
+var (
+	ErrInvalidBoolean = errors.New("invalid boolean value")
 )
