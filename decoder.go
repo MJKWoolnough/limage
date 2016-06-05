@@ -30,7 +30,7 @@ type decoder struct {
 	parasites                    parasites
 	tattoo                       uint32
 	palette                      color.Palette
-	compression                  bool
+	compression                  uint8
 	guides                       []guide
 	paths                        paths
 	hres, vres                   float32
@@ -41,7 +41,9 @@ type decoder struct {
 		digits                           uint32
 		id, symbol, abbrev, sname, pname string
 	}
-	vectors vectors
+	vectors  vectors
+	layers   []layer
+	channels []channel
 }
 
 type guide struct {
@@ -128,7 +130,10 @@ PropertyLoop:
 				}
 			}
 		case propCompression:
-			d.compression = d.ReadBoolProperty()
+			d.compression = d.ReadUint8()
+			if d.compression > 1 {
+				return nil, ErrUnknownCompression
+			}
 		case propGuides:
 			ng := plength / 5
 			if ng*5 != plength {
@@ -176,6 +181,34 @@ PropertyLoop:
 	if d.Err != nil {
 		return nil, d.Err
 	}
+	layerptrs := make([]uint32, 0, 32)
+	for {
+		lptr := d.ReadUint32()
+		if lptr == 0 {
+			break
+		}
+		layerptrs = append(layerptrs, lptr)
+	}
+	channelptrs := make([]uint32, 0, 32)
+	for {
+		cptr := d.ReadUint32()
+		if cptr == 0 {
+			break
+		}
+		channelptrs = append(channelptrs, cptr)
+	}
+
+	d.layers = make([]layer, len(layerptrs))
+
+	for i := range d.layers {
+		d.layers[i] = d.ReadLayer()
+	}
+
+	d.channels = make([]channel, len(channelptrs))
+
+	for i := range d.channels {
+		d.channels[i] = d.ReadChannel()
+	}
 
 	return nil, nil
 }
@@ -190,4 +223,5 @@ var (
 	ErrInvalidGuideLength  = errors.New("invalid guide length")
 	ErrInvalidUnit         = errors.New("invalid unit")
 	ErrInvalidSampleLength = errors.New("invalid sample points length")
+	ErrUnknownCompression  = errors.New("unknown compressio method")
 )
