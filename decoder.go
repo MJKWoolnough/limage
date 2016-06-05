@@ -201,12 +201,14 @@ PropertyLoop:
 	d.layers = make([]layer, len(layerptrs))
 
 	for i := range d.layers {
+		d.Seek(int64(layerptrs[i]))
 		d.layers[i] = d.ReadLayer()
 	}
 
 	d.channels = make([]channel, len(channelptrs))
 
 	for i := range d.channels {
+		d.Seek(int64(channelptrs[i]))
 		d.channels[i] = d.ReadChannel()
 	}
 
