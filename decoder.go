@@ -5,6 +5,6 @@ import (
 	"io"
 )
 
-func Decoder(r io.Reader) (image.Image, error) {
+func Decoder(r io.ReadSeeker) (image.Image, error) {
 	return nil, nil
 }
