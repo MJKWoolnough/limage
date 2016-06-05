@@ -1,0 +1,94 @@
+package xcf
+
+import "errors"
+
+type vectors struct {
+	aIndex uint32
+	paths  []path
+}
+
+type path struct {
+	name            string
+	tattoo          uint32
+	visible, linked bool
+	parasites
+	strokes []stroke
+}
+
+type stroke struct {
+	closed bool
+	points []point
+}
+
+type point struct {
+	control                             bool
+	x, y, pressure, xtilt, ytilt, wheel float32
+}
+
+func (d *decoder) ReadVectors() vectors {
+	v := d.ReadUint32()
+	if v != 1 {
+		d.Err = ErrUnknownVectorVersion
+		return vectors{}
+	}
+	var vs vectors
+	vs.aIndex = d.ReadUint32()
+	n := d.ReadUint32()
+	vs.paths = make([]path, n)
+	for i := uint32(0); i < n; i++ {
+		vs.paths[i].name = d.ReadString()
+		vs.paths[i].tattoo = d.ReadUint32()
+		vs.paths[i].visible = d.ReadBoolProperty()
+		vs.paths[i].linked = d.ReadBoolProperty()
+		m := d.ReadUint32()
+		k := d.ReadUint32()
+		vs.paths[n].parasites = make(parasites, m)
+		vs.paths[n].strokes = make([]stoke, k)
+		for j := uint32(0); j < m; j++ {
+			vs.paths[i].parasites[j] = d.ReadParasite()
+		}
+		for j := uint32(0); j < k; j++ {
+			b := d.ReadUint32()
+			if b != 1 {
+				d.Err = ErrUnknownStrokeType
+				return vs
+			}
+			vs.paths[i].strokes[j].closed = d.ReadBoolProperty()
+			nf := d.ReadUint32()
+			if nf < 2 || nf > 6 {
+				d.Err = ErrInvalidFloatsNumber
+				return vs
+			}
+			vs.paths[i].strokes[j].points = make([]point, np)
+			for ii := uint32(0); ii < np; ii++ {
+				vs.paths[i].strokes[j].points[ii].control = d.ReadBoolProperty()
+				vs.paths[i].strokes[j].points[ii].x = d.ReadFloat32()
+				vs.paths[i].strokes[j].points[ii].y = d.ReadFloat32()
+				vs.paths[i].strokes[j].points[ii].pressure = 1
+				vs.paths[i].strokes[j].points[ii].xtilt = 0.5
+				vs.paths[i].strokes[j].points[ii].ytilt = 0.5
+				vs.paths[i].strokes[j].points[ii].wheel = 0.5
+				if nf >= 3 {
+					vs.paths[i].strokes[j].points[ii].pressure = d.ReadFloat32()
+					if nf >= 4 {
+						vs.paths[i].strokes[j].points[ii].xtilt = d.ReadFloat32()
+						if nf >= 5 {
+							vs.paths[i].strokes[j].points[ii].ytilt = d.ReadFloat32()
+							if nf == 6 {
+								vs.paths[i].strokes[j].points[ii].wheel = d.ReadFloat32()
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return vs
+}
+
+// Errors
+var (
+	ErrUnknownVectorVersion = errors.New("unknown vector version")
+	ErrUnknownStrokeType    = errors.New("unknown stroke type")
+	ErrInvalidFloatsNumber  = errors.New("invalids number of floats")
+)
