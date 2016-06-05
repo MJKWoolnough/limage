@@ -40,6 +40,16 @@ func (d *decoder) ReadParasites(l uint32) parasites {
 	return ps
 }
 
+func (d *decoder) ReadParasite() parasite {
+	var p parasite
+	p.name = d.ReadString()
+	p.flags = d.ReadUint32()
+	pplength := d.ReadUint32()
+	p.data = make([]byte, pplength)
+	d.Read(p.data)
+	return p
+}
+
 // Errors
 var (
 	ErrInvalidParasites = errors.New("invalid parasites layout")
