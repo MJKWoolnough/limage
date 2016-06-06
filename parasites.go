@@ -30,7 +30,7 @@ func (d *decoder) ReadParasites(l uint32) parasites {
 		l -= 4                   // flags
 		l -= pplength            // len(data)
 		if l < 0 {
-			d.Err = ErrInvalidParasites
+			d.SetError(ErrInvalidParasites)
 			return nil
 		}
 		p.data = make([]byte, pplength)

@@ -34,19 +34,19 @@ func (d *decoder) ReadPaths() paths {
 		p.paths[i].closed = d.ReadBoolProperty()
 		if p.paths[i].closed {
 			if state != 4 {
-				d.Err = ErrInconsistantClosedState
+				d.SetError(ErrInconsistantClosedState)
 				return p
 			}
 		} else {
 			if state != 2 {
-				d.Err = ErrInconsistantClosedState
+				d.SetError(ErrInconsistantClosedState)
 				return p
 			}
 		}
 		np := d.ReadUint32()
 		v := d.ReadUint32()
 		if v < 1 || v > 3 {
-			d.Err = ErrUnknownPathsVersion
+			d.SetError(ErrUnknownPathsVersion)
 			return p
 		}
 		if v == 2 || v == 3 {

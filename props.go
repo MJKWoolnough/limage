@@ -46,7 +46,7 @@ func (d *decoder) ReadBoolProperty() bool {
 	case 1:
 		return true
 	default:
-		d.Err = ErrInvalidBoolean
+		d.SetError(ErrInvalidBoolean)
 		return false
 	}
 }

@@ -28,7 +28,7 @@ type point struct {
 func (d *decoder) ReadVectors() vectors {
 	v := d.ReadUint32()
 	if v != 1 {
-		d.Err = ErrUnknownVectorVersion
+		d.SetError(ErrUnknownVectorVersion)
 		return vectors{}
 	}
 	var vs vectors
@@ -50,13 +50,13 @@ func (d *decoder) ReadVectors() vectors {
 		for j := uint32(0); j < k; j++ {
 			b := d.ReadUint32()
 			if b != 1 {
-				d.Err = ErrUnknownStrokeType
+				d.SetError(ErrUnknownStrokeType)
 				return vs
 			}
 			vs.paths[i].strokes[j].closed = d.ReadBoolProperty()
 			nf := d.ReadUint32()
 			if nf < 2 || nf > 6 {
-				d.Err = ErrInvalidFloatsNumber
+				d.SetError(ErrInvalidFloatsNumber)
 				return vs
 			}
 			vs.paths[i].strokes[j].points = make([]point, np)
