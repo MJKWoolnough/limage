@@ -87,7 +87,7 @@ PropertyLoop:
 		typ := d.ReadUint32()
 		plength := d.ReadUint32()
 		switch typ {
-		case 0:
+		case propEnd:
 			if plength != 0 {
 				return nil, ErrInvalidProperties
 			}
