@@ -215,6 +215,12 @@ PropertyLoop:
 	return nil, nil
 }
 
+func (d *Decoder) SetError(err error) {
+	if d.Err == nil {
+		d.Err = err
+	}
+}
+
 // Errors
 var (
 	ErrInvalidFileTypeID   = errors.New("invalid file type identification")
