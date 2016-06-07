@@ -74,7 +74,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 	var (
 		im       image.Image
 		imReader interface {
-			ReadColour(uint32, uint32, colourReader)
+			ReadColour(int, int, colourReader)
 		}
 	)
 
@@ -84,27 +84,27 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 	case 0: // rgb
 		rgb := newRGB(r)
 		im = rgb
-		imReader = rgbImage{rgb}
+		imReader = rgbImageReader{rgb}
 	case 1: // rgba
 		rgba := image.NewRGBA(r)
 		im = rgba
-		imReader = rgbaImage{rgba}
+		imReader = rgbaImageReader{rgba}
 	case 2: // gray
 		g := image.NewGray(r)
 		im = g
-		imReader = greyImage{g}
+		imReader = greyImageReader{g}
 	case 3: // gray + alpha
 		ga := newGrayAlpha(r)
 		im = ga
-		imReader = greyAlphaImage{ga}
+		imReader = greyAlphaImageReader{ga}
 	case 4: // indexed
 		in := image.NewPaletted(r, d.palette)
 		im = in
-		imReader = indexedImage{in}
+		imReader = indexedImageReader{in}
 	case 5: // indexed + alpha
 		in := newPalettedAlpha(r, d.palette)
 		im = in
-		imReader = indexedAlphaImage{in}
+		imReader = indexedAlphaImageReader{in}
 	}
 
 	for y := uint32(0); y < height; y += 64 {
@@ -118,7 +118,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 			}
 			for j := y; j < y+64 && j < height; j++ {
 				for i := x; i < x+64 && i < width; i++ {
-					imReader.ReadColour(i, j, cr)
+					imReader.ReadColour(int(i), int(j), cr)
 				}
 			}
 		}
