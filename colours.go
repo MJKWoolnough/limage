@@ -3,12 +3,10 @@ package xcf
 import (
 	"image"
 	"image/color"
-	"io"
 )
 
 type colourReader interface {
 	ReadByte() byte
-	io.Seeker
 }
 
 type rgb struct {
@@ -148,6 +146,16 @@ func (g *grayAlphaImage) SetGrayAlpha(x, y int, ga grayAlpha) {
 
 func (g *grayAlphaImage) SubImage(r image.Rectangle) image.Image {
 
+}
+
+type grayAlphaImageReader struct {
+	*grayAlphaImage
+}
+
+func (g greyAlphaImageReader) ReadColour(x, y uint32, cr colourReader) {
+	y := cr.ReadByte()
+	a := cr.ReadByte()
+	g.SetGray(x, y, grayAlpha{y, a})
 }
 
 type palettedAlpha struct {
