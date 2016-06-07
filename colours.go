@@ -9,6 +9,41 @@ type colourReader interface {
 	ReadByte() byte
 }
 
+type rgbaImageReader struct {
+	*image.NRGBA
+}
+
+func (rgba rgbaImageReader) ReadColour(x, y int, cr colourReader) {
+	r := cr.ReadByte()
+	g := cr.ReadByte()
+	b := cr.ReadByte()
+	a := cr.ReadByte()
+	rgba.SetNRGBA(x, y, color.NRGBA{
+		R: r,
+		G: g,
+		B: b,
+		A: a,
+	})
+}
+
+type grayImageReader struct {
+	*image.Gray
+}
+
+func (g grayImageReader) ReadColour(x, y int, cr colourReader) {
+	yc := cr.ReadByte()
+	g.SetGray(x, y, color.Gray{yc})
+}
+
+type indexedImageReader struct {
+	*image.Paletted
+}
+
+func (p indexedImageReader) ReadColour(x, y, int, cr colourReader) {
+	i := cr.ReadByte()
+	p.SetColorIndex(x, y, i)
+}
+
 type rgb struct {
 	R, G, B uint8
 }
@@ -96,11 +131,11 @@ type rgbImageReader struct {
 	*rgb
 }
 
-func (r rgbImageReader) ReadColour(x, y uint32, cr colourReader) {
+func (rgb rgbImageReader) ReadColour(x, y int, cr colourReader) {
 	r := cr.ReadByte()
 	g := cr.ReadByte()
 	b := cr.ReadByte()
-	r.SetRGB(x, y, rgb{r, g, b})
+	rgb.SetRGB(x, y, rgb{r, g, b})
 }
 
 type grayAlpha struct {
@@ -152,7 +187,7 @@ type grayAlphaImageReader struct {
 	*grayAlphaImage
 }
 
-func (g greyAlphaImageReader) ReadColour(x, y uint32, cr colourReader) {
+func (g greyAlphaImageReader) ReadColour(x, y int, cr colourReader) {
 	y := cr.ReadByte()
 	a := cr.ReadByte()
 	g.SetGray(x, y, grayAlpha{y, a})
