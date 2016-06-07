@@ -2,6 +2,7 @@ package xcf
 
 import (
 	"image"
+	"image/color"
 	"math"
 	"os"
 )
@@ -124,4 +125,43 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		}
 	}
 	return im
+}
+
+type colourReader interface {
+	ReadByte() byte
+}
+
+type rgbaImageReader struct {
+	*image.NRGBA
+}
+
+func (rgba rgbaImageReader) ReadColour(x, y int, cr colourReader) {
+	r := cr.ReadByte()
+	g := cr.ReadByte()
+	b := cr.ReadByte()
+	a := cr.ReadByte()
+	rgba.SetNRGBA(x, y, color.NRGBA{
+		R: r,
+		G: g,
+		B: b,
+		A: a,
+	})
+}
+
+type grayImageReader struct {
+	*image.Gray
+}
+
+func (g grayImageReader) ReadColour(x, y int, cr colourReader) {
+	yc := cr.ReadByte()
+	g.SetGray(x, y, color.Gray{yc})
+}
+
+type indexedImageReader struct {
+	*image.Paletted
+}
+
+func (p indexedImageReader) ReadColour(x, y, int, cr colourReader) {
+	i := cr.ReadByte()
+	p.SetColorIndex(x, y, i)
 }
