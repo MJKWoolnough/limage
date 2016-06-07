@@ -48,7 +48,7 @@ func (r *rgbImage) At(x, y int) color.Color {
 }
 
 func (r *rgbImage) ColorModel() color.Model {
-	return rgbColourModel
+	return color.ModelFunc(rgbColourModel)
 }
 
 func (r *rgbImage) RGBAt(x, y int) rgb {
