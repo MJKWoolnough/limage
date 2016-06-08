@@ -9,7 +9,7 @@ type grayAlpha struct {
 	Y, A uint8
 }
 
-func (g grayAlpha) grayAlphaA() (r, g, b, a uint32) {
+func (g grayAlpha) RGBA() (r, g, b, a uint32) {
 	y := uint32(c.Y)
 	y |= y << 8
 	a := uint32(c.A)
