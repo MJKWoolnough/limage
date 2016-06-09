@@ -105,7 +105,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 	case 5: // indexed + alpha
 		in := newPalettedAlpha(r, d.palette)
 		im = in
-		imReader = indexedAlphaImageReader{in}
+		imReader = palettedAlphaReader{in}
 	}
 
 	for y := uint32(0); y < height; y += 64 {
