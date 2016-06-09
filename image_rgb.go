@@ -91,7 +91,7 @@ func (rgb *rgbImage) SubImage(r image.Rectangle) image.Image {
 		return &rgbImage{}
 	}
 	return &rgbImage{
-		Pix:    rgb.Pix[rgb.PixOffset(r.Min.X, r.Min.Y)],
+		Pix:    rgb.Pix[rgb.PixOffset(r.Min.X, r.Min.Y):],
 		Stride: rgb.Stride,
 		Rect:   r,
 	}

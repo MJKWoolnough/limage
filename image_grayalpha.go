@@ -88,7 +88,7 @@ func (g *grayAlphaImage) SubImage(r image.Rectangle) image.Image {
 		return &grayAlphaImage{}
 	}
 	return &grayAlphaImage{
-		Pix:    g.Pix[g.PixOffset(r.Min.X, r.Min.Y)],
+		Pix:    g.Pix[g.PixOffset(r.Min.X, r.Min.Y):],
 		Stride: g.Stride,
 		Rect:   r,
 	}
