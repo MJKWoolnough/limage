@@ -122,11 +122,10 @@ PropertyLoop:
 				r := d.ReadUint8()
 				g := d.ReadUint8()
 				b := d.ReadUint8()
-				d.palette[i] = color.RGBA{
+				d.palette[i] = rgb{
 					R: r,
 					G: g,
 					B: b,
-					A: 255,
 				}
 			}
 		case propCompression:
