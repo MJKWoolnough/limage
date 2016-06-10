@@ -51,14 +51,14 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		}
 	*/
 
-	d.Seek(int64(lptr))
+	d.Seek(int64(lptr), os.SEEK_SET)
 
 	w := d.ReadUint32()
 	h := d.ReadUint32()
 
 	if w != width || h != height {
 		d.SetError(ErrInconsistantData)
-		return l
+		return nil
 	}
 
 	tiles := make([]uint32, int(math.Ceil(float64(w)/64)*math.Ceil(float64(h)/64)))
@@ -69,7 +69,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 
 	if d.ReadUint32() != 0 {
 		d.SetError(ErrInconsistantData)
-		return l
+		return nil
 	}
 
 	var (
@@ -79,7 +79,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		}
 	)
 
-	r := image.Rect(0, 0, width, height)
+	r := image.Rect(0, 0, int(width), int(height))
 
 	switch mode {
 	case 0: // rgb
@@ -87,17 +87,17 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		im = rgb
 		imReader = rgbImageReader{rgb}
 	case 1: // rgba
-		rgba := image.NewRGBA(r)
+		rgba := image.NewNRGBA(r)
 		im = rgba
 		imReader = rgbaImageReader{rgba}
 	case 2: // gray
 		g := image.NewGray(r)
 		im = g
-		imReader = greyImageReader{g}
+		imReader = grayImageReader{g}
 	case 3: // gray + alpha
 		ga := newGrayAlpha(r)
 		im = ga
-		imReader = greyAlphaImageReader{ga}
+		imReader = grayAlphaImageReader{ga}
 	case 4: // indexed
 		in := image.NewPaletted(r, d.palette)
 		im = in
@@ -161,7 +161,7 @@ type indexedImageReader struct {
 	*image.Paletted
 }
 
-func (p indexedImageReader) ReadColour(x, y, int, cr colourReader) {
+func (p indexedImageReader) ReadColour(x, y int, cr colourReader) {
 	i := cr.ReadByte()
 	p.SetColorIndex(x, y, i)
 }

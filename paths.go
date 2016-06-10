@@ -60,10 +60,10 @@ func (d *decoder) ReadPaths() paths {
 			p.paths[i].points[j].control = d.ReadBoolProperty()
 			if v == 1 {
 				p.paths[i].points[j].x = float64(d.ReadInt32())
-				p.paths[i].points[j].z = float64(d.ReadInt32())
+				p.paths[i].points[j].y = float64(d.ReadInt32())
 			} else {
 				p.paths[i].points[j].x = float64(d.ReadFloat32())
-				p.paths[i].points[j].x = float64(d.ReadFloat32())
+				p.paths[i].points[j].y = float64(d.ReadFloat32())
 			}
 		}
 	}

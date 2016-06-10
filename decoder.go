@@ -60,7 +60,7 @@ func Decoder(r io.ReadSeeker) (image.Image, error) {
 
 	// check header
 
-	var header [14]byte
+	var header [15]byte
 	d.Read(header[:])
 	if d.Err != nil {
 		return nil, d.Err // wrap?
@@ -79,7 +79,6 @@ func Decoder(r io.ReadSeeker) (image.Image, error) {
 	d.width = d.ReadUint32()
 	d.height = d.ReadUint32()
 	d.baseType = d.ReadUint32()
-	d.parasites = make(map[string][]byte)
 
 	// read image properties
 PropertyLoop:
@@ -200,21 +199,21 @@ PropertyLoop:
 	d.layers = make([]layer, len(layerptrs))
 
 	for i := range d.layers {
-		d.Seek(int64(layerptrs[i]))
+		d.Seek(int64(layerptrs[i]), os.SEEK_SET)
 		d.layers[i] = d.ReadLayer()
 	}
 
 	d.channels = make([]channel, len(channelptrs))
 
 	for i := range d.channels {
-		d.Seek(int64(channelptrs[i]))
+		d.Seek(int64(channelptrs[i]), os.SEEK_SET)
 		d.channels[i] = d.ReadChannel()
 	}
 
 	return nil, nil
 }
 
-func (d *Decoder) SetError(err error) {
+func (d *decoder) SetError(err error) {
 	if d.Err == nil {
 		d.Err = err
 	}

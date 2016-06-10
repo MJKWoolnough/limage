@@ -26,9 +26,9 @@ func (d *decoder) ReadParasites(l uint32) parasites {
 		p.name = d.ReadString()
 		p.flags = d.ReadUint32()
 		pplength := d.ReadUint32()
-		l -= 4 + len(p.name) + 1 // length (uint32) + string([]byte) + \0 (byte)
-		l -= 4                   // flags
-		l -= pplength            // len(data)
+		l -= 4 + uint32(len(p.name)) + 1 // length (uint32) + string([]byte) + \0 (byte)
+		l -= 4                           // flags
+		l -= pplength                    // len(data)
 		if l < 0 {
 			d.SetError(ErrInvalidParasites)
 			return nil

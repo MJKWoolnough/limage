@@ -4,10 +4,10 @@ import "errors"
 
 type vectors struct {
 	aIndex uint32
-	paths  []path
+	paths  []vpath
 }
 
-type path struct {
+type vpath struct {
 	name            string
 	tattoo          uint32
 	visible, linked bool
@@ -34,7 +34,7 @@ func (d *decoder) ReadVectors() vectors {
 	var vs vectors
 	vs.aIndex = d.ReadUint32()
 	n := d.ReadUint32()
-	vs.paths = make([]path, n)
+	vs.paths = make([]vpath, n)
 	for i := uint32(0); i < n; i++ {
 		vs.paths[i].name = d.ReadString()
 		vs.paths[i].tattoo = d.ReadUint32()
@@ -43,7 +43,7 @@ func (d *decoder) ReadVectors() vectors {
 		m := d.ReadUint32()
 		k := d.ReadUint32()
 		vs.paths[n].parasites = make(parasites, m)
-		vs.paths[n].strokes = make([]stoke, k)
+		vs.paths[n].strokes = make([]stroke, k)
 		for j := uint32(0); j < m; j++ {
 			vs.paths[i].parasites[j] = d.ReadParasite()
 		}
@@ -59,8 +59,8 @@ func (d *decoder) ReadVectors() vectors {
 				d.SetError(ErrInvalidFloatsNumber)
 				return vs
 			}
-			vs.paths[i].strokes[j].points = make([]point, np)
-			for ii := uint32(0); ii < np; ii++ {
+			vs.paths[i].strokes[j].points = make([]point, nf)
+			for ii := uint32(0); ii < nf; ii++ {
 				vs.paths[i].strokes[j].points[ii].control = d.ReadBoolProperty()
 				vs.paths[i].strokes[j].points[ii].x = d.ReadFloat32()
 				vs.paths[i].strokes[j].points[ii].y = d.ReadFloat32()

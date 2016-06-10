@@ -10,11 +10,11 @@ type rgb struct {
 }
 
 func (rgb rgb) RGBA() (r, g, b, a uint32) {
-	r = rgb.R
+	r = uint32(rgb.R)
 	r |= r << 8
-	g = rgb.G
+	g = uint32(rgb.G)
 	g |= g << 8
-	b = rgb.B
+	b = uint32(rgb.B)
 	b |= b << 8
 	return r, g, b, 0xFFFF
 }
@@ -22,9 +22,9 @@ func (rgb rgb) RGBA() (r, g, b, a uint32) {
 func rgbColourModel(c color.Color) color.Color {
 	r, g, b, _ := c.RGBA()
 	return rgb{
-		R: r >> 8,
-		G: g >> 8,
-		B: b >> 8,
+		R: uint8(r >> 8),
+		G: uint8(g >> 8),
+		B: uint8(b >> 8),
 	}
 }
 
@@ -34,7 +34,7 @@ type rgbImage struct {
 	Rect   image.Rectangle
 }
 
-func newRGBImage(r image.Rectangle) *rgbImage {
+func newRGB(r image.Rectangle) *rgbImage {
 	w, h := r.Dx(), r.Dy()
 	return &rgbImage{
 		Pix:    make([]rgb, w*h),
@@ -45,6 +45,10 @@ func newRGBImage(r image.Rectangle) *rgbImage {
 
 func (r *rgbImage) At(x, y int) color.Color {
 	return r.RGBAt(x, y)
+}
+
+func (r *rgbImage) Bounds() image.Rectangle {
+	return r.Rect
 }
 
 func (r *rgbImage) ColorModel() color.Model {
@@ -66,15 +70,15 @@ func (r *rgbImage) PixOffset(x, y int) int {
 	return (y-r.Rect.Min.Y)*r.Stride + x - r.Rect.Min.X
 }
 
-func (rgb *rgbImage) Set(x, y int, c color.Color) {
-	if !(image.Point{x, y}.In(rgb.Rect)) {
+func (rg *rgbImage) Set(x, y int, c color.Color) {
+	if !(image.Point{x, y}.In(rg.Rect)) {
 		return
 	}
 	r, g, b, _ := c.RGBA()
-	rgb.Pix[r.PixOffset(x, y)] = rgb{
-		R: r >> 8,
-		G: g >> 8,
-		B: b >> 8,
+	rg.Pix[rg.PixOffset(x, y)] = rgb{
+		R: uint8(r >> 8),
+		G: uint8(g >> 8),
+		B: uint8(b >> 8),
 	}
 }
 
@@ -98,12 +102,12 @@ func (rgb *rgbImage) SubImage(r image.Rectangle) image.Image {
 }
 
 type rgbImageReader struct {
-	*rgb
+	*rgbImage
 }
 
-func (rgb rgbImageReader) ReadColour(x, y int, cr colourReader) {
+func (rg rgbImageReader) ReadColour(x, y int, cr colourReader) {
 	r := cr.ReadByte()
 	g := cr.ReadByte()
 	b := cr.ReadByte()
-	rgb.SetRGB(x, y, rgb{r, g, b})
+	rg.SetRGB(x, y, rgb{r, g, b})
 }

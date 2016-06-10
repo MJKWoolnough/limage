@@ -4,7 +4,7 @@ import "errors"
 
 const (
 	propEnd               = 0
-	propColormap          = 1
+	propColorMap          = 1
 	propActiveLayer       = 2
 	propActiveChannel     = 3
 	propSelection         = 4

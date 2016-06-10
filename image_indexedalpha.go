@@ -16,7 +16,7 @@ type indexedAlpha struct {
 	I, A uint8
 }
 
-func newPalettedAlpha(r image.Rect, p color.Palette) *palettedAlpha {
+func newPalettedAlpha(r image.Rectangle, p color.Palette) *palettedAlpha {
 	w, h := r.Dx(), r.Dy()
 	return &palettedAlpha{
 		Pix:     make([]indexedAlpha, w*h),
@@ -33,14 +33,18 @@ func (p *palettedAlpha) At(x, y int) color.Color {
 	ia := p.IndexAlphaAt(x, y)
 	r, g, b, _ := p.Palette[ia.I].RGBA()
 	return color.NRGBA{
-		R: r >> 8,
-		G: g >> 8,
-		B: b >> 8,
+		R: uint8(r >> 8),
+		G: uint8(g >> 8),
+		B: uint8(b >> 8),
 		A: ia.A,
 	}
 }
 
-func (p *palettedAlpha) ColorModel() {
+func (p *palettedAlpha) Bounds() image.Rectangle {
+	return p.Rect
+}
+
+func (p *palettedAlpha) ColorModel() color.Model {
 	return p.Palette
 }
 
@@ -51,9 +55,9 @@ func (p *palettedAlpha) IndexAlphaAt(x, y int) indexedAlpha {
 	return p.Pix[p.PixOffset(x, y)]
 }
 
-func (p *palettedAlpha) Opaque() {
-	for _, a := range p.Alpha {
-		if a != 255 {
+func (p *palettedAlpha) Opaque() bool {
+	for _, c := range p.Pix {
+		if c.A != 255 {
 			return true
 		}
 	}
@@ -69,8 +73,8 @@ func (p *palettedAlpha) Set(x, y int, c color.Color) {
 	}
 	_, _, _, a := c.RGBA()
 	p.Pix[p.PixOffset(x, y)] = indexedAlpha{
-		I: p.Palette.Index(c),
-		A: a,
+		I: uint8(p.Palette.Index(c)),
+		A: uint8(a >> 8),
 	}
 }
 
@@ -82,7 +86,7 @@ func (p *palettedAlpha) SetIndexAlpha(x, y int, ia indexedAlpha) {
 }
 
 func (p *palettedAlpha) SubImage(r image.Rectangle) image.Image {
-	r = r.Intersect(rgb.Rect)
+	r = r.Intersect(p.Rect)
 	if r.Empty() {
 		return &palettedAlpha{}
 	}

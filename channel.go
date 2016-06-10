@@ -46,7 +46,7 @@ func (d *decoder) ReadChannel() channel {
 			}
 			c.opacity = uint8(o)
 		case propParasites:
-			c.parasites = d.ReadParasites()
+			c.parasites = d.ReadParasites(plength)
 		case propTattoo:
 			c.tattoo = d.ReadUint32()
 		case propVisible:
@@ -70,7 +70,8 @@ func (d *decoder) ReadChannel() channel {
 	}
 
 	hptr := d.ReadUint32()
-	d.Seek(int64(hptr))
+	d.Seek(int64(hptr), os.SEEK_SET)
 
 	c.image = d.ReadImage(c.width, c.height, 2) // gray
+	return c
 }

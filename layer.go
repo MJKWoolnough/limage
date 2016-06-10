@@ -28,7 +28,7 @@ func (d *decoder) ReadLayer() layer {
 	var l layer
 	l.width = d.ReadUint32()
 	l.height = d.ReadUint32()
-	typ := d.ReadUint()
+	typ := d.ReadUint32()
 	if typ>>1 != d.baseType {
 		d.SetError(ErrInvalidLayerType)
 		return l
@@ -58,7 +58,7 @@ PropertyLoop:
 			}
 			l.opacity = uint8(o)
 		case propParasites:
-			l.parasites = d.ReadParasites()
+			l.parasites = d.ReadParasites(plength)
 		case propTattoo:
 			l.tattoo = d.ReadUint32()
 		case propVisible:
@@ -104,13 +104,13 @@ PropertyLoop:
 	hptr := d.ReadUint32()
 	mptr := d.ReadUint32()
 
-	d.Seek(int64(hptr))
+	d.Seek(int64(hptr), os.SEEK_SET)
 	// read hierarchy
 
 	l.image = d.ReadImage(l.width, l.height, l.mode)
 
 	if mptr != 0 { // read layer mask
-		d.Seek(int64(mptr))
+		d.Seek(int64(mptr), os.SEEK_SET)
 		l.mask = d.ReadChannel()
 		if l.mask.width != l.width || l.mask.height != l.height {
 			d.SetError(ErrInconsistantData)

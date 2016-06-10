@@ -9,19 +9,19 @@ type grayAlpha struct {
 	Y, A uint8
 }
 
-func (g grayAlpha) RGBA() (r, g, b, a uint32) {
+func (c grayAlpha) RGBA() (r, g, b, a uint32) {
 	y := uint32(c.Y)
 	y |= y << 8
-	a := uint32(c.A)
+	a = uint32(c.A)
 	a |= a << 8
 	return y, y, y, a
 }
 
 func grayAlphaColourModel(c color.Color) color.Color {
-	_, _, _, a := c.grayAlphaA()
+	_, _, _, a := c.RGBA()
 	return grayAlpha{
 		Y: color.GrayModel.Convert(c).(color.Gray).Y,
-		A: a >> 8,
+		A: uint8(a >> 8),
 	}
 }
 
@@ -31,7 +31,7 @@ type grayAlphaImage struct {
 	Rect   image.Rectangle
 }
 
-func newgrayAlphaImage(r image.Rectangle) *grayAlphaImage {
+func newGrayAlpha(r image.Rectangle) *grayAlphaImage {
 	w, h := r.Dx(), r.Dy()
 	return &grayAlphaImage{
 		Pix:    make([]grayAlpha, w*h),
@@ -44,15 +44,19 @@ func (g *grayAlphaImage) At(x, y int) color.Color {
 	return g.GrayAlphaAt(x, y)
 }
 
+func (g *grayAlphaImage) Bounds() image.Rectangle {
+	return g.Rect
+}
+
 func (g *grayAlphaImage) ColorModel() color.Model {
 	return color.ModelFunc(grayAlphaColourModel)
 }
 
 func (g *grayAlphaImage) GrayAlphaAt(x, y int) grayAlpha {
-	if !(image.Point{x, y}.In(r.Rect)) {
+	if !(image.Point{x, y}.In(g.Rect)) {
 		return grayAlpha{}
 	}
-	return g.Pix[r.PixOffset(x, y)]
+	return g.Pix[g.PixOffset(x, y)]
 }
 
 func (g *grayAlphaImage) Opaque() bool {
@@ -72,14 +76,14 @@ func (ga *grayAlphaImage) Set(x, y int, c color.Color) {
 	if !(image.Point{x, y}.In(ga.Rect)) {
 		return
 	}
-	ga.Pix[r.PixOffset(x, y)] = grayAlphaColourModel(c).(grayAlpha)
+	ga.Pix[ga.PixOffset(x, y)] = grayAlphaColourModel(c).(grayAlpha)
 }
 
 func (g *grayAlphaImage) SetGrayAlpha(x, y int, ga grayAlpha) {
 	if !(image.Point{x, y}.In(g.Rect)) {
 		return
 	}
-	g.Pix[r.PixOffset(x, y)] = ga
+	g.Pix[g.PixOffset(x, y)] = ga
 }
 
 func (g *grayAlphaImage) SubImage(r image.Rectangle) image.Image {
@@ -95,12 +99,11 @@ func (g *grayAlphaImage) SubImage(r image.Rectangle) image.Image {
 }
 
 type grayAlphaImageReader struct {
-	*grayAlpha
+	*grayAlphaImage
 }
 
 func (ga grayAlphaImageReader) ReadColour(x, y int, cr colourReader) {
-	r := cr.ReadByte()
-	g := cr.ReadByte()
-	b := cr.ReadByte()
-	ga.SetRGB(x, y, rgb{r, g, b})
+	ya := cr.ReadByte()
+	a := cr.ReadByte()
+	ga.SetGrayAlpha(x, y, grayAlpha{ya, a})
 }
