@@ -107,7 +107,7 @@ PropertyLoop:
 	d.Seek(int64(hptr), os.SEEK_SET)
 	// read hierarchy
 
-	l.image = d.ReadImage(l.width, l.height, l.mode)
+	l.image = d.ReadImage(l.width, l.height, typ)
 
 	if mptr != 0 { // read layer mask
 		d.Seek(int64(mptr), os.SEEK_SET)
