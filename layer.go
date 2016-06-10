@@ -74,7 +74,7 @@ PropertyLoop:
 		case propFloatingSelection:
 			l.selection = d.ReadUint32()
 		case propGroupItem:
-			l.group = d.ReadBoolProperty()
+			l.group = true
 		case propItemPath:
 			if plength&3 != 0 {
 				d.SetError(ErrInvalidItemPathLength)
