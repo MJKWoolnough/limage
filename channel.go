@@ -72,5 +72,5 @@ func (d *decoder) ReadChannel() channel {
 	hptr := d.ReadUint32()
 	d.Seek(int64(hptr))
 
-	c.image = d.ReadImage(l.width, l.height, l.mode) // gray???
+	c.image = d.ReadImage(c.width, c.height, 2) // gray
 }
