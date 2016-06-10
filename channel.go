@@ -25,6 +25,7 @@ func (d *decoder) ReadChannel() channel {
 
 	c.name = d.ReadString()
 
+PropertyLoop:
 	for {
 		typ := d.ReadUint32()
 		plength := d.ReadUint32()
