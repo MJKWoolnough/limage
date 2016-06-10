@@ -21,18 +21,7 @@ type layer struct {
 	offsetX, offsetY                            int32
 	textLayerFlags                              uint32
 	image                                       image.Image
-	mask                                        struct {
-		name                         string
-		linked, lockContent, visible bool
-		opacity                      uint8
-		parasites                    parasites
-		tattoo                       uint32
-		active, selection, show      bool
-		color                        struct {
-			r, g, b uint8
-		}
-		image image.Image
-	}
+	mask                                        channel
 }
 
 func (d *decoder) ReadLayer() layer {
@@ -122,62 +111,11 @@ PropertyLoop:
 
 	if mptr != 0 { // read layer mask
 		d.Seek(int64(mptr))
-		width := d.ReadUint32()
-		height := d.ReadUint32()
-		if width != l.width || height != l.height {
+		l.mask = d.ReadChannel()
+		if l.mask.width != l.width || l.mask.height != l.height {
 			d.SetError(ErrInconsistantData)
 			return l
 		}
-		l.mask.name = d.ReadString()
-
-		for {
-			typ := d.ReadUint32()
-			plength := d.ReadUint32()
-			switch typ {
-			// general properties
-			case propEnd:
-				if plength != 0 {
-					d.SetError(ErrInvalidProperties)
-				}
-				break PropertyLoop
-			case propLinked:
-				l.mask.linked = d.ReadBoolProperty()
-			case propLockContent:
-				l.mask.lockContent = d.ReadBoolProperty()
-			case propOpacity:
-				o := d.ReadUint32()
-				if o > 255 {
-					d.SetError(ErrInvalidOpacity)
-				}
-				l.mask.opacity = uint8(o)
-			case propParasites:
-				l.mask.parasites = d.ReadParasites()
-			case propTattoo:
-				l.mask.tattoo = d.ReadUint32()
-			case propVisible:
-				l.mask.visible = d.ReadBoolProperty()
-
-				//mask properties
-			case propActiveChannel:
-				l.mask.active = true
-			case propColor:
-				l.mask.color.r = d.ReadUint8()
-				l.mask.color.g = d.ReadUint8()
-				l.mask.color.b = d.ReadUint8()
-			case propSelection:
-				l.mask.selection = true
-			case propShowMasked:
-				l.mask.show = d.ReadBoolProperty()
-			default:
-				d.Seek(int64(plength), os.SEEK_CUR)
-			}
-
-		}
-
-		hptr := d.ReadUint32()
-		d.Seek(int64(hptr))
-
-		l.mask.image = d.ReadImage(l.width, l.height, l.mode) // gray???
 	}
 	return l
 }
