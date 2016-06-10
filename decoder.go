@@ -55,7 +55,7 @@ type samplePoint struct {
 	x, y uint32
 }
 
-func Decoder(r io.ReadSeeker) (image.Image, error) {
+func Decode(r io.ReadSeeker) (image.Image, error) {
 	d := decoder{reader: newReader(r)}
 
 	// check header
