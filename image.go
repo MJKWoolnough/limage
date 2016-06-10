@@ -115,7 +115,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 			if d.compression == 0 { // no compression
 				cr = &d.reader
 			} else { // rle
-				cr = &rle{reader: d.reader}
+				cr = &rle{Reader: d.reader.StickyReader}
 			}
 			for j := y; j < y+64 && j < height; j++ {
 				for i := x; i < x+64 && i < width; i++ {
