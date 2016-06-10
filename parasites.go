@@ -21,18 +21,20 @@ func (p parasites) Get(name string) *parasite {
 
 func (d *decoder) ReadParasites(l uint32) parasites {
 	ps := make(parasites, 0, 32)
-	for l >= 0 {
+	for l > 0 {
 		var p parasite
 		p.name = d.ReadString()
 		p.flags = d.ReadUint32()
 		pplength := d.ReadUint32()
-		l -= 4 + uint32(len(p.name)) + 1 // length (uint32) + string([]byte) + \0 (byte)
-		l -= 4                           // flags
-		l -= pplength                    // len(data)
-		if l < 0 {
+		read := 4 + uint32(len(p.name)) + 1 // length (uint32) + string([]byte) + \0 (byte)
+		read += 4                           // flags
+		read += 4                           // pplength
+		read += pplength                    // len(data)
+		if read > l {
 			d.SetError(ErrInvalidParasites)
 			return nil
 		}
+		l -= read
 		p.data = make([]byte, pplength)
 		d.Read(p.data)
 		ps = append(ps, p)
