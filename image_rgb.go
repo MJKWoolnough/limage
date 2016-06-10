@@ -105,9 +105,6 @@ type rgbImageReader struct {
 	*rgbImage
 }
 
-func (rg rgbImageReader) ReadColour(x, y int, cr colourReader) {
-	r := cr.ReadByte()
-	g := cr.ReadByte()
-	b := cr.ReadByte()
-	rg.SetRGB(x, y, rgb{r, g, b})
+func (rg rgbImageReader) ReadColour(x, y int, pixels []byte) {
+	rg.SetRGB(x, y, rgb{R: pixels[0], G: pixels[1], B: pixels[2]})
 }

@@ -102,11 +102,9 @@ type palettedAlphaReader struct {
 	*palettedAlpha
 }
 
-func (p palettedAlphaReader) ReadColour(x, y int, cr colourReader) {
-	i := cr.ReadByte()
-	a := cr.ReadByte()
+func (p palettedAlphaReader) ReadColour(x, y int, pixels []byte) {
 	p.SetIndexAlpha(x, y, indexedAlpha{
-		I: i,
-		A: a,
+		I: pixels[0],
+		A: pixels[1],
 	})
 }

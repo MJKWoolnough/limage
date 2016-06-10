@@ -3,6 +3,7 @@ package xcf
 import (
 	"image"
 	"image/color"
+	"io"
 	"math"
 	"os"
 )
@@ -75,7 +76,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 	var (
 		im       image.Image
 		imReader interface {
-			ReadColour(int, int, colourReader)
+			ReadColour(int, int, []byte)
 		}
 	)
 
@@ -108,18 +109,42 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		imReader = palettedAlphaReader{in}
 	}
 
+	var pixBuffer [64 * 64 * 4]byte
+
+	var cr io.Reader
+	if d.compression == 0 { // no compression
+		cr = &d.reader
+	} else { // rle
+		cr = &rle{Reader: d.reader.StickyReader}
+	}
+
+	pixel := make([]byte, bpp)
+	channels := make([][]byte, bpp)
+
 	for y := uint32(0); y < height; y += 64 {
 		for x := uint32(0); x < width; x += 64 {
 			d.Seek(int64(tiles[0]), os.SEEK_SET)
-			var cr colourReader
-			if d.compression == 0 { // no compression
-				cr = &d.reader
-			} else { // rle
-				cr = &rle{Reader: d.reader.StickyReader}
+			tiles = tiles[1:]
+			w := width - x
+			if w > 64 {
+				w = 64
 			}
-			for j := y; j < y+64 && j < height; j++ {
-				for i := x; i < x+64 && i < width; i++ {
-					imReader.ReadColour(int(i), int(j), cr)
+			h := height - y
+			if h > 64 {
+				h = 64
+			}
+			n := w * h
+			cr.Read(pixBuffer[:n*bpp])
+			for i := uint32(0); i < bpp; i++ {
+				channels[i] = pixBuffer[n*i : n*(i+1)]
+			}
+			for j := uint32(0); j < h; j++ {
+				for i := uint32(0); i < w; i++ {
+					for k := uint32(0); k < bpp; k++ {
+						pixel[k] = channels[k][0]
+						channels[k] = channels[k][1:]
+					}
+					imReader.ReadColour(int(x+i), int(y+j), pixel)
 				}
 			}
 		}
@@ -135,16 +160,12 @@ type rgbaImageReader struct {
 	*image.NRGBA
 }
 
-func (rgba rgbaImageReader) ReadColour(x, y int, cr colourReader) {
-	r := cr.ReadByte()
-	g := cr.ReadByte()
-	b := cr.ReadByte()
-	a := cr.ReadByte()
+func (rgba rgbaImageReader) ReadColour(x, y int, pixel []byte) {
 	rgba.SetNRGBA(x, y, color.NRGBA{
-		R: r,
-		G: g,
-		B: b,
-		A: a,
+		R: pixel[0],
+		G: pixel[1],
+		B: pixel[2],
+		A: pixel[3],
 	})
 }
 
@@ -152,16 +173,14 @@ type grayImageReader struct {
 	*image.Gray
 }
 
-func (g grayImageReader) ReadColour(x, y int, cr colourReader) {
-	yc := cr.ReadByte()
-	g.SetGray(x, y, color.Gray{yc})
+func (g grayImageReader) ReadColour(x, y int, pixel []byte) {
+	g.SetGray(x, y, color.Gray{pixel[0]})
 }
 
 type indexedImageReader struct {
 	*image.Paletted
 }
 
-func (p indexedImageReader) ReadColour(x, y int, cr colourReader) {
-	i := cr.ReadByte()
-	p.SetColorIndex(x, y, i)
+func (p indexedImageReader) ReadColour(x, y int, pixel []byte) {
+	p.SetColorIndex(x, y, pixel[0])
 }

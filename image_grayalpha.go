@@ -102,8 +102,6 @@ type grayAlphaImageReader struct {
 	*grayAlphaImage
 }
 
-func (ga grayAlphaImageReader) ReadColour(x, y int, cr colourReader) {
-	ya := cr.ReadByte()
-	a := cr.ReadByte()
-	ga.SetGrayAlpha(x, y, grayAlpha{ya, a})
+func (ga grayAlphaImageReader) ReadColour(x, y int, pixels []byte) {
+	ga.SetGrayAlpha(x, y, grayAlpha{pixels[0], pixels[1]})
 }
