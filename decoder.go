@@ -60,7 +60,7 @@ func Decode(r io.ReadSeeker) (image.Image, error) {
 
 	// check header
 
-	var header [15]byte
+	var header [14]byte
 	d.Read(header[:])
 	if d.Err != nil {
 		return nil, d.Err // wrap?
@@ -73,9 +73,10 @@ func Decode(r io.ReadSeeker) (image.Image, error) {
 	default:
 		return nil, ErrUnsupportedVersion
 	}
-	if header[14] != 0 {
+	if header[13] != 0 {
 		return nil, ErrInvalidHeader
 	}
+
 	d.width = d.ReadUint32()
 	d.height = d.ReadUint32()
 	d.baseType = d.ReadUint32()
