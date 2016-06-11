@@ -197,11 +197,18 @@ PropertyLoop:
 		channelptrs = append(channelptrs, cptr)
 	}
 
+	if d.Err != nil {
+		return nil, d.Err
+	}
+
 	d.layers = make([]layer, len(layerptrs))
 
 	for i := range d.layers {
 		d.Seek(int64(layerptrs[i]), os.SEEK_SET)
 		d.layers[i] = d.ReadLayer()
+		if d.Err != nil {
+			return nil, d.Err
+		}
 	}
 
 	d.channels = make([]channel, len(channelptrs))
@@ -209,7 +216,12 @@ PropertyLoop:
 	for i := range d.channels {
 		d.Seek(int64(channelptrs[i]), os.SEEK_SET)
 		d.channels[i] = d.ReadChannel()
+		if d.Err != nil {
+			return nil, d.Err
+		}
 	}
+
+	// process itemPath = layer group indexes
 
 	return nil, nil
 }
