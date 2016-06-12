@@ -41,7 +41,7 @@ func (r *rle) Read(p []byte) (int, error) {
 		} else {
 			r.Reader.Read(p[:c])
 		}
-		r.count -= c
+		r.count -= uint16(c)
 		p = p[c:]
 		n += c
 	}
