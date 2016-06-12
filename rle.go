@@ -10,7 +10,8 @@ type rle struct {
 }
 
 func (r *rle) Read(p []byte) (int, error) {
-	for i := range p {
+	var n int
+	for len(p) > 0 && r.Reader.Err == nil {
 		if r.count == 0 {
 			n := r.Reader.ReadUint8()
 			if n < 127 {
@@ -29,12 +30,20 @@ func (r *rle) Read(p []byte) (int, error) {
 				r.count = 256 - uint16(n)
 			}
 		}
-		r.count--
-		if r.repeatByte {
-			p[i] = r.data
-		} else {
-			p[i] = r.Reader.ReadUint8()
+		c := int(r.count)
+		if len(p) < c {
+			c = len(p)
 		}
+		if r.repeatByte {
+			for i := 0; i < c; i++ {
+				p[i] = r.data
+			}
+		} else {
+			r.Reader.Read(p[:c])
+		}
+		r.count -= c
+		p = p[c:]
+		n += c
 	}
-	return len(p), nil
+	return n, r.Reader.Err
 }
