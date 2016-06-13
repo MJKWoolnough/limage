@@ -1,6 +1,19 @@
 package xcf
 
-import "errors"
+import (
+	"errors"
+	"io"
+	"strconv"
+	"strings"
+
+	"github.com/MJKWoolnough/parser"
+)
+
+const (
+	iccProfileParasiteName = "icc-profile"
+	commentParasiteName    = "gimp-comment"
+	texttParasiteName      = "gimp-text-layer"
+)
 
 type parasite struct {
 	name  string
@@ -37,6 +50,7 @@ func (d *decoder) ReadParasites(l uint32) parasites {
 		l -= read
 		p.data = make([]byte, pplength)
 		d.Read(p.data)
+
 		ps = append(ps, p)
 	}
 	return ps
@@ -44,15 +58,217 @@ func (d *decoder) ReadParasites(l uint32) parasites {
 
 func (d *decoder) ReadParasite() parasite {
 	var p parasite
+
 	p.name = d.ReadString()
 	p.flags = d.ReadUint32()
 	pplength := d.ReadUint32()
+
 	p.data = make([]byte, pplength)
 	d.Read(p.data)
+
 	return p
+}
+
+type parsedParasite struct {
+	name  string
+	flags uint32
+	tags  []tag
+}
+
+func (ps *parasite) Parse() (parsedParasite, error) {
+	p := parser.New(parser.NewByteTokeniser(ps.data))
+	p.TokeniserState(openTK)
+	tags := make([]tag, 0, 32)
+	for {
+		tag, err := readTag(&p)
+		if err != nil {
+			if p.Err != io.EOF {
+				return parsedParasite{}, err
+			}
+			break
+		}
+		tags = append(tags, tag)
+	}
+	return parsedParasite{
+		name:  ps.name,
+		flags: ps.flags,
+		tags:  tags,
+	}, nil
+}
+
+const (
+	open       = "("
+	close      = ")"
+	chars      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	valName    = chars + "-"
+	digit      = "1234567890"
+	quoted     = "\""
+	whitespace = "\n\r "
+)
+
+const (
+	tokenOpen parser.TokenType = iota
+	tokenClose
+	tokenName
+	tokenValueString
+	tokenValueNumber
+)
+
+type tag struct {
+	name   string
+	values []interface{}
+}
+
+func readTag(p *parser.Parser) (tag, error) {
+	if p.Accept(parser.TokenDone) {
+		return tag{}, io.EOF
+	}
+	if !p.Accept(tokenOpen) {
+		return tag{}, ErrNoOpen
+	}
+	p.Get()
+	if !p.Accept(tokenName) {
+		return tag{}, ErrNoName
+	}
+	nt := p.Get()
+	var tg tag
+	tg.name = nt[0].Data
+	for {
+		tt := p.AcceptRun(tokenValueString, tokenValueNumber)
+		for _, v := range p.Get() {
+			switch v.Type {
+			case tokenValueString:
+				tg.values = append(tg.values, v.Data)
+			case tokenValueNumber:
+				num, err := strconv.ParseFloat(v.Data, 64)
+				if err != nil {
+					return tag{}, err
+				}
+				tg.values = append(tg.values, num)
+			}
+		}
+		switch tt {
+		case tokenClose:
+			p.Accept(tokenClose)
+			p.Get()
+			return tg, nil
+		case tokenOpen:
+			ttg, err := readTag(p)
+			p.TokeniserState(valueTK)
+			if err != nil {
+				return tag{}, err
+			}
+			tg.values = append(tg.values, ttg)
+		case parser.TokenDone:
+			return tag{}, io.EOF
+		default:
+			return tag{}, ErrInvalidParasites
+		}
+	}
+}
+
+func openTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
+	t.AcceptRun(whitespace)
+	switch t.Peek() {
+	case -1, 0:
+		return t.Done()
+	}
+	if !t.Accept(open) {
+		t.Err = ErrInvalidParasites
+		return t.Error()
+	}
+	t.Get()
+	return parser.Token{
+		Type: tokenOpen,
+	}, nameTK
+}
+
+func closeTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
+	t.Accept(close)
+	t.Get()
+	return parser.Token{
+		Type: tokenClose,
+	}, openTK
+}
+
+func nameTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
+	if !t.Accept(valName) {
+		t.Err = ErrInvalidParasites
+		return t.Error()
+	}
+	t.AcceptRun(valName)
+	return parser.Token{
+		Type: tokenName,
+		Data: t.Get(),
+	}, valueTK
+}
+
+func valueTK(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
+	t.AcceptRun(whitespace)
+	t.Get()
+	c := t.Peek()
+	if c == 0 {
+		return t.Done()
+	} else if c < 0 {
+		t.Err = ErrInvalidParasites
+		return t.Error()
+	}
+	switch string(c) {
+	case open:
+		return openTK(t)
+	case close:
+		return closeTK(t)
+	case quoted:
+		return parser.Token{
+			Type: tokenValueString,
+			Data: quotedString(t),
+		}, valueTK
+	}
+	if strings.ContainsRune(digit, c) {
+		t.AcceptRun(digit)
+		t.Accept(".")
+		t.AcceptRun(digit)
+		return parser.Token{
+			Type: tokenValueNumber,
+			Data: t.Get(),
+		}, valueTK
+	}
+	t.AcceptRun(valName)
+	return parser.Token{
+		Type: tokenValueString,
+		Data: t.Get(),
+	}, valueTK
+}
+
+func quotedString(t *parser.Tokeniser) string {
+	t.Accept(quoted)
+	t.Get()
+	var s string
+	for {
+		t.ExceptRun(quoted + "\\")
+		s += t.Get()
+		if t.Accept("\\") {
+			c := string(t.Peek())
+			switch c {
+			case "\"", "\\":
+				s += c
+			default:
+				s += "\\" + c
+			}
+			t.Accept(c)
+			t.Get()
+			continue
+		}
+		break
+	}
+	t.Accept(quoted)
+	t.Get()
+	return s
 }
 
 // Errors
 var (
 	ErrInvalidParasites = errors.New("invalid parasites layout")
+	ErrNoOpen           = errors.New("didn't receive Open token")
+	ErrNoName           = errors.New("didn't receive Name token")
 )
