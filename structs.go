@@ -51,7 +51,33 @@ func (g *Group) Bounds() image.Rectangle {
 }
 
 func (g *Group) At(x, y int) color.Color {
-	return nil
+	var c color.Color = color.Alpha{}
+	point := image.Point{x, y}
+	for i := len(g.Layers) - 1; i >= 0; i-- {
+		if !point.In(Layers[i].Bounds()) {
+			continue
+		}
+		ca := g.Layers[i].At(x, y)
+		ar, ag, ab, aa := ca.RGBA()
+		if aa == 0xffff {
+			c = ca
+			continue
+		} else if aa == 0 {
+			continue
+		}
+
+		br, bg, bb, ba := c.RGBA()
+
+		ma := 0xffff - aa
+		c = color.RGBA64{
+			R: uint16((br*ma + ar) / 0xffff),
+			G: uint16((bg*ma + ag) / 0xffff),
+			B: uint16((bb*ma + ab) / 0xffff),
+			A: uint16((ba*ma + aa) / 0xffff),
+		}
+
+	}
+	return c
 }
 
 type MaskedImage struct {
