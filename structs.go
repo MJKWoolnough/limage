@@ -23,6 +23,7 @@ func (i *Image) At(x, y int) color.Color {
 type Layer struct {
 	OffsetX, OffsetY int
 	Mode             uint32
+	Visible          bool
 	image.Image
 }
 
@@ -54,7 +55,10 @@ func (g *Group) At(x, y int) color.Color {
 	var c color.Color = color.Alpha{}
 	point := image.Point{x, y}
 	for i := len(g.Layers) - 1; i >= 0; i-- {
-		if !point.In(Layers[i].Bounds()) {
+		if !g.Layers[i].Visible {
+			continue
+		}
+		if !point.In(g.Layers[i].Bounds()) {
 			continue
 		}
 		ca := g.Layers[i].At(x, y)
