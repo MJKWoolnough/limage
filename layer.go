@@ -107,6 +107,10 @@ PropertyLoop:
 	d.Seek(int64(hptr), os.SEEK_SET)
 	// read hierarchy
 
+	if l.group { // skip reading image if its a group
+		return l
+	}
+
 	l.image = d.ReadImage(l.width, l.height, typ)
 
 	if mptr != 0 { // read layer mask
