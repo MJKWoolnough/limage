@@ -69,16 +69,10 @@ func (d *decoder) ReadParasite() parasite {
 	return p
 }
 
-type parsedParasite struct {
-	name  string
-	flags uint32
-	tags  []tag
-}
-
 func (ps *parasite) Parse() ([]Tag, error) {
 	p := parser.New(parser.NewByteTokeniser(ps.data))
 	p.TokeniserState(openTK)
-	tags := make([]tag, 0, 32)
+	tags := make([]Tag, 0, 32)
 	for {
 		tag, err := readTag(&p)
 		if err != nil {
