@@ -22,10 +22,10 @@ const (
 )
 
 type decoder struct {
+	*Image
 	reader
-	width, height, baseType      uint32
+	baseType                     uint32
 	linked, lockContent, visible bool
-	opacity                      uint8
 	parasites                    parasites
 	tattoo                       uint32
 	palette                      color.Palette
@@ -40,9 +40,8 @@ type decoder struct {
 		digits                           uint32
 		id, symbol, abbrev, sname, pname string
 	}
-	vectors  vectors
-	layers   []layer
-	channels []channel
+	vectors vectors
+	//channels []channel
 }
 
 type guide struct {
@@ -55,7 +54,7 @@ type samplePoint struct {
 }
 
 func Decode(r io.ReadSeeker) (image.Image, error) {
-	d := decoder{reader: newReader(r)}
+	d := decoder{Image: new(Image), reader: newReader(r)}
 
 	// check header
 
@@ -76,9 +75,15 @@ func Decode(r io.ReadSeeker) (image.Image, error) {
 		return nil, ErrInvalidHeader
 	}
 
-	d.width = d.ReadUint32()
-	d.height = d.ReadUint32()
+	d.Width = int(d.ReadUint32())
+	d.Height = int(d.ReadUint32())
 	d.baseType = d.ReadUint32()
+	switch d.baseType {
+	case 0:
+		d.colorModel = color.RGBAModel
+	case 1:
+		d.colorModel = color.ModelFunc(grayAlphaColourModel)
+	}
 
 	// read image properties
 PropertyLoop:
@@ -102,9 +107,12 @@ PropertyLoop:
 			if o > 255 {
 				return nil, ErrInvalidOpacity
 			}
-			d.opacity = uint8(o)
+			d.Opacity = uint8(o)
 		case propParasites:
 			d.parasites = d.ReadParasites(plength)
+			if c := d.parasites.Get(commentParasiteName); c != nil && len(c.data) > 0 {
+				d.Comment = string(c.data)
+			}
 		case propTattoo:
 			d.tattoo = d.ReadUint32()
 		case propVisible:
@@ -127,6 +135,7 @@ PropertyLoop:
 					B: b,
 				}
 			}
+			d.Image.colorModel = d.palette
 		case propCompression:
 			d.compression = d.ReadUint8()
 			if d.compression > 1 {
@@ -187,42 +196,90 @@ PropertyLoop:
 		}
 		layerptrs = append(layerptrs, lptr)
 	}
-	channelptrs := make([]uint32, 0, 32)
-	for {
-		cptr := d.ReadUint32()
-		if cptr == 0 {
-			break
+
+	/*
+		channelptrs := make([]uint32, 0, 32)
+		for {
+			cptr := d.ReadUint32()
+			if cptr == 0 {
+				break
+			}
+			channelptrs = append(channelptrs, cptr)
 		}
-		channelptrs = append(channelptrs, cptr)
-	}
 
-	if d.Err != nil {
-		return nil, d.Err
-	}
-
-	d.layers = make([]layer, len(layerptrs))
-
-	for i := range d.layers {
-		d.Goto(layerptrs[i])
-		d.layers[i] = d.ReadLayer()
 		if d.Err != nil {
 			return nil, d.Err
 		}
-	}
 
-	d.channels = make([]channel, len(channelptrs))
+	*/
 
-	for i := range d.channels {
-		d.Goto(channelptrs[i])
-		d.channels[i] = d.ReadChannel()
+	groups := make(map[string]*Group)
+	groups[""] = &d.Group
+	var n uint32
+	for _, lptr := range layerptrs {
+		d.Goto(lptr)
+		l := d.ReadLayer()
 		if d.Err != nil {
 			return nil, d.Err
 		}
+		var g *Group
+		if len(l.itemPath) == 0 {
+			l.itemPath = []uint32{n}
+			n++
+		}
+		g = groups[itemPathToString(l.itemPath[:len(l.itemPath)-1])]
+		if g == nil {
+			return nil, ErrInvalidGroup
+		}
+		if l.group {
+			gp := new(Group)
+			gp.Width = int(l.width)
+			gp.Height = int(l.height)
+			gp.colorModel = d.colorModel
+			l.Image = gp
+			groups[itemPathToString(l.itemPath)] = gp
+		} else {
+			if t := l.parasites.Get(textParasiteName); t != nil {
+				textData, err := parseTextData(t)
+				if err != nil {
+					return nil, err
+				}
+				l.Image = &Text{
+					Image:    l.Image,
+					TextData: textData,
+				}
+			}
+			if l.mask.image != nil {
+				l.Image = &MaskedImage{
+					Image: l.Image,
+					Mask:  l.mask.image,
+				}
+			}
+		}
+		g.Layers = append(g.Layers, l.Layer)
 	}
 
-	// process itemPath = layer group indexes
+	return d.Image, nil
 
-	return nil, nil
+	/*
+		d.channels = make([]channel, len(channelptrs))
+
+		for i := range d.channels {
+			d.Goto(channelptrs[i])
+			d.channels[i] = d.ReadChannel()
+			if d.Err != nil {
+				return nil, d.Err
+			}
+		}
+	*/
+}
+
+func itemPathToString(ip []uint32) string {
+	rs := make([]rune, len(ip))
+	for n, r := range ip {
+		rs[n] = rune(r)
+	}
+	return string(rs)
 }
 
 func (d *decoder) SetError(err error) {
@@ -241,5 +298,6 @@ var (
 	ErrInvalidGuideLength  = errors.New("invalid guide length")
 	ErrInvalidUnit         = errors.New("invalid unit")
 	ErrInvalidSampleLength = errors.New("invalid sample points length")
+	ErrInvalidGroup        = errors.New("invalid or unknown group specified for layer")
 	ErrUnknownCompression  = errors.New("unknown compression method")
 )

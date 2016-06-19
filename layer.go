@@ -1,14 +1,11 @@
 package xcf
 
-import (
-	"errors"
-	"image"
-)
+import "errors"
 
 type layer struct {
+	Layer
 	width, height                               uint32
-	name                                        string
-	linked, lockContent, visible                bool
+	linked, lockContent                         bool
 	opacity                                     uint8
 	parasites                                   parasites
 	tattoo                                      uint32
@@ -16,10 +13,7 @@ type layer struct {
 	selection                                   uint32
 	itemPath                                    []uint32
 	groupItemFlags                              uint32
-	mode                                        uint32
-	offsetX, offsetY                            int32
 	textLayerFlags                              uint32
-	image                                       image.Image
 	mask                                        channel
 }
 
@@ -32,7 +26,7 @@ func (d *decoder) ReadLayer() layer {
 		d.SetError(ErrInvalidLayerType)
 		return l
 	}
-	l.name = d.ReadString()
+	l.Name = d.ReadString()
 
 	// read properties
 PropertyLoop:
@@ -61,7 +55,7 @@ PropertyLoop:
 		case propTattoo:
 			l.tattoo = d.ReadUint32()
 		case propVisible:
-			l.visible = d.ReadBoolProperty()
+			l.Visible = d.ReadBoolProperty()
 
 		//layer properties
 		case propActiveLayer:
@@ -87,10 +81,10 @@ PropertyLoop:
 		case propLockAlpha:
 			l.lockAlpha = d.ReadBoolProperty()
 		case propMode:
-			l.mode = d.ReadUint32()
+			l.Mode = d.ReadUint32()
 		case propOffsets:
-			l.offsetX = d.ReadInt32()
-			l.offsetY = d.ReadInt32()
+			l.OffsetX = int(d.ReadInt32())
+			l.OffsetY = int(d.ReadInt32())
 		case propShowMask:
 			l.show = d.ReadBoolProperty()
 		case propTextLayerFlags:
@@ -110,7 +104,7 @@ PropertyLoop:
 		return l
 	}
 
-	l.image = d.ReadImage(l.width, l.height, typ)
+	l.Image = d.ReadImage(l.width, l.height, typ)
 
 	if mptr != 0 { // read layer mask
 		d.Goto(mptr)
