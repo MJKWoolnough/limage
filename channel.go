@@ -1,9 +1,6 @@
 package xcf
 
-import (
-	"image"
-	"os"
-)
+import "image"
 
 type channel struct {
 	width, height                uint32
@@ -65,13 +62,13 @@ PropertyLoop:
 		case propShowMasked:
 			c.show = d.ReadBoolProperty()
 		default:
-			d.Seek(int64(plength), os.SEEK_CUR)
+			d.Skip(plength)
 		}
 
 	}
 
 	hptr := d.ReadUint32()
-	d.Seek(int64(hptr), os.SEEK_SET)
+	d.Goto(hptr)
 
 	c.image = d.ReadImage(c.width, c.height, 2) // gray
 	return c

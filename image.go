@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"io"
 	"math"
-	"os"
 )
 
 func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
@@ -52,7 +51,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		}
 	*/
 
-	d.Seek(int64(lptr), os.SEEK_SET)
+	d.Goto(lptr)
 
 	w := d.ReadUint32()
 	h := d.ReadUint32()
@@ -123,7 +122,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 
 	for y := uint32(0); y < height; y += 64 {
 		for x := uint32(0); x < width; x += 64 {
-			d.Seek(int64(tiles[0]), os.SEEK_SET)
+			d.Goto(tiles[0])
 			tiles = tiles[1:]
 			w := width - x
 			if w > 64 {

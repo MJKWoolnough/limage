@@ -3,7 +3,6 @@ package xcf
 import (
 	"errors"
 	"image"
-	"os"
 )
 
 type layer struct {
@@ -97,14 +96,14 @@ PropertyLoop:
 		case propTextLayerFlags:
 			l.textLayerFlags = d.ReadUint32()
 		default:
-			d.Seek(int64(plength), os.SEEK_CUR)
+			d.Skip(plength)
 		}
 	}
 
 	hptr := d.ReadUint32()
 	mptr := d.ReadUint32()
 
-	d.Seek(int64(hptr), os.SEEK_SET)
+	d.Goto(hptr)
 	// read hierarchy
 
 	if l.group { // skip reading image if its a group
@@ -114,7 +113,7 @@ PropertyLoop:
 	l.image = d.ReadImage(l.width, l.height, typ)
 
 	if mptr != 0 { // read layer mask
-		d.Seek(int64(mptr), os.SEEK_SET)
+		d.Goto(mptr)
 		l.mask = d.ReadChannel()
 		if l.mask.width != l.width || l.mask.height != l.height {
 			d.SetError(ErrInconsistantData)

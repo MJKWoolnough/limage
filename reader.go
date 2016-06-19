@@ -3,6 +3,7 @@ package xcf
 import (
 	"errors"
 	"io"
+	"os"
 	"unicode/utf8"
 
 	"github.com/MJKWoolnough/byteio"
@@ -52,15 +53,18 @@ func (r *reader) ReadByte() byte {
 	return r.ReadUint8()
 }
 
-func (r *reader) Seek(offset int64, whence int) (int64, error) {
+func (r *reader) Goto(n uint32) {
 	if r.Err != nil {
-		return 0, r.Err
+		return
 	}
-	n, err := r.Seeker.Seek(offset, whence)
-	if err != nil {
-		r.Err = err
+	_, r.Err = r.Seeker.Seek(int64(n), os.SEEK_SET)
+}
+
+func (r *reader) Skip(n uint32) {
+	if r.Err != nil {
+		return
 	}
-	return n, err
+	_, r.Err = r.Seeker.Seek(int64(n), os.SEEK_CUR)
 }
 
 // Errors

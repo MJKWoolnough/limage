@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"io"
-	"os"
 )
 
 const (
@@ -114,7 +113,7 @@ PropertyLoop:
 		// image properties
 		case propColorMap:
 			if d.baseType != baseIndexed {
-				d.Seek(int64(plength), os.SEEK_CUR) // skip
+				d.Skip(plength) // skip
 			}
 			numColours := d.ReadUint32()
 			d.palette = make(color.Palette, numColours)
@@ -173,7 +172,7 @@ PropertyLoop:
 		case propVectors:
 			d.vectors = d.ReadVectors()
 		default:
-			d.Seek(int64(plength), os.SEEK_CUR)
+			d.Skip(plength)
 		}
 	}
 
@@ -204,7 +203,7 @@ PropertyLoop:
 	d.layers = make([]layer, len(layerptrs))
 
 	for i := range d.layers {
-		d.Seek(int64(layerptrs[i]), os.SEEK_SET)
+		d.Goto(layerptrs[i])
 		d.layers[i] = d.ReadLayer()
 		if d.Err != nil {
 			return nil, d.Err
@@ -214,7 +213,7 @@ PropertyLoop:
 	d.channels = make([]channel, len(channelptrs))
 
 	for i := range d.channels {
-		d.Seek(int64(channelptrs[i]), os.SEEK_SET)
+		d.Goto(channelptrs[i])
 		d.channels[i] = d.ReadChannel()
 		if d.Err != nil {
 			return nil, d.Err
