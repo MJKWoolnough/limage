@@ -40,7 +40,7 @@ func parseTextData(t parasite) (TextData, error) {
 		case "color":
 			if len(tag.Values) == 1 {
 				t, _ := tag.Values[0].(Tag)
-				if t.Name == "color-rgb" && len(t.Values != 3) {
+				if t.Name == "color-rgb" && len(t.Values) != 3 {
 					r, _ := t.Values[0].(float64)
 					g, _ := t.Values[1].(float64)
 					b, _ := t.Values[2].(float64)
@@ -55,7 +55,7 @@ func parseTextData(t parasite) (TextData, error) {
 		case "hinting":
 		}
 	}
-	xd := xml.NewDecoder(strings.NewReader(markup))
+	xd := xml.NewDecoder(strings.NewReader(textData))
 	stack := TextData{defaultText}
 	td := make(TextData, 0, 32)
 	for {
