@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func parseTextData(t parasite) (TextData, error) {
+func parseTextData(t *parasite) (TextData, error) {
 	tags, err := t.Parse()
 	if err != nil {
 		return nil, err
