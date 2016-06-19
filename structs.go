@@ -21,6 +21,7 @@ func (i *Image) At(x, y int) color.Color {
 }
 
 type Layer struct {
+	Name             string
 	OffsetX, OffsetY int
 	Mode             uint32
 	Visible          bool
@@ -37,7 +38,6 @@ func (l *Layer) At(x, y int) color.Color {
 }
 
 type Group struct {
-	Name          string
 	Width, Height int
 	colorModel    color.Model
 	Layers        []Layer
