@@ -75,7 +75,7 @@ type parsedParasite struct {
 	tags  []tag
 }
 
-func (ps *parasite) Parse() (parsedParasite, error) {
+func (ps *parasite) Parse() ([]Tag, error) {
 	p := parser.New(parser.NewByteTokeniser(ps.data))
 	p.TokeniserState(openTK)
 	tags := make([]tag, 0, 32)
@@ -83,17 +83,13 @@ func (ps *parasite) Parse() (parsedParasite, error) {
 		tag, err := readTag(&p)
 		if err != nil {
 			if p.Err != io.EOF {
-				return parsedParasite{}, err
+				return nil, err
 			}
 			break
 		}
 		tags = append(tags, tag)
 	}
-	return parsedParasite{
-		name:  ps.name,
-		flags: ps.flags,
-		tags:  tags,
-	}, nil
+	return tags, nil
 }
 
 const (
@@ -114,37 +110,37 @@ const (
 	tokenValueNumber
 )
 
-type tag struct {
-	name   string
-	values []interface{}
+type Tag struct {
+	Name   string
+	Values []interface{}
 }
 
-func readTag(p *parser.Parser) (tag, error) {
+func readTag(p *parser.Parser) (Tag, error) {
 	if p.Accept(parser.TokenDone) {
-		return tag{}, io.EOF
+		return Tag{}, io.EOF
 	}
 	if !p.Accept(tokenOpen) {
-		return tag{}, ErrNoOpen
+		return Tag{}, ErrNoOpen
 	}
 	p.Get()
 	if !p.Accept(tokenName) {
-		return tag{}, ErrNoName
+		return Tag{}, ErrNoName
 	}
 	nt := p.Get()
-	var tg tag
-	tg.name = nt[0].Data
+	var tg Tag
+	tg.Name = nt[0].Data
 	for {
 		tt := p.AcceptRun(tokenValueString, tokenValueNumber)
 		for _, v := range p.Get() {
 			switch v.Type {
 			case tokenValueString:
-				tg.values = append(tg.values, v.Data)
+				tg.Values = append(tg.Values, v.Data)
 			case tokenValueNumber:
 				num, err := strconv.ParseFloat(v.Data, 64)
 				if err != nil {
-					return tag{}, err
+					return Tag{}, err
 				}
-				tg.values = append(tg.values, num)
+				tg.Values = append(tg.Values, num)
 			}
 		}
 		switch tt {
@@ -156,13 +152,13 @@ func readTag(p *parser.Parser) (tag, error) {
 			ttg, err := readTag(p)
 			p.TokeniserState(valueTK)
 			if err != nil {
-				return tag{}, err
+				return Tag{}, err
 			}
-			tg.values = append(tg.values, ttg)
+			tg.Values = append(tg.Values, ttg)
 		case parser.TokenDone:
-			return tag{}, io.EOF
+			return Tag{}, io.EOF
 		default:
-			return tag{}, ErrInvalidParasites
+			return Tag{}, ErrInvalidParasites
 		}
 	}
 }
