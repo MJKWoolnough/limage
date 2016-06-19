@@ -242,5 +242,5 @@ var (
 	ErrInvalidGuideLength  = errors.New("invalid guide length")
 	ErrInvalidUnit         = errors.New("invalid unit")
 	ErrInvalidSampleLength = errors.New("invalid sample points length")
-	ErrUnknownCompression  = errors.New("unknown compressio method")
+	ErrUnknownCompression  = errors.New("unknown compression method")
 )
