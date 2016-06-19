@@ -12,7 +12,7 @@ import (
 const (
 	iccProfileParasiteName = "icc-profile"
 	commentParasiteName    = "gimp-comment"
-	texttParasiteName      = "gimp-text-layer"
+	textParasiteName       = "gimp-text-layer"
 )
 
 type parasite struct {
