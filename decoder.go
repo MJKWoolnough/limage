@@ -259,8 +259,6 @@ PropertyLoop:
 		g.Layers = append(g.Layers, l.Layer)
 	}
 
-	return d.Image, nil
-
 	/*
 		d.channels = make([]channel, len(channelptrs))
 
@@ -272,6 +270,8 @@ PropertyLoop:
 			}
 		}
 	*/
+
+	return d.Image, nil
 }
 
 func (d *decoder) SetError(err error) {
