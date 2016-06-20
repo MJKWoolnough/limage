@@ -80,9 +80,9 @@ func Decode(r io.ReadSeeker) (image.Image, error) {
 	d.baseType = d.ReadUint32()
 	switch d.baseType {
 	case 0:
-		d.colorModel = color.RGBAModel
+		d.Config.ColorModel = color.RGBAModel
 	case 1:
-		d.colorModel = color.ModelFunc(grayAlphaColourModel)
+		d.Config.ColorModel = color.ModelFunc(grayAlphaColourModel)
 	}
 
 	// read image properties
@@ -135,7 +135,7 @@ PropertyLoop:
 					B: b,
 				}
 			}
-			d.Image.colorModel = d.palette
+			d.Image.Config.ColorModel = d.palette
 		case propCompression:
 			d.compression = d.ReadUint8()
 			if d.compression > 1 {
@@ -235,7 +235,7 @@ PropertyLoop:
 			gp := new(Group)
 			gp.Width = int(l.width)
 			gp.Height = int(l.height)
-			gp.colorModel = d.colorModel
+			gp.Config.ColorModel = d.Config.ColorModel
 			l.Image = gp
 			groups[string(l.itemPath)] = gp
 		} else {

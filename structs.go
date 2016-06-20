@@ -38,13 +38,12 @@ func (l *Layer) At(x, y int) color.Color {
 }
 
 type Group struct {
-	Width, Height int
-	colorModel    color.Model
-	Layers        []Layer
+	image.Config
+	Layers []Layer
 }
 
 func (g *Group) ColorModel() color.Model {
-	return g.colorModel
+	return g.Config.ColorModel
 }
 
 func (g *Group) Bounds() image.Rectangle {
