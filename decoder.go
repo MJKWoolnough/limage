@@ -215,7 +215,7 @@ PropertyLoop:
 
 	groups := make(map[string]*Group)
 	groups[""] = &d.Group
-	var n uint32
+	var n rune
 	for _, lptr := range layerptrs {
 		d.Goto(lptr)
 		l := d.ReadLayer()
@@ -224,10 +224,10 @@ PropertyLoop:
 		}
 		var g *Group
 		if len(l.itemPath) == 0 {
-			l.itemPath = []uint32{n}
+			l.itemPath = []rune{n}
 			n++
 		}
-		g = groups[itemPathToString(l.itemPath[:len(l.itemPath)-1])]
+		g = groups[string(l.itemPath[:len(l.itemPath)-1])]
 		if g == nil {
 			return nil, ErrInvalidGroup
 		}
@@ -237,7 +237,7 @@ PropertyLoop:
 			gp.Height = int(l.height)
 			gp.colorModel = d.colorModel
 			l.Image = gp
-			groups[itemPathToString(l.itemPath)] = gp
+			groups[string(l.itemPath)] = gp
 		} else {
 			if t := l.parasites.Get(textParasiteName); t != nil {
 				textData, err := parseTextData(t)
@@ -272,14 +272,6 @@ PropertyLoop:
 			}
 		}
 	*/
-}
-
-func itemPathToString(ip []uint32) string {
-	rs := make([]rune, len(ip))
-	for n, r := range ip {
-		rs[n] = rune(r)
-	}
-	return string(rs)
 }
 
 func (d *decoder) SetError(err error) {

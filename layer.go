@@ -11,7 +11,7 @@ type layer struct {
 	tattoo                                      uint32
 	apply, active, edit, group, lockAlpha, show bool
 	selection                                   uint32
-	itemPath                                    []uint32
+	itemPath                                    []rune
 	groupItemFlags                              uint32
 	textLayerFlags                              uint32
 	mask                                        channel
@@ -72,9 +72,9 @@ PropertyLoop:
 			if plength&3 != 0 {
 				d.SetError(ErrInvalidItemPathLength)
 			}
-			l.itemPath = make([]uint32, plength>>2)
+			l.itemPath = make([]rune, plength>>2)
 			for i := uint32(0); i < plength>>2; i++ {
-				l.itemPath[i] = d.ReadUint32()
+				l.itemPath[i] = rune(d.ReadUint32())
 			}
 		case propGroupItemFlags:
 			l.groupItemFlags = d.ReadUint32()
