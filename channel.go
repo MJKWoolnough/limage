@@ -10,7 +10,7 @@ type channel struct {
 	parasites                    parasites
 	tattoo                       uint32
 	active, selection, show      bool
-	color                        rgb
+	color                        RGB
 	image                        image.Image
 }
 

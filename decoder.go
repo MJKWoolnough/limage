@@ -129,7 +129,7 @@ PropertyLoop:
 				r := d.ReadUint8()
 				g := d.ReadUint8()
 				b := d.ReadUint8()
-				d.palette[i] = rgb{
+				d.palette[i] = RGB{
 					R: r,
 					G: g,
 					B: b,

@@ -44,7 +44,7 @@ func parseTextData(t *parasite) (TextData, error) {
 					r, _ := t.Values[0].(float64)
 					g, _ := t.Values[1].(float64)
 					b, _ := t.Values[2].(float64)
-					defaultText.ForeColor = rgb{uint8(r), uint8(g), uint8(b)}
+					defaultText.ForeColor = RGB{uint8(r), uint8(g), uint8(b)}
 				}
 			}
 		case "justify":

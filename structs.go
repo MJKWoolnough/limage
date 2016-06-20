@@ -92,7 +92,7 @@ type MaskedImage struct {
 func (m *MaskedImage) At(x, y int) color.Color {
 	mask := m.Image.At(x, y).(color.Gray)
 	switch i := m.Image.(type) {
-	case *rgbImage:
+	case *RGBImage:
 		c := i.RGBAt(x, y)
 		return color.NRGBA{
 			R: c.R,
@@ -106,25 +106,25 @@ func (m *MaskedImage) At(x, y int) color.Color {
 		return c
 	case *image.Gray:
 		c := i.GrayAt(x, y)
-		return grayAlpha{
+		return GrayAlpha{
 			Y: c.Y,
 			A: mask.Y,
 		}
-	case *grayAlphaImage:
+	case *GrayAlphaImage:
 		c := i.GrayAlphaAt(x, y)
 		c.A = uint8((uint32(mask.Y) * uint32(c.A)) >> 8)
 		return c
 	case *image.Paletted:
-		c := i.Palette[i.ColorIndexAt(x, y)].(rgb)
+		c := i.Palette[i.ColorIndexAt(x, y)].(RGB)
 		return color.NRGBA{
 			R: c.R,
 			G: c.G,
 			B: c.B,
 			A: mask.Y,
 		}
-	case *palettedAlpha:
+	case *PalettedAlpha:
 		ca := i.IndexAlphaAt(x, y)
-		c := i.Palette[ca.I].(rgb)
+		c := i.Palette[ca.I].(RGB)
 		return color.NRGBA{
 			R: c.R,
 			G: c.G,

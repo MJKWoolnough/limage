@@ -5,28 +5,28 @@ import (
 	"image/color"
 )
 
-type palettedAlpha struct {
-	Pix     []indexedAlpha
+type PalettedAlpha struct {
+	Pix     []IndexedAlpha
 	Stride  int
 	Rect    image.Rectangle
 	Palette color.Palette
 }
 
-type indexedAlpha struct {
+type IndexedAlpha struct {
 	I, A uint8
 }
 
-func newPalettedAlpha(r image.Rectangle, p color.Palette) *palettedAlpha {
+func newPalettedAlpha(r image.Rectangle, p color.Palette) *PalettedAlpha {
 	w, h := r.Dx(), r.Dy()
-	return &palettedAlpha{
-		Pix:     make([]indexedAlpha, w*h),
+	return &PalettedAlpha{
+		Pix:     make([]IndexedAlpha, w*h),
 		Stride:  w,
 		Rect:    r,
 		Palette: p,
 	}
 }
 
-func (p *palettedAlpha) At(x, y int) color.Color {
+func (p *PalettedAlpha) At(x, y int) color.Color {
 	if p.Palette == nil {
 		return nil
 	}
@@ -40,22 +40,22 @@ func (p *palettedAlpha) At(x, y int) color.Color {
 	}
 }
 
-func (p *palettedAlpha) Bounds() image.Rectangle {
+func (p *PalettedAlpha) Bounds() image.Rectangle {
 	return p.Rect
 }
 
-func (p *palettedAlpha) ColorModel() color.Model {
+func (p *PalettedAlpha) ColorModel() color.Model {
 	return p.Palette
 }
 
-func (p *palettedAlpha) IndexAlphaAt(x, y int) indexedAlpha {
+func (p *PalettedAlpha) IndexAlphaAt(x, y int) IndexedAlpha {
 	if !(image.Point{x, y}.In(p.Rect)) {
-		return indexedAlpha{}
+		return IndexedAlpha{}
 	}
 	return p.Pix[p.PixOffset(x, y)]
 }
 
-func (p *palettedAlpha) Opaque() bool {
+func (p *PalettedAlpha) Opaque() bool {
 	for _, c := range p.Pix {
 		if c.A != 255 {
 			return true
@@ -63,34 +63,34 @@ func (p *palettedAlpha) Opaque() bool {
 	}
 	return false
 }
-func (p *palettedAlpha) PixOffset(x, y int) int {
+func (p *PalettedAlpha) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*1
 }
 
-func (p *palettedAlpha) Set(x, y int, c color.Color) {
+func (p *PalettedAlpha) Set(x, y int, c color.Color) {
 	if !(image.Point{x, y}.In(p.Rect)) {
 		return
 	}
 	_, _, _, a := c.RGBA()
-	p.Pix[p.PixOffset(x, y)] = indexedAlpha{
+	p.Pix[p.PixOffset(x, y)] = IndexedAlpha{
 		I: uint8(p.Palette.Index(c)),
 		A: uint8(a >> 8),
 	}
 }
 
-func (p *palettedAlpha) SetIndexAlpha(x, y int, ia indexedAlpha) {
+func (p *PalettedAlpha) SetIndexAlpha(x, y int, ia IndexedAlpha) {
 	if !(image.Point{x, y}.In(p.Rect)) {
 		return
 	}
 	p.Pix[p.PixOffset(x, y)] = ia
 }
 
-func (p *palettedAlpha) SubImage(r image.Rectangle) image.Image {
+func (p *PalettedAlpha) SubImage(r image.Rectangle) image.Image {
 	r = r.Intersect(p.Rect)
 	if r.Empty() {
-		return &palettedAlpha{}
+		return &PalettedAlpha{}
 	}
-	return &palettedAlpha{
+	return &PalettedAlpha{
 		Pix:     p.Pix[p.PixOffset(r.Min.X, r.Min.Y):],
 		Stride:  p.Stride,
 		Rect:    r,
@@ -99,11 +99,11 @@ func (p *palettedAlpha) SubImage(r image.Rectangle) image.Image {
 }
 
 type palettedAlphaReader struct {
-	*palettedAlpha
+	*PalettedAlpha
 }
 
 func (p palettedAlphaReader) ReadColour(x, y int, pixels []byte) {
-	p.SetIndexAlpha(x, y, indexedAlpha{
+	p.SetIndexAlpha(x, y, IndexedAlpha{
 		I: pixels[0],
 		A: pixels[1],
 	})
