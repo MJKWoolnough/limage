@@ -86,11 +86,11 @@ func (g *Group) At(x, y int) color.Color {
 
 type MaskedImage struct {
 	image.Image
-	Mask image.Image
+	Mask *image.Gray
 }
 
 func (m *MaskedImage) At(x, y int) color.Color {
-	mask := m.Image.At(x, y).(color.Gray)
+	mask := m.Mask.GrayAt(x, y)
 	switch i := m.Image.(type) {
 	case *RGBImage:
 		c := i.RGBAt(x, y)

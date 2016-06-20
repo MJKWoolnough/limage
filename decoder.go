@@ -252,7 +252,7 @@ PropertyLoop:
 			if l.mask.image != nil {
 				l.Image = &MaskedImage{
 					Image: l.Image,
-					Mask:  l.mask.image,
+					Mask:  l.mask.image.(*image.Gray),
 				}
 			}
 		}
