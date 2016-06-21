@@ -83,7 +83,14 @@ PropertyLoop:
 		case propLockAlpha:
 			l.lockAlpha = d.ReadBoolProperty()
 		case propMode:
-			l.Mode = d.ReadUint32()
+			l.Mode = Composite(d.ReadUint32())
+			if d.baseType != 0 {
+				switch l.Mode {
+				case CompositeNormal, CompositeBehind:
+				default:
+					l.Mode = 0
+				}
+			}
 		case propOffsets:
 			l.OffsetX = int(d.ReadInt32())
 			l.OffsetY = int(d.ReadInt32())
