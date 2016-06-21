@@ -16,7 +16,7 @@ func (i *Image) At(x, y int) color.Color {
 		return i.Group.At(x, y)
 	}
 	c := colourToNRGBA(i.Group.At(x, y))
-	c.A = uint8((uint32(i.Opacity) * uint32(c.A)) >> 8)
+	c.A = uint16((uint32(i.Opacity) * uint32(c.A)) / 0xff)
 	return c
 }
 
@@ -35,7 +35,12 @@ func (l *Layer) Bounds() image.Rectangle {
 }
 
 func (l *Layer) At(x, y int) color.Color {
-	return l.Image.At(x-l.OffsetX, y-l.OffsetY)
+	if l.Opacity == 255 {
+		return l.Image.At(x-l.OffsetX, y-l.OffsetY)
+	}
+	c := colourToNRGBA(l.Image.At(x-l.OffsetX, y-l.OffsetY))
+	c.A = uint16((uint32(l.Opacity) * uint32(c.A)) / 0xff)
+	return c
 }
 
 type Group struct {
@@ -133,18 +138,21 @@ func (m *MaskedImage) At(x, y int) color.Color {
 		}
 	default: // shouldn't happen (I think)
 		c := colourToNRGBA(i.At(x, y))
-		c.A = uint8((uint32(mask.Y) * uint32(c.A)) >> 8)
+		c.A = uint16((uint32(mask.Y) * uint32(c.A)))
 		return c
 	}
 }
 
-func colourToNRGBA(c color.Color) color.NRGBA {
+func colourToNRGBA(c color.Color) color.NRGBA64 {
 	r, g, b, a := c.RGBA()
-	return color.NRGBA{
-		R: uint8(((r * 0xffff) / a) >> 8),
-		G: uint8(((g * 0xffff) / a) >> 8),
-		B: uint8(((b * 0xffff) / a) >> 8),
-		A: uint8(a >> 8),
+	if a == 0 {
+		return color.NRGBA64{}
+	}
+	return color.NRGBA64{
+		R: uint16(((r * 0xffff) / a)),
+		G: uint16(((g * 0xffff) / a)),
+		B: uint16(((b * 0xffff) / a)),
+		A: uint16(a),
 	}
 }
 
