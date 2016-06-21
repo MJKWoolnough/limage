@@ -13,6 +13,8 @@ func (c GrayAlpha) RGBA() (r, g, b, a uint32) {
 	y := uint32(c.Y)
 	y |= y << 8
 	a = uint32(c.A)
+	y *= a
+	y /= 0xff
 	a |= a << 8
 	return y, y, y, a
 }
