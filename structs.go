@@ -73,10 +73,10 @@ func (g *Group) At(x, y int) color.Color {
 
 		ma := 0xffff - aa
 		c = color.RGBA64{
-			R: uint16((br*ma + ar) / 0xffff),
-			G: uint16((bg*ma + ag) / 0xffff),
-			B: uint16((bb*ma + ab) / 0xffff),
-			A: uint16((ba*ma + aa) / 0xffff),
+			R: uint16((br*ma + ar*0xffff) / 0xffff),
+			G: uint16((bg*ma + ag*0xffff) / 0xffff),
+			B: uint16((bb*ma + ab*0xffff) / 0xffff),
+			A: uint16((ba*ma + aa*0xffff) / 0xffff),
 		}
 
 	}
