@@ -53,6 +53,134 @@ type samplePoint struct {
 	x, y uint32
 }
 
+func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
+	var c image.Config
+
+	d := decoder{Image: new(Image), reader: newReader(r)}
+
+	// check header
+
+	var header [14]byte
+	d.Read(header[:])
+	if d.Err != nil {
+		return c, d.Err
+	}
+	if string(header[:9]) != fileTypeID {
+		return c, ErrInvalidFileTypeID
+	}
+	switch string(header[9:13]) {
+	case fileVersion0, fileVersion1, fileVersion2, fileVersion3:
+	default:
+		return c, ErrUnsupportedVersion
+	}
+	if header[13] != 0 {
+		return c, ErrInvalidHeader
+	}
+
+	c.Width = int(d.ReadUint32())
+	c.Height = int(d.ReadUint32())
+	baseType := d.ReadUint32()
+	switch baseType {
+	case 0:
+		c.ColorModel = color.RGBAModel
+	case 1:
+		c.ColorModel = color.ModelFunc(grayAlphaColourModel)
+	case 2:
+	PropertyLoop:
+		for {
+			typ := d.ReadUint32()
+			plength := d.ReadUint32()
+			switch typ {
+			case propEnd:
+				if plength != 0 {
+					return c, ErrInvalidProperties
+				}
+				break PropertyLoop
+
+			// the one we care about
+			case propColorMap:
+				if baseType != baseIndexed {
+					d.Skip(plength) // skip
+				}
+				numColours := d.ReadUint32()
+				palette := make(color.Palette, numColours)
+				for i := uint32(0); i < numColours; i++ {
+					r := d.ReadUint8()
+					g := d.ReadUint8()
+					b := d.ReadUint8()
+					palette[i] = RGB{
+						R: r,
+						G: g,
+						B: b,
+					}
+				}
+				c.ColorModel = palette
+				break PropertyLoop
+
+			//general properties
+			case propLinked:
+				d.ReadBoolProperty()
+			case propLockContent:
+				d.ReadBoolProperty()
+			case propOpacity:
+				if o := d.ReadUint32(); o > 255 {
+					return c, ErrInvalidOpacity
+				}
+			case propParasites:
+				d.ReadParasites(plength)
+			case propTattoo:
+				d.ReadUint32()
+			case propVisible:
+				d.ReadBoolProperty()
+			case propCompression:
+				if d.ReadUint8() > 1 {
+					return c, ErrUnknownCompression
+				}
+			case propGuides:
+				ng := plength / 5
+				if ng*5 != plength {
+					return c, ErrInvalidGuideLength
+				}
+				for n := uint32(0); n < ng; n++ {
+					d.ReadInt32()
+					d.ReadBoolProperty()
+				}
+			case propPaths:
+				d.ReadPaths()
+			case propResolution:
+				d.ReadFloat32()
+				d.ReadFloat32()
+			case propSamplePoints:
+				if plength&1 == 1 {
+					return c, ErrInvalidSampleLength
+				}
+				for i := uint32(0); i < plength>>1; i++ {
+					d.ReadUint32()
+					d.ReadUint32()
+				}
+			case propUnit:
+				if unit := d.ReadUint32(); unit < 0 || unit > 4 {
+					return c, ErrInvalidUnit
+				}
+			case propUserUnit:
+				d.ReadFloat32()
+				d.ReadUint32()
+				d.ReadString()
+				d.ReadString()
+				d.ReadString()
+				d.ReadString()
+				d.ReadString()
+			case propVectors:
+				d.ReadVectors()
+			default:
+				d.Skip(plength)
+			}
+		}
+	}
+
+	return c, d.Err
+}
+
 func Decode(r io.ReadSeeker) (image.Image, error) {
 	d := decoder{Image: new(Image), reader: newReader(r)}
 
