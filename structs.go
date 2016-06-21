@@ -25,6 +25,7 @@ type Layer struct {
 	OffsetX, OffsetY int
 	Mode             uint32
 	Visible          bool
+	Opacity          uint8
 	image.Image
 }
 

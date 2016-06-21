@@ -6,7 +6,6 @@ type layer struct {
 	Layer
 	width, height                               uint32
 	linked, lockContent                         bool
-	opacity                                     uint8
 	parasites                                   parasites
 	tattoo                                      uint32
 	apply, active, edit, group, lockAlpha, show bool
@@ -49,7 +48,7 @@ PropertyLoop:
 			if o > 255 {
 				d.SetError(ErrInvalidOpacity)
 			}
-			l.opacity = uint8(o)
+			l.Opacity = uint8(o)
 		case propParasites:
 			l.parasites = d.ReadParasites(plength)
 		case propTattoo:
