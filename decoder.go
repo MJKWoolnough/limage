@@ -213,8 +213,13 @@ PropertyLoop:
 
 	*/
 
-	groups := make(map[string]*Group)
-	groups[""] = &d.Group
+	type groupOffset struct {
+		*Group
+		OffsetX, OffsetY int
+	}
+
+	groups := make(map[string]groupOffset)
+	groups[""] = groupOffset{Group: &d.Group}
 	var n rune
 	for _, lptr := range layerptrs {
 		d.Goto(lptr)
@@ -222,13 +227,12 @@ PropertyLoop:
 		if d.Err != nil {
 			return nil, d.Err
 		}
-		var g *Group
 		if len(l.itemPath) == 0 {
 			l.itemPath = []rune{n}
 			n++
 		}
-		g = groups[string(l.itemPath[:len(l.itemPath)-1])]
-		if g == nil {
+		g := groups[string(l.itemPath[:len(l.itemPath)-1])]
+		if g.Group == nil {
 			return nil, ErrInvalidGroup
 		}
 		if l.group {
@@ -237,7 +241,12 @@ PropertyLoop:
 			gp.Height = int(l.height)
 			gp.Config.ColorModel = d.Config.ColorModel
 			l.Image = gp
-			groups[string(l.itemPath)] = gp
+			groups[string(l.itemPath)] = groupOffset{
+				Group:   gp,
+				OffsetX: l.OffsetX,
+				OffsetY: l.OffsetY,
+			}
+
 		} else {
 			if t := l.parasites.Get(textParasiteName); t != nil {
 				textData, err := parseTextData(t)
@@ -256,6 +265,8 @@ PropertyLoop:
 				}
 			}
 		}
+		l.OffsetX -= g.OffsetX
+		l.OffsetY -= g.OffsetY
 		g.Layers = append(g.Layers, l.Layer)
 	}
 
