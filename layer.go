@@ -27,6 +27,9 @@ func (d *decoder) ReadLayer() layer {
 	}
 	l.Name = d.ReadString()
 
+	// defaults
+	l.Opacity = 255
+
 	// read properties
 PropertyLoop:
 	for {
