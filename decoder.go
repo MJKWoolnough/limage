@@ -213,6 +213,9 @@ func Decode(r io.ReadSeeker) (image.Image, error) {
 		d.Config.ColorModel = color.ModelFunc(grayAlphaColourModel)
 	}
 
+	// defaults
+	d.Opacity = 255
+
 	// read image properties
 PropertyLoop:
 	for {
