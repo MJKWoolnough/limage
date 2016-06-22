@@ -20,10 +20,10 @@ func (ap alphaPalette) Convert(c color.Color) color.Color {
 	r, g, b, _ := ap.Palette.Convert(c).RGBA()
 	_, _, _, a := c.RGBA()
 	return image.RGBA{
-		R: r,
-		G: g,
-		B: b,
-		A: a,
+		R: uint8(r >> 8),
+		G: uint8(g >> 8),
+		B: uint8(b >> 8),
+		A: uint8(a >> 8),
 	}
 }
 
