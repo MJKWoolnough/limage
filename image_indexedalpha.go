@@ -12,6 +12,21 @@ type PalettedAlpha struct {
 	Palette color.Palette
 }
 
+type alphaPalette struct {
+	color.Palette
+}
+
+func (ap alphaPalette) Convert(c color.Color) color.Color {
+	r, g, b, _ := ap.Palette.Convert(c).RGBA()
+	_, _, _, a := c.RGBA()
+	return image.RGBA{
+		R: r,
+		G: g,
+		B: b,
+		A: a,
+	}
+}
+
 type IndexedAlpha struct {
 	I, A uint8
 }
@@ -45,7 +60,7 @@ func (p *PalettedAlpha) Bounds() image.Rectangle {
 }
 
 func (p *PalettedAlpha) ColorModel() color.Model {
-	return p.Palette
+	return alphaPalette{p.Palette}
 }
 
 func (p *PalettedAlpha) IndexAlphaAt(x, y int) IndexedAlpha {

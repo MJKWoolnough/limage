@@ -266,7 +266,7 @@ PropertyLoop:
 					B: b,
 				}
 			}
-			d.Image.Config.ColorModel = d.palette
+			d.Config.ColorModel = alphaPalette{d.palette}
 		case propCompression:
 			d.compression = d.ReadUint8()
 			if d.compression > 1 {
