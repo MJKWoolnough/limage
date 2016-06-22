@@ -5,7 +5,7 @@ import "errors"
 type layer struct {
 	Layer
 	width, height                               uint32
-	linked, lockContent                         bool
+	linked, lockContent, alpha                  bool
 	parasites                                   parasites
 	tattoo                                      uint32
 	apply, active, edit, group, lockAlpha, show bool
@@ -25,6 +25,7 @@ func (d *decoder) ReadLayer() layer {
 		d.SetError(ErrInvalidLayerType)
 		return l
 	}
+	l.alpha = typ && 1 == 1
 	l.Name = d.ReadString()
 
 	// defaults

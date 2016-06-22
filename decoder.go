@@ -349,15 +349,22 @@ PropertyLoop:
 		OffsetX, OffsetY int
 	}
 
-	groups := make(map[string]groupOffset)
+	var (
+		groups = make(map[string]groupOffset)
+		n      rune
+		alpha  bool = true
+	)
 	groups[""] = groupOffset{Group: &d.Group}
-	var n rune
 	for _, lptr := range layerptrs {
+		if !alpha {
+			return nil, ErrMissingAlpha
+		}
 		d.Goto(lptr)
 		l := d.ReadLayer()
 		if d.Err != nil {
 			return nil, d.Err
 		}
+		alpha = l.alpha
 		if len(l.itemPath) == 0 {
 			l.itemPath = []rune{n}
 			n++
@@ -434,4 +441,5 @@ var (
 	ErrInvalidSampleLength = errors.New("invalid sample points length")
 	ErrInvalidGroup        = errors.New("invalid or unknown group specified for layer")
 	ErrUnknownCompression  = errors.New("unknown compression method")
+	ErrMissingAlpha        = errors.New("non-bottom layer missing alpha channel")
 )
