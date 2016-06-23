@@ -32,7 +32,7 @@ const (
 func (c Composite) Composite(a, b color.Color) color.Color {
 	switch c {
 	case CompositeNormal:
-		//return compositeNormal(a, b)
+		return compositeNormal(a, b)
 	case CompositeDissolve:
 		//return compositeDissolve(a, b)
 	case CompositeBehind:
@@ -77,4 +77,43 @@ func (c Composite) Composite(a, b color.Color) color.Color {
 		//return compositeGrainMerge(a, b)
 	}
 	return color.Alpha{}
+}
+
+func compositeNormal(a, b color.Color) color.Color {
+
+	return nil
+}
+
+func min(n ...uint32) uint32 {
+	var m uint32 = 0xffffffff
+	for _, o := range n {
+		if o < m {
+			m = o
+		}
+	}
+}
+
+func max(n ...uint32) uint32 {
+	var m uint32
+	for _, o := range n {
+		if o > m {
+			m = o
+		}
+	}
+}
+
+func mid(n ...uint32) uint32 {
+	return (min(n...) + max(n...)) >> 1
+}
+
+func clamp(n uint32) uint32 {
+	if n > 0xffff {
+		return 0xffff
+	}
+	return n
+}
+
+func blend(a1, x1, a2, x2 uint32) uint32 {
+	k := a2 / (1 - (1-a1)*(1-a2))
+	return (1-k)*x1 + k*x2
 }
