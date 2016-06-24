@@ -96,6 +96,11 @@ type MaskedImage struct {
 
 func (m *MaskedImage) At(x, y int) color.Color {
 	mask := m.Mask.GrayAt(x, y)
+	if mask.Y == 0 {
+		return color.Alpha{}
+	} else if mask.Y == 0xff {
+		return m.Image.At(x, y)
+	}
 	switch i := m.Image.(type) {
 	case *RGBImage:
 		c := i.RGBAt(x, y)
