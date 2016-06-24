@@ -23,7 +23,7 @@ func (i *Image) At(x, y int) color.Color {
 type Layer struct {
 	Name             string
 	OffsetX, OffsetY int
-	Mode             uint32
+	Mode             Composite
 	Visible          bool
 	Opacity          uint8
 	image.Image
@@ -66,25 +66,7 @@ func (g *Group) At(x, y int) color.Color {
 		if !point.In(g.Layers[i].Bounds()) {
 			continue
 		}
-		ca := g.Layers[i].At(x, y)
-		ar, ag, ab, aa := ca.RGBA()
-		if aa == 0xffff {
-			c = ca
-			continue
-		} else if aa == 0 {
-			continue
-		}
-
-		br, bg, bb, ba := c.RGBA()
-
-		ma := 0xffff - aa
-		c = color.RGBA64{
-			R: uint16((br*ma + ar*0xffff) / 0xffff),
-			G: uint16((bg*ma + ag*0xffff) / 0xffff),
-			B: uint16((bb*ma + ab*0xffff) / 0xffff),
-			A: uint16((ba*ma + aa*0xffff) / 0xffff),
-		}
-
+		c = g.Layers[i].Mode.Composite(c, g.Layers[i].At(x, y))
 	}
 	return c
 }
