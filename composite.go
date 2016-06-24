@@ -1,6 +1,9 @@
 package xcf
 
-import "image/color"
+import (
+	"image/color"
+	"math/rand"
+)
 
 type Composite uint32
 
@@ -29,59 +32,78 @@ const (
 	CompositeGrainMerge   Composite = 21
 )
 
-func (c Composite) Composite(a, b color.Color) color.Color {
+func (c Composite) Composite(bottom, top color.Color) color.Color {
 	switch c {
-	case CompositeNormal:
-		return compositeNormal(a, b)
 	case CompositeDissolve:
-		//return compositeDissolve(a, b)
+		//return compositeDissolve(bottom, top)
 	case CompositeBehind:
-		//return compositeBehin(a, b)
+		//return compositeBehin(bottom, top)
 	case CompositeMultiply:
-		//return compositeMultiple(a, b)
+		//return compositeMultiple(bottom, top)
 	case CompositeScreen:
-		//return compositeScreen(a, b)
+		//return compositeScreen(bottom, top)
 	case CompositeOverlay:
-		//return compositeOverlay(a, b)
+		//return compositeOverlay(bottom, top)
 	case CompositeDifference:
-		//return compositeDifference(a, b)
+		//return compositeDifference(bottom, top)
 	case CompositeAddition:
-		//return compositeAddition(a, b)
+		//return compositeAddition(bottom, top)
 	case CompositeSubtract:
-		//return compositeSubtract(a, b)
+		//return compositeSubtract(bottom, top)
 	case CompositeDarkenOnly:
-		//return compositeDarkenOnly(a, b)
+		//return compositeDarkenOnly(bottom, top)
 	case CompositeLightenOnly:
-		//return compositeLightenOnly(a, b)
+		//return compositeLightenOnly(bottom, top)
 	case CompositeHue:
-		//return compositeHue(a, b)
+		//return compositeHue(bottom, top)
 	case CompositeSaturation:
-		//return compositeSaturation(a, b)
+		//return compositeSaturation(bottom, top)
 	case CompositeColor:
-		//return compositeColor(a, b)
+		//return compositeColor(bottom, top)
 	case CompositeValue:
-		//return compositeValue(a, b)
+		//return compositeValue(bottom, top)
 	case CompositeDivide:
-		//return compositeDivide(a, b)
+		//return compositeDivide(bottom, top)
 	case CompositeDodge:
-		//return compositeDodge(a, b)
+		//return compositeDodge(bottom, top)
 	case CompositeBurn:
-		//return compositeBurn(a, b)
+		//return compositeBurn(bottom, top)
 	case CompositeHardLight:
-		//return compositeHardLight(a, b)
+		//return compositeHardLight(bottom, top)
 	case CompositeSoftLight:
-		//return compositeSoftLight(a, b)
+		//return compositeSoftLight(bottom, top)
 	case CompositeGrainExtract:
-		//return compositeGrainExtract(a, b)
+		//return compositeGrainExtract(bottom, top)
 	case CompositeGrainMerge:
-		//return compositeGrainMerge(a, b)
+		//return compositeGrainMerge(bottom, top)
+	default: //Normal
+		return compositeNormal(bottom, top)
 	}
 	return color.Alpha{}
 }
 
-func compositeNormal(a, b color.Color) color.Color {
+func compositeNormal(bottom, top color.Color) color.Color {
+	ar, ag, ab, aa := bottom.RGBA()
+	br, bg, bb, ba := top.RGBA()
+	return color.RGBA64{
+		R: uint16(blend(aa, ar, ba, br)),
+		G: uint16(blend(aa, ag, ba, bg)),
+		B: uint16(blend(aa, ab, ba, bb)),
+		A: uint16(0xffff - (0xffff-aa)*(0xffff-ba)),
+	}
+}
 
-	return nil
+func compositeDissolve(bottom, top color.Color) color.Color {
+	r, g, b, a := top.RGBA()
+	if uint32(rand.Int31n(0xffff)) < a {
+		return color.RGBA64{
+			R: uint16(r),
+			G: uint16(g),
+			B: uint16(b),
+			A: 0xffff,
+		}
+	}
+	return bottom
 }
 
 func min(n ...uint32) uint32 {
@@ -91,6 +113,7 @@ func min(n ...uint32) uint32 {
 			m = o
 		}
 	}
+	return m
 }
 
 func max(n ...uint32) uint32 {
@@ -100,6 +123,7 @@ func max(n ...uint32) uint32 {
 			m = o
 		}
 	}
+	return m
 }
 
 func mid(n ...uint32) uint32 {
@@ -114,6 +138,6 @@ func clamp(n uint32) uint32 {
 }
 
 func blend(a1, x1, a2, x2 uint32) uint32 {
-	k := a2 / (1 - (1-a1)*(1-a2))
+	k := a2 / (0xffff - (0xffff-a1)*(0xffff-a2))
 	return (1-k)*x1 + k*x2
 }
