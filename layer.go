@@ -25,7 +25,7 @@ func (d *decoder) ReadLayer() layer {
 		d.SetError(ErrInvalidLayerType)
 		return l
 	}
-	l.alpha = typ && 1 == 1
+	l.alpha = typ&1 == 1
 	l.Name = d.ReadString()
 
 	// defaults

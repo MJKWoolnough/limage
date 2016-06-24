@@ -19,7 +19,7 @@ type alphaPalette struct {
 func (ap alphaPalette) Convert(c color.Color) color.Color {
 	r, g, b, _ := ap.Palette.Convert(c).RGBA()
 	_, _, _, a := c.RGBA()
-	return image.RGBA{
+	return color.RGBA{
 		R: uint8(r >> 8),
 		G: uint8(g >> 8),
 		B: uint8(b >> 8),
