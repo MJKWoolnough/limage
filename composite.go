@@ -50,7 +50,7 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 	case CompositeAddition:
 		f = compositeAddition
 	case CompositeSubtract:
-		//return compositeSubtract(bottom, top)
+		return compositeSubtract
 	case CompositeDarkenOnly:
 		//return compositeDarkenOnly(bottom, top)
 	case CompositeLightenOnly:
@@ -136,6 +136,13 @@ func compositeDifference(x, y uint32) uint32 {
 
 func compositeAddition(x, y uint32) uint32 {
 	return clamp(x + y)
+}
+
+func compositeSubtract(x, y uint32) uint32 {
+	if y > x {
+		return 0
+	}
+	return x - y
 }
 
 func min(n ...uint32) uint32 {
