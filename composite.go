@@ -68,7 +68,7 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 	case CompositeDodge:
 		f = compositeDodge
 	case CompositeBurn:
-		//return compositeBurn(bottom, top)
+		f = compositeBurn
 	case CompositeHardLight:
 		//return compositeHardLight(bottom, top)
 	case CompositeSoftLight:
@@ -154,11 +154,33 @@ func compositeLightenOnly(x, y uint32) uint32 {
 }
 
 func compositeDivide(x, y uint32) uint32 {
+	if y == 0 {
+		if x == 0 {
+			return 0
+		}
+		return 0xffff
+	}
 	return clamp(0xffff * x / y)
 }
 
 func compositeDodge(x, y uint32) uint32 {
+	if y == 0xffff {
+		if x == 0 {
+			return 0
+		}
+		return 0xffff
+	}
 	return clamp(0xffff * x / (0xffff - y))
+}
+
+func compositeBurn(x, y uint32) uint32 {
+	if y == 0 {
+		if x == 0xffff {
+			return 0
+		}
+		return 0xffff
+	}
+	return clamp(0xffff - 0xffff*(0xffff-x)/y)
 }
 
 func min(n ...uint32) uint32 {
