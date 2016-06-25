@@ -44,7 +44,7 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 	case CompositeScreen:
 		f = compositeScreen
 	case CompositeOverlay:
-		//return compositeOverlay(bottom, top)
+		f = compositeOverlay
 	case CompositeDifference:
 		//return compositeDifference(bottom, top)
 	case CompositeAddition:
@@ -120,6 +120,11 @@ func compositeMultiply(x, y uint32) uint32 {
 
 func compositeScreen(x, y uint32) uint32 {
 	return 0xffff - (0xffff-x)*(0xffff-y)/0xffff
+}
+
+func compositeOverlay(x, y uint32) uint32 {
+	t := 0xffff - y
+	return (0xffff-y)*(x*x/0xffff)/0xffff + y*(0xffff-(t*t/0xffff))/0xffff
 }
 
 func min(n ...uint32) uint32 {
