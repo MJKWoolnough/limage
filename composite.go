@@ -145,7 +145,7 @@ func compositeSubtract(x, y uint32) uint32 {
 	return x - y
 }
 
-func CompositeDarkenOnly(x, y uint32) uint32 {
+func compositeDarkenOnly(x, y uint32) uint32 {
 	return min(x, y)
 }
 
