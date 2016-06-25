@@ -83,9 +83,9 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 	ar, ag, ab, aa := bottom.RGBA()
 	br, bg, bb, ba := top.RGBA()
 	return color.RGBA64{
-		R: uint16(blend(aa, br, min(aa, ba), f(ar, br))),
-		G: uint16(blend(aa, bg, min(aa, ba), f(ag, bg))),
-		B: uint16(blend(aa, bb, min(aa, ba), f(ab, bb))),
+		R: uint16(blend(aa, ar, min(aa, ba), f(ar, br))),
+		G: uint16(blend(aa, ag, min(aa, ba), f(ag, bg))),
+		B: uint16(blend(aa, ab, min(aa, ba), f(ab, bb))),
 		A: aa,
 	}
 }
