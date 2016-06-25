@@ -154,11 +154,11 @@ func compositeLightenOnly(x, y uint32) uint32 {
 }
 
 func compositeDivide(x, y uint32) uint32 {
-	return clamp(x / y)
+	return clamp(0xffff * x / y)
 }
 
 func compositeDodge(x, y uint32) uint32 {
-	return clamp(x / (0xffff - y))
+	return clamp(0xffff * x / (0xffff - y))
 }
 
 func min(n ...uint32) uint32 {
