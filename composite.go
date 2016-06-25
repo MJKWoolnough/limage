@@ -33,13 +33,14 @@ const (
 )
 
 func (c Composite) Composite(bottom, top color.Color) color.Color {
+	var f func(uint32, uint32) uint32
 	switch c {
 	case CompositeDissolve:
-		//return compositeDissolve(bottom, top)
+		return compositeDissolve(bottom, top)
 	case CompositeBehind:
-		//return compositeBehin(bottom, top)
+		return bottom
 	case CompositeMultiply:
-		//return compositeMultiple(bottom, top)
+		f = compositeMultiply
 	case CompositeScreen:
 		//return compositeScreen(bottom, top)
 	case CompositeOverlay:
@@ -79,7 +80,14 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 	default: //Normal
 		return compositeNormal(bottom, top)
 	}
-	return color.Alpha{}
+	ar, ag, ab, aa := bottom.RGBA()
+	br, bg, bb, ba := top.RGBA()
+	return color.RGBA64{
+		R: uint16(blend(aa, br, min(aa, ba), f(ar, br))),
+		G: uint16(blend(aa, bg, min(aa, ba), f(ag, bg))),
+		B: uint16(blend(aa, bb, min(aa, ba), f(ab, bb))),
+		A: aa,
+	}
 }
 
 func compositeNormal(bottom, top color.Color) color.Color {
@@ -104,6 +112,10 @@ func compositeDissolve(bottom, top color.Color) color.Color {
 		}
 	}
 	return bottom
+}
+
+func compositeMultiply(x, y uint32) uint32 {
+	return x * y
 }
 
 func min(n ...uint32) uint32 {
