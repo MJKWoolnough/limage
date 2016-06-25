@@ -74,7 +74,7 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 	case CompositeSoftLight:
 		f = compositeSoftLight
 	case CompositeGrainExtract:
-		//return compositeGrainExtract(bottom, top)
+		f = compositeGrainExtract
 	case CompositeGrainMerge:
 		//return compositeGrainMerge(bottom, top)
 	default: //Normal
@@ -192,6 +192,13 @@ func compositeHardLight(x, y uint32) uint32 {
 
 func compositeSoftLight(x, y uint32) uint32 {
 	return compositeOverlay(x, y)
+}
+
+func compositeGrainExtract(x, y uint32) uint32 {
+	if x+0x7fff < y {
+		return 0
+	}
+	return clamp(x - y + 0x7fff)
 }
 
 func min(n ...uint32) uint32 {
