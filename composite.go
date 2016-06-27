@@ -81,6 +81,9 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 		return compositeNormal(bottom, top)
 	}
 	ar, ag, ab, aa := bottom.RGBA()
+	if aa == 0 {
+		return color.Alpha{}
+	}
 	br, bg, bb, ba := top.RGBA()
 	return color.RGBA64{
 		R: uint16(blend(aa, ar, min(aa, ba), f(ar, br))),
@@ -93,6 +96,9 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 func compositeNormal(bottom, top color.Color) color.Color {
 	ar, ag, ab, aa := bottom.RGBA()
 	br, bg, bb, ba := top.RGBA()
+	if aa == 0 && ba == 0 {
+		return color.Alpha{}
+	}
 	return color.RGBA64{
 		R: uint16(blend(aa, ar, ba, br)),
 		G: uint16(blend(aa, ag, ba, bg)),
@@ -269,6 +275,6 @@ func clamp(n uint32) uint32 {
 }
 
 func blend(a1, x1, a2, x2 uint32) uint32 {
-	k := a2 / (0xffff - (0xffff-a1)*(0xffff-a2))
+	k := a2 / (0xffff - (0xffff-a1)*(0xffff-a2)/0xffff)
 	return (1-k)*x1 + k*x2
 }
