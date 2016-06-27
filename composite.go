@@ -56,13 +56,13 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 	case CompositeLightenOnly:
 		f = compositeLightenOnly
 	case CompositeHue:
-		//return compositeHue(bottom, top)
+		return compositeHue(bottom, top)
 	case CompositeSaturation:
-		//return compositeSaturation(bottom, top)
+		return compositeSaturation(bottom, top)
 	case CompositeColor:
-		//return compositeColor(bottom, top)
+		return compositeColor(bottom, top)
 	case CompositeValue:
-		//return compositeValue(bottom, top)
+		return compositeValue(bottom, top)
 	case CompositeDivide:
 		f = compositeDivide
 	case CompositeDodge:
@@ -203,6 +203,38 @@ func compositeGrainExtract(x, y uint32) uint32 {
 
 func compositeGrainMerge(x, y uint32) uint32 {
 	return clamp(x + y + 0x7fff)
+}
+
+func compositeHue(bottom, top color.Color) color.Color {
+	br, bg, bb, ba := top.RGBA()
+	if br == bg && br == bb {
+		return bottom
+	}
+	a := rgbToHSV(bottom)
+	b := rgbToHSV(top)
+	a.H = b.H
+	return a
+}
+
+func compositeSaturation(bottom, top color.Color) color.Color {
+	a := rgbToHSV(bottom)
+	b := rgbToHSV(top)
+	a.S = b.S
+	return a
+}
+
+func compositeColor(bottom, top color.Color) color.Color {
+	a := rgbToHSL(bottom)
+	b := rgbToHSL(top)
+	b.L = a.L
+	return b
+}
+
+func compositeValue(bottom, top color.Color) color.Color {
+	a := rgbToHSV(bottom)
+	b := rgbToHSV(top)
+	a.V = b.V
+	return a
 }
 
 func min(n ...uint32) uint32 {
