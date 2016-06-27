@@ -97,7 +97,7 @@ func compositeNormal(bottom, top color.Color) color.Color {
 		R: uint16(blend(aa, ar, ba, br)),
 		G: uint16(blend(aa, ag, ba, bg)),
 		B: uint16(blend(aa, ab, ba, bb)),
-		A: uint16(0xffff - (0xffff-aa)*(0xffff-ba)),
+		A: uint16(0xffff - (0xffff-aa)*(0xffff-ba)/0xffff),
 	}
 }
 
