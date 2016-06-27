@@ -206,7 +206,7 @@ func compositeGrainMerge(x, y uint32) uint32 {
 }
 
 func compositeHue(bottom, top color.Color) color.Color {
-	br, bg, bb, ba := top.RGBA()
+	br, bg, bb, _ := top.RGBA()
 	if br == bg && br == bb {
 		return bottom
 	}
