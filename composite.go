@@ -86,7 +86,7 @@ func (c Composite) Composite(bottom, top color.Color) color.Color {
 		R: uint16(blend(aa, ar, min(aa, ba), f(ar, br))),
 		G: uint16(blend(aa, ag, min(aa, ba), f(ag, bg))),
 		B: uint16(blend(aa, ab, min(aa, ba), f(ab, bb))),
-		A: aa,
+		A: uint16(aa),
 	}
 }
 
