@@ -32,6 +32,55 @@ const (
 	CompositeGrainMerge   Composite = 21
 )
 
+func (c Composite) String() string {
+	switch c {
+	case CompositeDissolve:
+		return "Dissolve"
+	case CompositeBehind:
+		return "Behind"
+	case CompositeMultiply:
+		return "Multiply"
+	case CompositeScreen:
+		return "Screen"
+	case CompositeOverlay:
+		return "Overlay"
+	case CompositeDifference:
+		return "Difference"
+	case CompositeAddition:
+		return "Addition"
+	case CompositeSubtract:
+		return "Subtract"
+	case CompositeDarkenOnly:
+		return "Darken Only"
+	case CompositeLightenOnly:
+		return "Lighten Only"
+	case CompositeHue:
+		return "Hue"
+	case CompositeSaturation:
+		return "Saturation"
+	case CompositeColor:
+		return "Color"
+	case CompositeValue:
+		return "Value"
+	case CompositeDivide:
+		return "Divide"
+	case CompositeDodge:
+		return "Dodge"
+	case CompositeBurn:
+		return "Burn"
+	case CompositeHardLight:
+		return "Hard Light"
+	case CompositeSoftLight:
+		return "Soft Light"
+	case CompositeGrainExtract:
+		return "Grain Extract"
+	case CompositeGrainMerge:
+		return "Grain Merge"
+	default:
+		return "Normal"
+	}
+}
+
 func (c Composite) Composite(bottom, top color.Color) color.Color {
 	var f func(uint32, uint32) uint32
 	switch c {
