@@ -324,6 +324,6 @@ func clamp(n uint32) uint32 {
 }
 
 func blend(a1, x1, a2, x2 uint32) uint32 {
-	k := a2 / (0xffff - (0xffff-a1)*(0xffff-a2)/0xffff)
-	return (1-k)*x1 + k*x2
+	k := 0xffff * a2 / (0xffff - (0xffff-a1)*(0xffff-a2)/0xffff)
+	return (0xffff-k)*x1/0xffff + k*x2/0xffff
 }
