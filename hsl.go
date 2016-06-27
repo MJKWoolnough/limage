@@ -7,7 +7,7 @@ type hsl struct {
 }
 
 func rgbToHSL(cl color.Color) hsl {
-	return hsv{}
+	return hsl{}
 }
 
 func (h hsl) RGBA() (uint32, uint32, uint32, uint32) {
