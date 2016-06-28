@@ -66,7 +66,7 @@ func (g *Group) At(x, y int) color.Color {
 		if !point.In(g.Layers[i].Bounds()) {
 			continue
 		}
-		if _, ok := g.Config.ColorModel.(color.Palette); g.Layers[i].Mode == CompositeNormal && ok {
+		if _, ok := g.Config.ColorModel.(color.Palette); g.Layers[i].Mode != CompositeDissolve && ok {
 			d := g.Layers[i].At(x, y)
 			if ar, ag, ab, aa := d.RGBA(); aa > 0x7fff {
 				c = color.RGBA64{
