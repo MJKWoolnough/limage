@@ -142,19 +142,6 @@ func (c Composite) Composite(bottom, top color.NRGBA64) color.Color {
 }
 
 func compositeNormal(bottom, top color.NRGBA64) color.NRGBA64 {
-	/*
-		ar, ag, ab, aa := bottom.RGBA()
-		br, bg, bb, ba := top.RGBA()
-		if aa == 0 && ba == 0 {
-			return color.Alpha{}
-		}
-		return color.RGBA64{
-			R: uint16(blend(aa, ar, ba, br)),
-			G: uint16(blend(aa, ag, ba, bg)),
-			B: uint16(blend(aa, ab, ba, bb)),
-			A: uint16(0xffff - (0xffff-aa)*(0xffff-ba)/0xffff),
-		}
-	*/
 	if bottom.A == 0 && top.A == 0 {
 		return color.NRGBA64{}
 	}
