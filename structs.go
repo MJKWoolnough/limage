@@ -12,12 +12,7 @@ type Image struct {
 }
 
 func (i *Image) At(x, y int) color.Color {
-	if i.Opacity == 255 {
-		return i.Group.At(x, y)
-	}
-	c := colourToNRGBA(i.Group.At(x, y))
-	c.A = uint16((uint32(i.Opacity) * uint32(c.A)) / 0xff)
-	return c
+	return transparency(i.Group.At(x, y), i.Opacity)
 }
 
 type Layer struct {
@@ -35,12 +30,7 @@ func (l *Layer) Bounds() image.Rectangle {
 }
 
 func (l *Layer) At(x, y int) color.Color {
-	if l.Opacity == 255 {
-		return l.Image.At(x-l.OffsetX, y-l.OffsetY)
-	}
-	c := colourToNRGBA(l.Image.At(x-l.OffsetX, y-l.OffsetY))
-	c.A = uint16((uint32(l.Opacity) * uint32(c.A)) / 0xff)
-	return c
+	return transparency(l.Image.At(x-l.OffsetX, y-l.OffsetY), l.Opacity)
 }
 
 type Group struct {
@@ -191,4 +181,17 @@ type TextDatum struct {
 	Bold, Italic, Underline, Strikethrough bool
 	Font, Data                             string
 	FontUnit                               uint8
+}
+
+func transparency(ac color.Color, ao uint8) color.Color {
+	if ao == 0xff {
+		return ac
+	} else if ao == 0 {
+		return color.Alpha{}
+	}
+	c := colourToNRGBA(ac)
+	o := uint32(ao)
+	o |= o << 8
+	c.A = uint16(o * uint32(c.A) / 0xffff)
+	return c
 }
