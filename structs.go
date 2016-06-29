@@ -137,7 +137,7 @@ func (m *MaskedImage) At(x, y int) color.Color {
 		}
 	default: // shouldn't happen (I think)
 		c := colourToNRGBA(i.At(x, y))
-		c.A = uint16((uint32(mask.Y) * uint32(c.A)))
+		c.A = uint16((uint32(mask.Y) * uint32(c.A)) / 0xffff)
 		return c
 	}
 }
