@@ -77,7 +77,7 @@ func (g *Group) At(x, y int) color.Color {
 				}
 			}
 		} else {
-			c = g.Layers[i].Mode.Composite(c, g.Layers[i].At(x, y))
+			c = g.Layers[i].Mode.Composite(colourToNRGBA(c), colourToNRGBA(g.Layers[i].At(x, y)))
 		}
 	}
 	return c
