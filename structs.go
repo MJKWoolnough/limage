@@ -143,6 +143,21 @@ func (m *MaskedImage) At(x, y int) color.Color {
 }
 
 func colourToNRGBA(c color.Color) color.NRGBA64 {
+	switch c := c.(type) {
+	case color.NRGBA:
+		var d color.NRGBA64
+		d.R = uint16(c.R)
+		d.R |= d.R << 8
+		d.G = uint16(c.G)
+		d.G |= d.G << 8
+		d.B = uint16(c.B)
+		d.B |= d.B << 8
+		d.A = uint16(c.A)
+		d.A |= d.A << 8
+		return d
+	case color.NRGBA64:
+		return c
+	}
 	r, g, b, a := c.RGBA()
 	if a == 0 {
 		return color.NRGBA64{}
