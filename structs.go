@@ -79,57 +79,7 @@ type MaskedImage struct {
 }
 
 func (m *MaskedImage) At(x, y int) color.Color {
-	mask := m.Mask.GrayAt(x, y)
-	if mask.Y == 0 {
-		return color.Alpha{}
-	} else if mask.Y == 0xff {
-		return m.Image.At(x, y)
-	}
-	switch i := m.Image.(type) {
-	case *RGBImage:
-		c := i.RGBAt(x, y)
-		return color.NRGBA{
-			R: c.R,
-			G: c.G,
-			B: c.B,
-			A: mask.Y,
-		}
-	case *image.NRGBA:
-		c := i.NRGBAAt(x, y)
-		c.A = uint8((uint32(mask.Y) * uint32(c.A)) >> 8)
-		return c
-	case *image.Gray:
-		c := i.GrayAt(x, y)
-		return GrayAlpha{
-			Y: c.Y,
-			A: mask.Y,
-		}
-	case *GrayAlphaImage:
-		c := i.GrayAlphaAt(x, y)
-		c.A = uint8((uint32(mask.Y) * uint32(c.A)) >> 8)
-		return c
-	case *image.Paletted:
-		c := i.Palette[i.ColorIndexAt(x, y)].(RGB)
-		return color.NRGBA{
-			R: c.R,
-			G: c.G,
-			B: c.B,
-			A: mask.Y,
-		}
-	case *PalettedAlpha:
-		ca := i.IndexAlphaAt(x, y)
-		c := i.Palette[ca.I].(RGB)
-		return color.NRGBA{
-			R: c.R,
-			G: c.G,
-			B: c.B,
-			A: uint8((uint32(mask.Y) * uint32(ca.A)) >> 8),
-		}
-	default: // shouldn't happen (I think)
-		c := colourToNRGBA(i.At(x, y))
-		c.A = uint16((uint32(mask.Y) * uint32(c.A)) / 0xffff)
-		return c
-	}
+	return transparency(m.Image.At(x, y), m.Mask.GrayAt(x, y).Y)
 }
 
 func colourToNRGBA(c color.Color) color.NRGBA64 {
@@ -153,9 +103,9 @@ func colourToNRGBA(c color.Color) color.NRGBA64 {
 		return color.NRGBA64{}
 	}
 	return color.NRGBA64{
-		R: uint16(((r * 0xffff) / a)),
-		G: uint16(((g * 0xffff) / a)),
-		B: uint16(((b * 0xffff) / a)),
+		R: uint16(r * 0xffff / a),
+		G: uint16(g * 0xffff / a),
+		B: uint16(b * 0xffff / a),
 		A: uint16(a),
 	}
 }
@@ -187,7 +137,7 @@ func transparency(ac color.Color, ao uint8) color.Color {
 	if ao == 0xff {
 		return ac
 	} else if ao == 0 {
-		return color.Alpha{}
+		return color.NRGBA64{}
 	}
 	c := colourToNRGBA(ac)
 	o := uint32(ao)
