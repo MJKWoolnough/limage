@@ -99,6 +99,8 @@ PropertyLoop:
 			l.show = d.ReadBoolProperty()
 		case propTextLayerFlags:
 			l.textLayerFlags = d.ReadUint32()
+		case propFloatOpacity:
+			l.Opacity = uint8(d.ReadFloat32() * 256)
 		default:
 			d.Skip(plength)
 		}
