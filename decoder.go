@@ -408,6 +408,12 @@ PropertyLoop:
 		g.Layers = append(g.Layers, l.Layer)
 	}
 
+	switch d.Layers[len(d.Layers)-1].Mode {
+	case CompositeNormal, CompositeDissolve:
+	default:
+		d.Layers[len(d.Layers)-1].Mode = 0
+	}
+
 	/*
 		d.channels = make([]channel, len(channelptrs))
 
