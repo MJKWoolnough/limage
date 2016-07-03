@@ -51,10 +51,10 @@ func rgbToHSL(cl color.NRGBA64) HSLA {
 }
 
 func (h HSLA) RGBA() (uint32, uint32, uint32, uint32) {
-	return h.toNRGBA().RGBA()
+	return h.ToNRGBA().RGBA()
 }
 
-func (h HSLA) toNRGBA() color.NRGBA64 {
+func (h HSLA) ToNRGBA() color.NRGBA64 {
 	return color.NRGBA64{}
 }
 
@@ -67,9 +67,9 @@ func rgbToHSV(cl color.NRGBA64) HSVA {
 }
 
 func (h HSVA) RGBA() (uint32, uint32, uint32, uint32) {
-	return h.toNRGBA().RGBA()
+	return h.ToNRGBA().RGBA()
 }
 
-func (h HSVA) toNRGBA() color.NRGBA64 {
+func (h HSVA) ToNRGBA() color.NRGBA64 {
 	return color.NRGBA64{}
 }

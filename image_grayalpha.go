@@ -19,6 +19,14 @@ func (c GrayAlpha) RGBA() (r, g, b, a uint32) {
 	return y, y, y, a
 }
 
+func (c GrayAlpha) ToNRGBA() color.NRGBA64 {
+	y := uint16(c.Y)
+	y |= y << 8
+	a := uint16(c.A)
+	a |= a << 8
+	return color.NRGBA64{y, y, y, a}
+}
+
 func grayAlphaColourModel(c color.Color) color.Color {
 	_, _, _, a := c.RGBA()
 	return GrayAlpha{

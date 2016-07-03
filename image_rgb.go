@@ -19,6 +19,16 @@ func (rgb RGB) RGBA() (r, g, b, a uint32) {
 	return r, g, b, 0xFFFF
 }
 
+func (rgb RGB) ToNRGBA() color.NRGBA64 {
+	r = uint16(rgb.R)
+	r |= r << 8
+	g = uint16(rgb.G)
+	g |= g << 8
+	b = uint16(rgb.B)
+	b |= b << 8
+	return color.NRGBA64{r, g, b, 0xffff}
+}
+
 func rgbColourModel(c color.Color) color.Color {
 	r, g, b, _ := c.RGBA()
 	return RGB{

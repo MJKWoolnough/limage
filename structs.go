@@ -93,6 +93,11 @@ func colourToNRGBA(c color.Color) color.NRGBA64 {
 	case color.NRGBA64:
 		return c
 	}
+	if n, ok := c.(interface {
+		ToNRGBA() color.NRGBA64
+	}); ok {
+		return n.ToNRGBA()
+	}
 	r, g, b, a := c.RGBA()
 	if a == 0 {
 		return color.NRGBA64{}
