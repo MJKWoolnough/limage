@@ -67,19 +67,19 @@ func colourToHue(cl color.NRGBA64, mx uint16, c uint32) uint16 {
 	var h uint32
 	switch mx {
 	case cl.R:
-		if cl.G > cl.B {
+		if cl.G >= cl.B {
 			h = 0x00000 + 0xffff*uint32(cl.G-cl.B)/c
 		} else {
 			h = 0x5fffa - 0xffff*uint32(cl.B-cl.G)/c
 		}
 	case cl.G:
-		if cl.B > cl.R {
+		if cl.B >= cl.R {
 			h = 0x1fffe + 0xffff*uint32(cl.B-cl.R)/c
 		} else {
 			h = 0x1fffe - 0xffff*uint32(cl.R-cl.B)/c
 		}
 	case cl.B:
-		if cl.R > cl.G {
+		if cl.R >= cl.G {
 			h = 0x3fffc + 0xffff*uint32(cl.R-cl.G)/c
 		} else {
 			h = 0x3fffc - 0xffff*uint32(cl.G-cl.R)/c
