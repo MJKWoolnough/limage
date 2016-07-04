@@ -31,8 +31,24 @@ func (h HSLA) RGBA() (uint32, uint32, uint32, uint32) {
 	return h.ToNRGBA().RGBA()
 }
 
-func (h HSLA) ToNRGBA() color.NRGBA64 {
-	return color.NRGBA64{}
+func (hsl HSLA) ToNRGBA() color.NRGBA64 {
+	if hsl.S == 0 {
+		return color.NRGBA64{
+			R: hsl.L,
+			G: hsl.L,
+			B: hsl.L,
+			A: hsl.A,
+		}
+	}
+	cl := color.NRGBA64{
+		A: hsl.A,
+	}
+	c := uint32(hsl.L) << 1
+	if c < 0x7fff {
+		c = 0x1fffe - c
+	}
+	c = c * uint32(hsl.S) / 0xffff
+	return hcmaToColour(hsl.H, c, hsl.L-uint16(c>>2), hsl.A)
 }
 
 type HSVA struct {
@@ -68,44 +84,8 @@ func (hsv HSVA) ToNRGBA() color.NRGBA64 {
 			A: hsv.A,
 		}
 	}
-	cl := color.NRGBA64{
-		A: hsv.A,
-	}
 	c := uint16(uint32(hsv.V) * uint32(hsv.S) / 0xffff)
-	var h uint32
-	if hsv.H != 0xffff {
-		h = uint32(hsv.H) * 6
-	}
-	x := h % 0x1fffe
-	if x >= 0xffff {
-		x = 0x1fffe - ha
-	}
-	x = x * c / 0xffff
-	switch h / 0xffff {
-	case 0:
-		cl.R = c
-		cl.G = x
-	case 1:
-		cl.R = x
-		cl.G = c
-	case 2:
-		cl.G = c
-		cl.B = x
-	case 3:
-		cl.G = x
-		cl.B = c
-	case 4:
-		cl.R = x
-		cl.B = c
-	case 5:
-		cl.R = c
-		cl.B = x
-	}
-	m := hsv.V - uint16(c)
-	cl.R += m
-	cl.G += m
-	cl.B += m
-	return cl
+	return hcmaToColour(hsv.H, c, hsv.V-uint16(c), hsv.A)
 }
 
 func colourToHue(cl color.NRGBA64, mx uint16, c uint32) uint16 {
@@ -132,4 +112,43 @@ func colourToHue(cl color.NRGBA64, mx uint16, c uint32) uint16 {
 	}
 
 	return uint16(h / 6)
+}
+
+func hcmaToColour(hue, c uint32, m, a uint16) color.NRGBA64 {
+	var h uint32
+	if hue != 0xffff {
+		h = hue * 6
+	}
+	x := h % 0x1fffe
+	if x >= 0xffff {
+		x = 0x1fffe - ha
+	}
+	x = x * c / 0xffff
+	cl := color.NRGBA64{
+		A: a,
+	}
+	switch h / 0xffff {
+	case 0:
+		cl.R = c
+		cl.G = x
+	case 1:
+		cl.R = x
+		cl.G = c
+	case 2:
+		cl.G = c
+		cl.B = x
+	case 3:
+		cl.G = x
+		cl.B = c
+	case 4:
+		cl.R = x
+		cl.B = c
+	case 5:
+		cl.R = c
+		cl.B = x
+	}
+	cl.R += m
+	cl.G += m
+	cl.B += m
+	return cl
 }
