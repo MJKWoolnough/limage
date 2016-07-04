@@ -59,8 +59,53 @@ func (h HSVA) RGBA() (uint32, uint32, uint32, uint32) {
 	return h.ToNRGBA().RGBA()
 }
 
-func (h HSVA) ToNRGBA() color.NRGBA64 {
-	return color.NRGBA64{}
+func (hsv HSVA) ToNRGBA() color.NRGBA64 {
+	if hsv.S == 0 {
+		return color.NRGBA64{
+			R: hsv.V,
+			G: hsv.V,
+			B: hsv.V,
+			A: hsv.A,
+		}
+	}
+	cl := color.NRGBA64{
+		A: hsv.A,
+	}
+	c := uint16(uint32(hsv.V) * uint32(hsv.S) / 0xffff)
+	var h uint32
+	if hsv.H != 0xffff {
+		h = uint32(hsv.H) * 6
+	}
+	x := h % 0x1fffe
+	if x >= 0xffff {
+		x = 0x1fffe - ha
+	}
+	x = x * c / 0xffff
+	switch h / 0xffff {
+	case 0:
+		cl.R = c
+		cl.G = x
+	case 1:
+		cl.R = x
+		cl.G = c
+	case 2:
+		cl.G = c
+		cl.B = x
+	case 3:
+		cl.G = x
+		cl.B = c
+	case 4:
+		cl.R = x
+		cl.B = c
+	case 5:
+		cl.R = c
+		cl.B = x
+	}
+	m := hsv.V - uint16(c)
+	cl.R += m
+	cl.G += m
+	cl.B += m
+	return cl
 }
 
 func colourToHue(cl color.NRGBA64, mx uint16, c uint32) uint16 {
