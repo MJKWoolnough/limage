@@ -53,6 +53,7 @@ type samplePoint struct {
 	x, y uint32
 }
 
+// DecodeConfig retrieves the color model and dimensions of the XCF image
 func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 	var c image.Config
 
@@ -181,6 +182,7 @@ func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 	return c, d.Err
 }
 
+// Decode reads an XCF layered image from the given ReadSeeker
 func Decode(r io.ReadSeeker) (image.Image, error) {
 	d := decoder{Image: new(Image), reader: newReader(r)}
 
@@ -352,7 +354,7 @@ PropertyLoop:
 	var (
 		groups = make(map[string]groupOffset)
 		n      rune
-		alpha  bool = true
+		alpha  = true
 	)
 	groups[""] = groupOffset{Group: &d.Group}
 	for _, lptr := range layerptrs {

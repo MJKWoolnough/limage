@@ -5,6 +5,7 @@ import (
 	"image/color"
 )
 
+// PalettedAlpha represents a paletted image with an alpha channel
 type PalettedAlpha struct {
 	Pix     []IndexedAlpha
 	Stride  int
@@ -27,6 +28,7 @@ func (ap alphaPalette) Convert(c color.Color) color.Color {
 	}
 }
 
+// IndexedAlpha is the combination of a palette index and an Alpha channel
 type IndexedAlpha struct {
 	I, A uint8
 }
@@ -41,6 +43,7 @@ func newPalettedAlpha(r image.Rectangle, p color.Palette) *PalettedAlpha {
 	}
 }
 
+// At returns the color of the pixel at the given coords
 func (p *PalettedAlpha) At(x, y int) color.Color {
 	if p.Palette == nil {
 		return nil
@@ -55,14 +58,18 @@ func (p *PalettedAlpha) At(x, y int) color.Color {
 	}
 }
 
+// Bounds returns the limits of the image
 func (p *PalettedAlpha) Bounds() image.Rectangle {
 	return p.Rect
 }
 
+// ColorModel a color model to tranform arbitrary colors to one in the palette
 func (p *PalettedAlpha) ColorModel() color.Model {
 	return alphaPalette{p.Palette}
 }
 
+// IndexAlphaAt returns the palette index and Alpha component of the given
+// coords
 func (p *PalettedAlpha) IndexAlphaAt(x, y int) IndexedAlpha {
 	if !(image.Point{x, y}.In(p.Rect)) {
 		return IndexedAlpha{}
@@ -70,6 +77,7 @@ func (p *PalettedAlpha) IndexAlphaAt(x, y int) IndexedAlpha {
 	return p.Pix[p.PixOffset(x, y)]
 }
 
+// Opaque returns true if the image is completely opaque
 func (p *PalettedAlpha) Opaque() bool {
 	for _, c := range p.Pix {
 		if c.A != 255 {
@@ -78,10 +86,15 @@ func (p *PalettedAlpha) Opaque() bool {
 	}
 	return false
 }
+
+// PixOffset returns the index of the Pix array corresponding to the given
+// coords
 func (p *PalettedAlpha) PixOffset(x, y int) int {
 	return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*1
 }
 
+// Set converts the given colour to the closest in the palette and sets it at
+// the given coords
 func (p *PalettedAlpha) Set(x, y int, c color.Color) {
 	if !(image.Point{x, y}.In(p.Rect)) {
 		return
@@ -93,6 +106,7 @@ func (p *PalettedAlpha) Set(x, y int, c color.Color) {
 	}
 }
 
+// SetIndexAlpha directly set the index and alpha channels to the given coords
 func (p *PalettedAlpha) SetIndexAlpha(x, y int, ia IndexedAlpha) {
 	if !(image.Point{x, y}.In(p.Rect)) {
 		return
@@ -100,6 +114,7 @@ func (p *PalettedAlpha) SetIndexAlpha(x, y int, ia IndexedAlpha) {
 	p.Pix[p.PixOffset(x, y)] = ia
 }
 
+// SubImage retuns the Image viewable through the given bounds
 func (p *PalettedAlpha) SubImage(r image.Rectangle) image.Image {
 	r = r.Intersect(p.Rect)
 	if r.Empty() {

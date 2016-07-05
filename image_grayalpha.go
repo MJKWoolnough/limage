@@ -5,10 +5,12 @@ import (
 	"image/color"
 )
 
+// GrayAlpha represents a Gray color with an Alpha channel
 type GrayAlpha struct {
 	Y, A uint8
 }
 
+// RGBA implements the color.Color interface
 func (c GrayAlpha) RGBA() (r, g, b, a uint32) {
 	y := uint32(c.Y)
 	y |= y << 8
@@ -19,6 +21,7 @@ func (c GrayAlpha) RGBA() (r, g, b, a uint32) {
 	return y, y, y, a
 }
 
+// ToNRGBA converts the HSV color into the RGB colorspace
 func (c GrayAlpha) ToNRGBA() color.NRGBA64 {
 	y := uint16(c.Y)
 	y |= y << 8
@@ -35,6 +38,7 @@ func grayAlphaColourModel(c color.Color) color.Color {
 	}
 }
 
+// GrayAlphaImage is an image of GrayAlpha pixels
 type GrayAlphaImage struct {
 	Pix    []GrayAlpha
 	Stride int
@@ -50,18 +54,23 @@ func newGrayAlpha(r image.Rectangle) *GrayAlphaImage {
 	}
 }
 
+// At returns the color for the pixel at the specified coords
 func (g *GrayAlphaImage) At(x, y int) color.Color {
 	return g.GrayAlphaAt(x, y)
 }
 
+// Bounds returns the limits of the image
 func (g *GrayAlphaImage) Bounds() image.Rectangle {
 	return g.Rect
 }
 
+// ColorModel returns a color model to transform arbitrary colours into a
+// GrayAlpha color
 func (g *GrayAlphaImage) ColorModel() color.Model {
 	return color.ModelFunc(grayAlphaColourModel)
 }
 
+// GrayAlphaAt returns a GrayAlpha colr for the specified coords
 func (g *GrayAlphaImage) GrayAlphaAt(x, y int) GrayAlpha {
 	if !(image.Point{x, y}.In(g.Rect)) {
 		return GrayAlpha{}
@@ -69,6 +78,7 @@ func (g *GrayAlphaImage) GrayAlphaAt(x, y int) GrayAlpha {
 	return g.Pix[g.PixOffset(x, y)]
 }
 
+// Opaque returns true if all pixels have full alpha
 func (g *GrayAlphaImage) Opaque() bool {
 	for _, c := range g.Pix {
 		if c.A != 255 {
@@ -78,17 +88,22 @@ func (g *GrayAlphaImage) Opaque() bool {
 	return true
 }
 
+// PixOffset returns the index of the element of Pix corresponding to the given
+// coords
 func (g *GrayAlphaImage) PixOffset(x, y int) int {
 	return (y-g.Rect.Min.Y)*g.Stride + x - g.Rect.Min.X
 }
 
-func (ga *GrayAlphaImage) Set(x, y int, c color.Color) {
-	if !(image.Point{x, y}.In(ga.Rect)) {
+// Set converts the given colour to a GrayAlpha colour and sets it at the given
+// coords
+func (g *GrayAlphaImage) Set(x, y int, c color.Color) {
+	if !(image.Point{x, y}.In(g.Rect)) {
 		return
 	}
-	ga.Pix[ga.PixOffset(x, y)] = grayAlphaColourModel(c).(GrayAlpha)
+	g.Pix[g.PixOffset(x, y)] = grayAlphaColourModel(c).(GrayAlpha)
 }
 
+// SetGrayAlpha sets the colour at the given coords
 func (g *GrayAlphaImage) SetGrayAlpha(x, y int, ga GrayAlpha) {
 	if !(image.Point{x, y}.In(g.Rect)) {
 		return
@@ -96,6 +111,7 @@ func (g *GrayAlphaImage) SetGrayAlpha(x, y int, ga GrayAlpha) {
 	g.Pix[g.PixOffset(x, y)] = ga
 }
 
+// SubImage retuns the Image viewable through the given bounds
 func (g *GrayAlphaImage) SubImage(r image.Rectangle) image.Image {
 	r = r.Intersect(g.Rect)
 	if r.Empty() {

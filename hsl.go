@@ -2,6 +2,7 @@ package xcf
 
 import "image/color"
 
+// HSLA represents the Hue, Saturation, Lightness and Alpha of a pixel
 type HSLA struct {
 	H, S, L, A uint16
 }
@@ -27,27 +28,30 @@ func rgbToHSL(cl color.NRGBA64) HSLA {
 	return hsl
 }
 
+// RGBA implements the color.Color interface
 func (h HSLA) RGBA() (uint32, uint32, uint32, uint32) {
 	return h.ToNRGBA().RGBA()
 }
 
-func (hsl HSLA) ToNRGBA() color.NRGBA64 {
-	if hsl.S == 0 {
+// ToNRGBA converts the HSL color into the RGB colorspace
+func (h HSLA) ToNRGBA() color.NRGBA64 {
+	if h.S == 0 {
 		return color.NRGBA64{
-			R: hsl.L,
-			G: hsl.L,
-			B: hsl.L,
-			A: hsl.A,
+			R: h.L,
+			G: h.L,
+			B: h.L,
+			A: h.A,
 		}
 	}
-	c := uint32(hsl.L) << 1
+	c := uint32(h.L) << 1
 	if c < 0x7fff {
 		c = 0x1fffe - c
 	}
-	c = c * uint32(hsl.S) / 0xffff
-	return hcmaToColour(uint32(hsl.H), c, hsl.L-uint16(c>>2), hsl.A)
+	c = c * uint32(h.S) / 0xffff
+	return hcmaToColour(uint32(h.H), c, h.L-uint16(c>>2), h.A)
 }
 
+// HSVA represents the Hue, Saturation, Value and Alpha of a pixel
 type HSVA struct {
 	H, S, V, A uint16
 }
@@ -68,21 +72,23 @@ func rgbToHSV(cl color.NRGBA64) HSVA {
 	return hsv
 }
 
+// RGBA implements the color.Color interface
 func (h HSVA) RGBA() (uint32, uint32, uint32, uint32) {
 	return h.ToNRGBA().RGBA()
 }
 
-func (hsv HSVA) ToNRGBA() color.NRGBA64 {
-	if hsv.S == 0 {
+// ToNRGBA converts the HSV color into the RGB colorspace
+func (h HSVA) ToNRGBA() color.NRGBA64 {
+	if h.S == 0 {
 		return color.NRGBA64{
-			R: hsv.V,
-			G: hsv.V,
-			B: hsv.V,
-			A: hsv.A,
+			R: h.V,
+			G: h.V,
+			B: h.V,
+			A: h.A,
 		}
 	}
-	c := uint16(uint32(hsv.V) * uint32(hsv.S) / 0xffff)
-	return hcmaToColour(uint32(hsv.H), uint32(c), hsv.V-uint16(c), hsv.A)
+	c := uint16(uint32(h.V) * uint32(h.S) / 0xffff)
+	return hcmaToColour(uint32(h.H), uint32(c), h.V-uint16(c), h.A)
 }
 
 func colourToHue(cl color.NRGBA64, mx uint16, c uint32) uint16 {

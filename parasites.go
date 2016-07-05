@@ -104,6 +104,7 @@ const (
 	tokenValueNumber
 )
 
+// Tag represents a single tag from a parsed Parasite
 type Tag struct {
 	Name   string
 	Values []interface{}

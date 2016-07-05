@@ -5,8 +5,10 @@ import (
 	"math/rand"
 )
 
+// Composite determines how two layers are composed together
 type Composite uint32
 
+// Composite constants
 const (
 	CompositeNormal       Composite = 0
 	CompositeDissolve     Composite = 1
@@ -32,6 +34,7 @@ const (
 	CompositeGrainMerge   Composite = 21
 )
 
+// String returns the name of the composition
 func (c Composite) String() string {
 	switch c {
 	case CompositeDissolve:
@@ -81,6 +84,7 @@ func (c Composite) String() string {
 	}
 }
 
+// Composite performs the composition of two layers
 func (c Composite) Composite(bottom, top color.NRGBA64) color.Color {
 	var f func(uint16, uint16) uint16
 	switch c {
