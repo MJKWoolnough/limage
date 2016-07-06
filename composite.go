@@ -105,7 +105,9 @@ func (c Composite) String() string {
 }
 
 // Composite performs the composition of two layers
-func (c Composite) Composite(bottom, top color.NRGBA64) color.Color {
+func (c Composite) Composite(b, t color.Color) color.Color {
+	bottom := colourToNRGBA(b)
+	top := colourToNRGBA(t)
 	var f func(uint16, uint16) uint16
 	switch c {
 	case CompositeMultiply:
