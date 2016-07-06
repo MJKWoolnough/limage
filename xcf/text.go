@@ -6,16 +6,19 @@ import (
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/MJKWoolnough/limage"
+	"github.com/MJKWoolnough/limage/lcolor"
 )
 
-func parseTextData(t *parasite) (TextData, error) {
+func parseTextData(t *parasite) (limage.TextData, error) {
 	tags, err := t.Parse()
 	if err != nil {
 		return nil, err
 	}
 	var (
 		textData    string
-		defaultText TextDatum
+		defaultText limage.TextDatum
 	)
 	defaultText.BackColor = color.Alpha{}
 	defaultText.ForeColor = color.Gray{}
@@ -44,7 +47,7 @@ func parseTextData(t *parasite) (TextData, error) {
 					r, _ := t.Values[0].(float64)
 					g, _ := t.Values[1].(float64)
 					b, _ := t.Values[2].(float64)
-					defaultText.ForeColor = RGB{uint8(r), uint8(g), uint8(b)}
+					defaultText.ForeColor = lcolor.RGB{uint8(r), uint8(g), uint8(b)}
 				}
 			}
 		case "justify":
@@ -56,8 +59,8 @@ func parseTextData(t *parasite) (TextData, error) {
 		}
 	}
 	xd := xml.NewDecoder(strings.NewReader(textData))
-	stack := TextData{defaultText}
-	td := make(TextData, 0, 32)
+	stack := limage.TextData{defaultText}
+	td := make(limage.TextData, 0, 32)
 	for {
 		t, err := xd.Token()
 		if err != nil {

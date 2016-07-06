@@ -1,4 +1,4 @@
-package xcf
+package lcolor
 
 import "image/color"
 
@@ -7,7 +7,7 @@ type HSLA struct {
 	H, S, L, A uint16
 }
 
-func rgbToHSL(cl color.NRGBA64) HSLA {
+func RGBToHSL(cl color.NRGBA64) HSLA {
 	mn := uint32(min(cl.R, cl.G, cl.B))
 	mx := uint32(max(cl.R, cl.G, cl.B))
 	l := mx + mn
@@ -56,7 +56,7 @@ type HSVA struct {
 	H, S, V, A uint16
 }
 
-func rgbToHSV(cl color.NRGBA64) HSVA {
+func RGBToHSV(cl color.NRGBA64) HSVA {
 	mn := min(cl.R, cl.G, cl.B)
 	mx := max(cl.R, cl.G, cl.B)
 	hsv := HSVA{
@@ -154,4 +154,24 @@ func hcmaToColour(hue, c uint32, m, a uint16) color.NRGBA64 {
 	cl.G += m
 	cl.B += m
 	return cl
+}
+
+func min(n ...uint16) uint16 {
+	var m uint16 = 0xffff
+	for _, o := range n {
+		if o < m {
+			m = o
+		}
+	}
+	return m
+}
+
+func max(n ...uint16) uint16 {
+	var m uint16
+	for _, o := range n {
+		if o > m {
+			m = o
+		}
+	}
+	return m
 }

@@ -5,6 +5,9 @@ import (
 	"image/color"
 	"io"
 	"math"
+
+	"github.com/MJKWoolnough/limage"
+	"github.com/MJKWoolnough/limage/lcolor"
 )
 
 func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
@@ -83,7 +86,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 
 	switch mode {
 	case 0: // rgb
-		rgb := newRGB(r)
+		rgb := limage.NewRGB(r)
 		im = rgb
 		imReader = rgbImageReader{rgb}
 	case 1: // rgba
@@ -95,15 +98,15 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		im = g
 		imReader = grayImageReader{g}
 	case 3: // gray + alpha
-		ga := newGrayAlpha(r)
+		ga := limage.NewGrayAlpha(r)
 		im = ga
 		imReader = grayAlphaImageReader{ga}
 	case 4: // indexed
-		in := image.NewPaletted(r, d.palette)
+		in := image.NewPaletted(r, color.Palette(d.palette))
 		im = in
 		imReader = indexedImageReader{in}
 	case 5: // indexed + alpha
-		in := newPalettedAlpha(r, d.palette)
+		in := limage.NewPalettedAlpha(r, d.palette)
 		im = in
 		imReader = palettedAlphaReader{in}
 	}
@@ -182,4 +185,31 @@ type indexedImageReader struct {
 
 func (p indexedImageReader) ReadColour(x, y int, pixel []byte) {
 	p.SetColorIndex(x, y, pixel[0])
+}
+
+type grayAlphaImageReader struct {
+	*limage.GrayAlpha
+}
+
+func (ga grayAlphaImageReader) ReadColour(x, y int, pixels []byte) {
+	ga.SetGrayAlpha(x, y, lcolor.GrayAlpha{pixels[0], pixels[1]})
+}
+
+type palettedAlphaReader struct {
+	*limage.PalettedAlpha
+}
+
+func (p palettedAlphaReader) ReadColour(x, y int, pixels []byte) {
+	p.SetIndexAlpha(x, y, lcolor.IndexedAlpha{
+		I: pixels[0],
+		A: pixels[1],
+	})
+}
+
+type rgbImageReader struct {
+	*limage.RGB
+}
+
+func (rg rgbImageReader) ReadColour(x, y int, pixels []byte) {
+	rg.SetRGB(x, y, lcolor.RGB{R: pixels[0], G: pixels[1], B: pixels[2]})
 }

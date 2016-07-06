@@ -1,9 +1,13 @@
 package xcf
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/MJKWoolnough/limage"
+)
 
 type layer struct {
-	Layer
+	limage.Layer
 	width, height                               uint32
 	linked, lockContent, alpha                  bool
 	parasites                                   parasites
@@ -84,10 +88,10 @@ PropertyLoop:
 		case propLockAlpha:
 			l.lockAlpha = d.ReadBoolProperty()
 		case propMode:
-			l.Mode = Composite(d.ReadUint32())
+			l.Mode = limage.Composite(d.ReadUint32())
 			if d.baseType != 0 {
 				switch l.Mode {
-				case CompositeNormal, CompositeBehind:
+				case limage.CompositeNormal, limage.CompositeBehind:
 				default:
 					l.Mode = 0
 				}

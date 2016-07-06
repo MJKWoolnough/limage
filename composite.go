@@ -1,8 +1,10 @@
-package xcf
+package limage
 
 import (
 	"image/color"
 	"math/rand"
+
+	"github.com/MJKWoolnough/limage/lcolor"
 )
 
 // Composite determines how two layers are composed together
@@ -265,29 +267,29 @@ func compositeHue(bottom, top color.NRGBA64) color.Color {
 	if br == bg && br == bb {
 		return bottom
 	}
-	a := rgbToHSV(bottom)
-	b := rgbToHSV(top)
+	a := lcolor.RGBToHSV(bottom)
+	b := lcolor.RGBToHSV(top)
 	a.H = b.H
 	return a
 }
 
 func compositeSaturation(bottom, top color.NRGBA64) color.Color {
-	a := rgbToHSV(bottom)
-	b := rgbToHSV(top)
+	a := lcolor.RGBToHSV(bottom)
+	b := lcolor.RGBToHSV(top)
 	a.S = b.S
 	return a
 }
 
 func compositeColor(bottom, top color.NRGBA64) color.Color {
-	a := rgbToHSL(bottom)
-	b := rgbToHSL(top)
+	a := lcolor.RGBToHSL(bottom)
+	b := lcolor.RGBToHSL(top)
 	b.L = a.L
 	return b
 }
 
 func compositeValue(bottom, top color.NRGBA64) color.Color {
-	a := rgbToHSV(bottom)
-	b := rgbToHSV(top)
+	a := lcolor.RGBToHSV(bottom)
+	b := lcolor.RGBToHSV(top)
 	a.V = b.V
 	return a
 }

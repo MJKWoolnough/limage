@@ -5,6 +5,9 @@ import (
 	"image"
 	"image/color"
 	"io"
+
+	"github.com/MJKWoolnough/limage"
+	"github.com/MJKWoolnough/limage/lcolor"
 )
 
 const (
@@ -22,13 +25,13 @@ const (
 )
 
 type decoder struct {
-	*Image
+	*limage.Image
 	reader
 	baseType                     uint32
 	linked, lockContent, visible bool
 	parasites                    parasites
 	tattoo                       uint32
-	palette                      color.Palette
+	palette                      lcolor.AlphaPalette
 	compression                  uint8
 	guides                       []guide
 	paths                        paths
@@ -57,7 +60,7 @@ type samplePoint struct {
 func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 	var c image.Config
 
-	d := decoder{Image: new(Image), reader: newReader(r)}
+	d := decoder{Image: new(limage.Image), reader: newReader(r)}
 
 	// check header
 
@@ -85,7 +88,7 @@ func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 	case 0:
 		c.ColorModel = color.RGBAModel
 	case 1:
-		c.ColorModel = color.ModelFunc(grayAlphaColourModel)
+		c.ColorModel = lcolor.GrayAlphaModel
 	case 2:
 	PropertyLoop:
 		for {
@@ -104,12 +107,12 @@ func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 					d.Skip(plength) // skip
 				}
 				numColours := d.ReadUint32()
-				palette := make(color.Palette, numColours)
+				palette := make(lcolor.AlphaPalette, numColours)
 				for i := uint32(0); i < numColours; i++ {
 					r := d.ReadUint8()
 					g := d.ReadUint8()
 					b := d.ReadUint8()
-					palette[i] = RGB{
+					palette[i] = lcolor.RGB{
 						R: r,
 						G: g,
 						B: b,
@@ -183,8 +186,8 @@ func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 }
 
 // Decode reads an XCF layered image from the given ReadSeeker
-func Decode(r io.ReadSeeker) (image.Image, error) {
-	d := decoder{Image: new(Image), reader: newReader(r)}
+func Decode(r io.ReadSeeker) (*limage.Image, error) {
+	d := decoder{Image: new(limage.Image), reader: newReader(r)}
 
 	// check header
 
@@ -212,7 +215,7 @@ func Decode(r io.ReadSeeker) (image.Image, error) {
 	case 0:
 		d.Config.ColorModel = color.RGBAModel
 	case 1:
-		d.Config.ColorModel = color.ModelFunc(grayAlphaColourModel)
+		d.Config.ColorModel = lcolor.GrayAlphaModel
 	}
 
 	// defaults
@@ -257,18 +260,18 @@ PropertyLoop:
 				d.Skip(plength) // skip
 			}
 			numColours := d.ReadUint32()
-			d.palette = make(color.Palette, numColours)
+			d.palette = make(lcolor.AlphaPalette, numColours)
 			for i := uint32(0); i < numColours; i++ {
 				r := d.ReadUint8()
 				g := d.ReadUint8()
 				b := d.ReadUint8()
-				d.palette[i] = RGB{
+				d.palette[i] = lcolor.RGB{
 					R: r,
 					G: g,
 					B: b,
 				}
 			}
-			d.Config.ColorModel = alphaPalette{d.palette}
+			d.Config.ColorModel = d.palette
 		case propCompression:
 			d.compression = d.ReadUint8()
 			if d.compression > 1 {
@@ -347,7 +350,7 @@ PropertyLoop:
 	*/
 
 	type groupOffset struct {
-		*Group
+		*limage.Group
 		OffsetX, OffsetY int
 	}
 
@@ -376,7 +379,7 @@ PropertyLoop:
 			return nil, ErrInvalidGroup
 		}
 		if l.group {
-			gp := new(Group)
+			gp := new(limage.Group)
 			gp.Width = int(l.width)
 			gp.Height = int(l.height)
 			gp.Config.ColorModel = d.Config.ColorModel
@@ -393,13 +396,13 @@ PropertyLoop:
 				if err != nil {
 					return nil, err
 				}
-				l.Image = &Text{
+				l.Image = &limage.Text{
 					Image:    l.Image,
 					TextData: textData,
 				}
 			}
 			if l.mask.image != nil {
-				l.Image = &MaskedImage{
+				l.Image = &limage.MaskedImage{
 					Image: l.Image,
 					Mask:  l.mask.image.(*image.Gray),
 				}
@@ -411,7 +414,7 @@ PropertyLoop:
 	}
 
 	switch d.Layers[len(d.Layers)-1].Mode {
-	case CompositeNormal, CompositeDissolve:
+	case limage.CompositeNormal, limage.CompositeDissolve:
 	default:
 		d.Layers[len(d.Layers)-1].Mode = 0
 	}

@@ -1,4 +1,4 @@
-package xcf
+package limage
 
 import (
 	"image"

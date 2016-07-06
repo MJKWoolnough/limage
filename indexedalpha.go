@@ -1,42 +1,24 @@
-package xcf
+package limage
 
 import (
 	"image"
 	"image/color"
+
+	"github.com/MJKWoolnough/limage/lcolor"
 )
 
 // PalettedAlpha represents a paletted image with an alpha channel
 type PalettedAlpha struct {
-	Pix     []IndexedAlpha
+	Pix     []lcolor.IndexedAlpha
 	Stride  int
 	Rect    image.Rectangle
-	Palette color.Palette
+	Palette lcolor.AlphaPalette
 }
 
-type alphaPalette struct {
-	color.Palette
-}
-
-func (ap alphaPalette) Convert(c color.Color) color.Color {
-	r, g, b, _ := ap.Palette.Convert(c).RGBA()
-	_, _, _, a := c.RGBA()
-	return color.RGBA{
-		R: uint8(r >> 8),
-		G: uint8(g >> 8),
-		B: uint8(b >> 8),
-		A: uint8(a >> 8),
-	}
-}
-
-// IndexedAlpha is the combination of a palette index and an Alpha channel
-type IndexedAlpha struct {
-	I, A uint8
-}
-
-func newPalettedAlpha(r image.Rectangle, p color.Palette) *PalettedAlpha {
+func NewPalettedAlpha(r image.Rectangle, p lcolor.AlphaPalette) *PalettedAlpha {
 	w, h := r.Dx(), r.Dy()
 	return &PalettedAlpha{
-		Pix:     make([]IndexedAlpha, w*h),
+		Pix:     make([]lcolor.IndexedAlpha, w*h),
 		Stride:  w,
 		Rect:    r,
 		Palette: p,
@@ -65,14 +47,14 @@ func (p *PalettedAlpha) Bounds() image.Rectangle {
 
 // ColorModel a color model to tranform arbitrary colors to one in the palette
 func (p *PalettedAlpha) ColorModel() color.Model {
-	return alphaPalette{p.Palette}
+	return p.Palette
 }
 
 // IndexAlphaAt returns the palette index and Alpha component of the given
 // coords
-func (p *PalettedAlpha) IndexAlphaAt(x, y int) IndexedAlpha {
+func (p *PalettedAlpha) IndexAlphaAt(x, y int) lcolor.IndexedAlpha {
 	if !(image.Point{x, y}.In(p.Rect)) {
-		return IndexedAlpha{}
+		return lcolor.IndexedAlpha{}
 	}
 	return p.Pix[p.PixOffset(x, y)]
 }
@@ -100,14 +82,14 @@ func (p *PalettedAlpha) Set(x, y int, c color.Color) {
 		return
 	}
 	_, _, _, a := c.RGBA()
-	p.Pix[p.PixOffset(x, y)] = IndexedAlpha{
+	p.Pix[p.PixOffset(x, y)] = lcolor.IndexedAlpha{
 		I: uint8(p.Palette.Index(c)),
 		A: uint8(a >> 8),
 	}
 }
 
 // SetIndexAlpha directly set the index and alpha channels to the given coords
-func (p *PalettedAlpha) SetIndexAlpha(x, y int, ia IndexedAlpha) {
+func (p *PalettedAlpha) SetIndexAlpha(x, y int, ia lcolor.IndexedAlpha) {
 	if !(image.Point{x, y}.In(p.Rect)) {
 		return
 	}
@@ -126,15 +108,4 @@ func (p *PalettedAlpha) SubImage(r image.Rectangle) image.Image {
 		Rect:    r,
 		Palette: p.Palette,
 	}
-}
-
-type palettedAlphaReader struct {
-	*PalettedAlpha
-}
-
-func (p palettedAlphaReader) ReadColour(x, y int, pixels []byte) {
-	p.SetIndexAlpha(x, y, IndexedAlpha{
-		I: pixels[0],
-		A: pixels[1],
-	})
 }

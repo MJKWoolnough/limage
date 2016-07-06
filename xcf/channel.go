@@ -1,6 +1,10 @@
 package xcf
 
-import "image"
+import (
+	"image"
+
+	"github.com/MJKWoolnough/limage/lcolor"
+)
 
 type channel struct {
 	width, height                uint32
@@ -10,7 +14,7 @@ type channel struct {
 	parasites                    parasites
 	tattoo                       uint32
 	active, selection, show      bool
-	color                        RGB
+	color                        lcolor.RGB
 	image                        image.Image
 }
 
