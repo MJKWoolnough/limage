@@ -12,28 +12,34 @@ type Composite uint32
 
 // Composite constants
 const (
-	CompositeNormal       Composite = 0
-	CompositeDissolve     Composite = 1
-	CompositeBehind       Composite = 2
-	CompositeMultiply     Composite = 3
-	CompositeScreen       Composite = 4
-	CompositeOverlay      Composite = 5
-	CompositeDifference   Composite = 6
-	CompositeAddition     Composite = 7
-	CompositeSubtract     Composite = 8
-	CompositeDarkenOnly   Composite = 9
-	CompositeLightenOnly  Composite = 10
-	CompositeHue          Composite = 11
-	CompositeSaturation   Composite = 12
-	CompositeColor        Composite = 13
-	CompositeValue        Composite = 14
-	CompositeDivide       Composite = 15
-	CompositeDodge        Composite = 16
-	CompositeBurn         Composite = 17
-	CompositeHardLight    Composite = 18
-	CompositeSoftLight    Composite = 19
-	CompositeGrainExtract Composite = 20
-	CompositeGrainMerge   Composite = 21
+	CompositeNormal          Composite = 0
+	CompositeDissolve        Composite = 1
+	CompositeBehind          Composite = 2
+	CompositeMultiply        Composite = 3
+	CompositeScreen          Composite = 4
+	CompositeOverlay         Composite = 5
+	CompositeDifference      Composite = 6
+	CompositeAddition        Composite = 7
+	CompositeSubtract        Composite = 8
+	CompositeDarkenOnly      Composite = 9
+	CompositeLightenOnly     Composite = 10
+	CompositeHue             Composite = 11
+	CompositeSaturation      Composite = 12
+	CompositeColor           Composite = 13
+	CompositeValue           Composite = 14
+	CompositeDivide          Composite = 15
+	CompositeDodge           Composite = 16
+	CompositeBurn            Composite = 17
+	CompositeHardLight       Composite = 18
+	CompositeSoftLight       Composite = 19
+	CompositeGrainExtract    Composite = 20
+	CompositeGrainMerge      Composite = 21
+	CompositeLuminosity      Composite = 22
+	CompositePlus            Composite = 23
+	CompositeDestinationIn   Composite = 24
+	CompositeDestinationOut  Composite = 25
+	CompositeSourceAtop      Composite = 26
+	CompositeDestinationAtop Composite = 27
 )
 
 // String returns the name of the composition
@@ -81,6 +87,18 @@ func (c Composite) String() string {
 		return "Grain Extract"
 	case CompositeGrainMerge:
 		return "Grain Merge"
+	case CompositeLuminosity:
+		return "Luminosity"
+	case CompositePlus:
+		return "Plus"
+	case CompositeDestinationIn:
+		return "Destination In"
+	case CompositeDestinationOut:
+		return "Destination Out"
+	case CompositeSourceAtop:
+		return "Source Atop"
+	case CompositeDestinationAtop:
+		return "Destination Atop"
 	default:
 		return "Normal"
 	}
@@ -90,10 +108,6 @@ func (c Composite) String() string {
 func (c Composite) Composite(bottom, top color.NRGBA64) color.Color {
 	var f func(uint16, uint16) uint16
 	switch c {
-	case CompositeDissolve:
-		return compositeDissolve(bottom, top)
-	case CompositeBehind:
-		return bottom
 	case CompositeMultiply:
 		f = compositeMultiply
 	case CompositeScreen:
@@ -110,14 +124,6 @@ func (c Composite) Composite(bottom, top color.NRGBA64) color.Color {
 		f = compositeDarkenOnly
 	case CompositeLightenOnly:
 		f = compositeLightenOnly
-	case CompositeHue:
-		return compositeHue(bottom, top)
-	case CompositeSaturation:
-		return compositeSaturation(bottom, top)
-	case CompositeColor:
-		return compositeColor(bottom, top)
-	case CompositeValue:
-		return compositeValue(bottom, top)
 	case CompositeDivide:
 		f = compositeDivide
 	case CompositeDodge:
@@ -132,6 +138,30 @@ func (c Composite) Composite(bottom, top color.NRGBA64) color.Color {
 		f = compositeGrainExtract
 	case CompositeGrainMerge:
 		f = compositeGrainMerge
+	case CompositeBehind:
+		return bottom
+	case CompositeDissolve:
+		return compositeDissolve(bottom, top)
+	case CompositeHue:
+		return compositeHue(bottom, top)
+	case CompositeSaturation:
+		return compositeSaturation(bottom, top)
+	case CompositeColor:
+		return compositeColor(bottom, top)
+	case CompositeValue:
+		return compositeValue(bottom, top)
+	case CompositeLuminosity:
+		return compositeColor(top, bottom)
+	case CompositePlus:
+		return compositePlus(bottom, top)
+	case CompositeDestinationIn:
+		return compositeDstIn(bottom, top)
+	case CompositeDestinationOut:
+		return compositeDstOut(bottom, top)
+	case CompositeSourceAtop:
+		return compositeAtop(bottom, top)
+	case CompositeDestinationAtop:
+		return compositeAtop(top, bottom)
 	default: //Normal
 		return compositeNormal(bottom, top)
 	}
@@ -292,6 +322,22 @@ func compositeValue(bottom, top color.NRGBA64) color.Color {
 	b := lcolor.RGBToHSV(top)
 	a.V = b.V
 	return a
+}
+
+func compositePlus(bottom, top color.NRGBA64) color.NRGBA64 {
+	return compositeNormal(bottom, top)
+}
+
+func compositeDstIn(bottom, top color.NRGBA64) color.NRGBA64 {
+	return compositeNormal(bottom, top)
+}
+
+func compositeDstOut(bottom, top color.NRGBA64) color.NRGBA64 {
+	return compositeNormal(bottom, top)
+}
+
+func compositeAtop(bottom, top color.NRGBA64) color.NRGBA64 {
+	return compositeNormal(bottom, top)
 }
 
 func min(n ...uint16) uint16 {
