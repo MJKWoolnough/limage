@@ -71,7 +71,7 @@ func (g *Group) At(x, y int) color.Color {
 				c = d
 			}
 		} else {
-			c = g.Layers[i].Mode.Composite(colourToNRGBA(c), colourToNRGBA(g.Layers[i].At(x, y)))
+			c = g.Layers[i].Mode.Composite(c, g.Layers[i].At(x, y))
 		}
 	}
 	return c
@@ -109,16 +109,7 @@ func colourToNRGBA(c color.Color) color.NRGBA64 {
 	}); ok {
 		return n.ToNRGBA()
 	}
-	r, g, b, a := c.RGBA()
-	if a == 0 {
-		return color.NRGBA64{}
-	}
-	return color.NRGBA64{
-		R: uint16(r * 0xffff / a),
-		G: uint16(g * 0xffff / a),
-		B: uint16(b * 0xffff / a),
-		A: uint16(a),
-	}
+	return color.NRGBA64Model.Convert(c).(color.NRGBA64)
 }
 
 // Text represents a text layer
