@@ -10,6 +10,33 @@ import (
 	"github.com/MJKWoolnough/limage/lcolor"
 )
 
+func getReadSeeker(r io.Reader) (io.ReadSeeker, error) {
+	if rs, ok := r.(io.ReadSeeker); ok {
+		return rs, nil
+	}
+	return nil, errors.New("requires read seeker")
+}
+
+func decodeConfig(r io.Reader) (image.Config, error) {
+	rs, err := getReadSeeker(r)
+	if err != nil {
+		return image.Config{}, err
+	}
+	return DecodeConfig(rs)
+}
+
+func decode(r io.Reader) (image.Image, error) {
+	rs, err := getReadSeeker(r)
+	if err != nil {
+		return nil, err
+	}
+	return Decode(rs)
+}
+
+func init() {
+	image.RegisterFormat("xcf", fileTypeID, decode, decodeConfig)
+}
+
 const (
 	fileTypeID   = "gimp xcf "
 	fileVersion0 = "file"
