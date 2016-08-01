@@ -1,6 +1,7 @@
 package xcf
 
 import (
+	"bufio"
 	"errors"
 	"image"
 	"image/color"
@@ -11,6 +12,9 @@ import (
 )
 
 func getReadSeeker(r io.Reader) (io.ReadSeeker, error) {
+	if bb, ok := r.(*bufio.Reader); ok {
+		r = bufioToReader(bb)
+	}
 	if rs, ok := r.(io.ReadSeeker); ok {
 		return rs, nil
 	}
