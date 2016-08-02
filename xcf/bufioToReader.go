@@ -18,7 +18,6 @@ type bufioReader struct {
 }
 
 type readSeeker struct {
-	io.Reader
 	Buffer     []byte
 	ReadSeeker io.ReadSeeker
 	Pos        int64
@@ -43,6 +42,11 @@ func (r *readSeeker) Seek(offset int64, whence int) (int64, error) {
 	case 0:
 		r.Pos = offset
 	case 1:
+		if l := int64(len(r.Buffer)); r.Pos >= l {
+			n, err := r.ReadSeeker.Seek(offset, 1)
+			r.Pos = n + l
+			return r.Pos, err
+		}
 		r.Pos += offset
 	case 2:
 		// should never be used
