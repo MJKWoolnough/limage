@@ -3,41 +3,36 @@ package ora
 import (
 	"archive/zip"
 	"errors"
-	"image"
-	"image/png"
 	"io"
+
+	"github.com/MJKWoolnough/limage"
 )
 
-func Decode(r io.ReaderAt, size int64) (image.Image, error) {
+func Decode(r io.ReaderAt, size int64) (*limage.Image, error) {
 	zr, err := zip.NewReader(r, size)
 	if err != nil {
 		return nil, err
 	}
 	required := 0
-	var merged *zip.File
+	var stack *zip.File
 	for _, f := range zr.File {
 		switch f.Name {
-		case "stack.xml", "data", "Thumbnails/thumbnail.png":
+		case "stack.xml":
+			required++
+			stack = f
+		case "data", "Thumbnails/thumbnail.png", "mergedimage.png":
 			required++
 		case "mimetype":
 			if !checkMime(f) {
 				return nil, ErrInvalidMimeType
 			}
 			required++
-		case "mergedimage.png":
-			merged = f
-			required++
 		}
 	}
 	if required < 5 {
 		return nil, ErrMissingRequired
 	}
-	f, err := merged.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return png.Decode(f)
+
 }
 
 func checkMime(mimetype *zip.File) bool {
