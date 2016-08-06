@@ -1,8 +1,7 @@
 package xcf
 
 import (
-	"errors"
-
+	"github.com/MJKWoolnough/errors"
 	"github.com/MJKWoolnough/limage"
 )
 
@@ -135,7 +134,7 @@ PropertyLoop:
 
 // Errors
 var (
-	ErrInvalidLayerType      = errors.New("invalid layer type")
-	ErrInvalidItemPathLength = errors.New("invalid item path length")
-	ErrInconsistantData      = errors.New("inconsistant data read")
+	ErrInvalidLayerType      errors.Error = "invalid layer type"
+	ErrInvalidItemPathLength errors.Error = "invalid item path length"
+	ErrInconsistantData      errors.Error = "inconsistant data read"
 )

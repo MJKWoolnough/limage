@@ -2,11 +2,11 @@ package xcf
 
 import (
 	"bufio"
-	"errors"
 	"image"
 	"image/color"
 	"io"
 
+	"github.com/MJKWoolnough/errors"
 	"github.com/MJKWoolnough/limage"
 	"github.com/MJKWoolnough/limage/lcolor"
 )
@@ -18,7 +18,7 @@ func getReadSeeker(r io.Reader) (io.ReadSeeker, error) {
 	if rs, ok := r.(io.ReadSeeker); ok {
 		return rs, nil
 	}
-	return nil, errors.New("requires read seeker")
+	return nil, errors.Error("requires read seeker")
 }
 
 func decodeConfig(r io.Reader) (image.Config, error) {
@@ -473,15 +473,15 @@ func (d *decoder) SetError(err error) {
 
 // Errors
 var (
-	ErrInvalidFileTypeID   = errors.New("invalid file type identification")
-	ErrUnsupportedVersion  = errors.New("unsupported file version")
-	ErrInvalidHeader       = errors.New("invalid header")
-	ErrInvalidProperties   = errors.New("invalid property list")
-	ErrInvalidOpacity      = errors.New("opacity not in valid range")
-	ErrInvalidGuideLength  = errors.New("invalid guide length")
-	ErrInvalidUnit         = errors.New("invalid unit")
-	ErrInvalidSampleLength = errors.New("invalid sample points length")
-	ErrInvalidGroup        = errors.New("invalid or unknown group specified for layer")
-	ErrUnknownCompression  = errors.New("unknown compression method")
-	ErrMissingAlpha        = errors.New("non-bottom layer missing alpha channel")
+	ErrInvalidFileTypeID   errors.Error = "invalid file type identification"
+	ErrUnsupportedVersion  errors.Error = "unsupported file version"
+	ErrInvalidHeader       errors.Error = "invalid header"
+	ErrInvalidProperties   errors.Error = "invalid property list"
+	ErrInvalidOpacity      errors.Error = "opacity not in valid range"
+	ErrInvalidGuideLength  errors.Error = "invalid guide length"
+	ErrInvalidUnit         errors.Error = "invalid unit"
+	ErrInvalidSampleLength errors.Error = "invalid sample points length"
+	ErrInvalidGroup        errors.Error = "invalid or unknown group specified for layer"
+	ErrUnknownCompression  errors.Error = "unknown compression method"
+	ErrMissingAlpha        errors.Error = "non-bottom layer missing alpha channel"
 )

@@ -1,6 +1,6 @@
 package xcf
 
-import "errors"
+import "github.com/MJKWoolnough/errors"
 
 type vectors struct {
 	aIndex uint32
@@ -88,7 +88,7 @@ func (d *decoder) ReadVectors() vectors {
 
 // Errors
 var (
-	ErrUnknownVectorVersion = errors.New("unknown vector version")
-	ErrUnknownStrokeType    = errors.New("unknown stroke type")
-	ErrInvalidFloatsNumber  = errors.New("invalids number of floats")
+	ErrUnknownVectorVersion errors.Error = "unknown vector version"
+	ErrUnknownStrokeType    errors.Error = "unknown stroke type"
+	ErrInvalidFloatsNumber  errors.Error = "invalids number of floats"
 )

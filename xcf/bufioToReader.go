@@ -2,9 +2,10 @@ package xcf
 
 import (
 	"bufio"
-	"errors"
 	"io"
 	"unsafe"
+
+	"github.com/MJKWoolnough/errors"
 )
 
 // copied from bufio
@@ -50,7 +51,7 @@ func (r *readSeeker) Seek(offset int64, whence int) (int64, error) {
 		r.Pos += offset
 	case 2:
 		// should never be used
-		return 0, errors.New("unimplemented")
+		return 0, errors.Error("unimplemented")
 	}
 	var err error
 	if l := int64(len(r.Buffer)); r.Pos > l {

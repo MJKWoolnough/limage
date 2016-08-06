@@ -1,6 +1,6 @@
 package xcf
 
-import "errors"
+import "github.com/MJKWoolnough/errors"
 
 type paths struct {
 	aIndex uint32
@@ -72,6 +72,6 @@ func (d *decoder) ReadPaths() paths {
 
 // Errors
 var (
-	ErrInconsistantClosedState = errors.New("inconsistant closed state")
-	ErrUnknownPathsVersion     = errors.New("unknown paths version")
+	ErrInconsistantClosedState errors.Error = "inconsistant closed state"
+	ErrUnknownPathsVersion     errors.Error = "unknown paths version"
 )

@@ -1,12 +1,12 @@
 package xcf
 
 import (
-	"errors"
 	"io"
 	"os"
 	"unicode/utf8"
 
 	"github.com/MJKWoolnough/byteio"
+	"github.com/MJKWoolnough/errors"
 )
 
 type reader struct {
@@ -69,6 +69,6 @@ func (r *reader) Skip(n uint32) {
 
 // Errors
 var (
-	ErrInvalidString = errors.New("string is invalid")
-	ErrStringTooLong = errors.New("string exceeds maximum length")
+	ErrInvalidString errors.Error = "string is invalid"
+	ErrStringTooLong errors.Error = "string exceeds maximum length"
 )

@@ -1,6 +1,6 @@
 package xcf
 
-import "errors"
+import "github.com/MJKWoolnough/errors"
 
 const (
 	propEnd               = 0
@@ -53,5 +53,5 @@ func (d *decoder) ReadBoolProperty() bool {
 
 // Errors
 var (
-	ErrInvalidBoolean = errors.New("invalid boolean value")
+	ErrInvalidBoolean errors.Error = "invalid boolean value"
 )
