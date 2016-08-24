@@ -1,10 +1,11 @@
 package xcf
 
 import (
+	"errors"
 	"image"
 	"io"
 )
 
 func Encode(w io.WriterAt, i image.Image) error {
-	return nil
+	return errors.New("unimplemented")
 }
