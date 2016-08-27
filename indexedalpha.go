@@ -15,6 +15,7 @@ type PalettedAlpha struct {
 	Palette lcolor.AlphaPalette
 }
 
+// NewPalettedAlpha creates a new image that uses a palette with an alpha channel
 func NewPalettedAlpha(r image.Rectangle, p lcolor.AlphaPalette) *PalettedAlpha {
 	w, h := r.Dx(), r.Dy()
 	return &PalettedAlpha{
