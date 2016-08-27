@@ -1,3 +1,4 @@
+// Package limage introduces structures to read and build layered images
 package limage
 
 import (
