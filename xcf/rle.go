@@ -1,6 +1,10 @@
 package xcf
 
-import "github.com/MJKWoolnough/byteio"
+import (
+	"io"
+
+	"github.com/MJKWoolnough/byteio"
+)
 
 type rle struct {
 	Reader     byteio.StickyReader
@@ -13,21 +17,30 @@ func (r *rle) Read(p []byte) (int, error) {
 	var n int
 	for len(p) > 0 && r.Reader.Err == nil {
 		if r.count == 0 {
-			n := r.Reader.ReadUint8()
-			if n < 127 {
+			m := r.Reader.ReadUint8()
+			if r.Reader.Err != nil {
+				return n, r.Reader.Err
+			}
+			if m < 127 {
 				r.repeatByte = true
-				r.count = uint16(n) + 1
+				r.count = uint16(m) + 1
 				r.data = r.Reader.ReadUint8()
-			} else if n == 127 {
+			} else if m == 127 {
 				r.repeatByte = true
 				r.count = r.Reader.ReadUint16()
 				r.data = r.Reader.ReadUint8()
-			} else if n == 128 {
+			} else if m == 128 {
 				r.repeatByte = false
 				r.count = r.Reader.ReadUint16()
 			} else {
 				r.repeatByte = false
-				r.count = 256 - uint16(n)
+				r.count = 256 - uint16(m)
+			}
+			if r.Reader.Err != nil {
+				if r.Reader.Err == io.EOF {
+					r.Reader.Err = io.ErrUnexpectedEOF
+				}
+				return n, r.Reader.Err
 			}
 		}
 		c := int(r.count)
