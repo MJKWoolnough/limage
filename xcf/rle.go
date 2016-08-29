@@ -51,6 +51,9 @@ func (r *rle) Read(p []byte) (int, error) {
 const minRunLength = 1
 
 func runLengthEncode(w byteio.StickyWriter, pix []byte) {
+	if len(pix) == 0 {
+		return
+	}
 	var (
 		lastByte      = pix[0]
 		run      uint = 0
