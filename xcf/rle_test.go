@@ -64,14 +64,45 @@ func TestReads(t *testing.T) {
 		},
 	}
 	for n, test := range tests {
-		r := rle{
+		var buf bytes.Buffer
+		_, err := io.Copy(&buf, &rle{
 			Reader: byteio.StickyReader{
 				Reader: byteio.BigEndianReader{Reader: strings.NewReader(test.Input)},
 			},
+		})
+		if err != nil {
+			t.Errorf("test %d: unexpected error: %q", n+1, err)
+		} else if str := buf.String(); str != test.Output {
+			t.Errorf("test %d: expecting %q, got %q", n+1, test.Output, str)
 		}
+	}
+}
+
+func TestWrites(t *testing.T) {
+	tests := []struct {
+		Input, Output string
+	}{
+		{},
+		{
+			"A",
+			"\x00A",
+		},
+		{
+			"AA",
+			"\x01A",
+		},
+	}
+	for n, test := range tests {
 		var buf bytes.Buffer
-		io.Copy(&buf, &r)
-		if str := buf.String(); str != test.Output {
+		w := byteio.StickyWriter{
+			Writer: byteio.BigEndianWriter{
+				Writer: &buf,
+			},
+		}
+		runLengthEncode(&w, []byte(test.Input))
+		if w.Err != nil {
+			t.Errorf("test %d: unexpected error: %q", n+1, w.Err)
+		} else if str := buf.String(); str != test.Output {
 			t.Errorf("test %d: expecting %q, got %q", n+1, test.Output, str)
 		}
 	}
