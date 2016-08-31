@@ -69,7 +69,7 @@ func runLengthEncode(w *byteio.StickyWriter, pix []byte) {
 	}
 	var (
 		lastByte      = pix[0]
-		run      uint = 0
+		run      uint = 1
 	)
 	for i := 1; i < len(pix); i++ {
 		if pix[i] == lastByte {
