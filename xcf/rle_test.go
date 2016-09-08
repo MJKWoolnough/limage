@@ -91,6 +91,14 @@ func TestWrites(t *testing.T) {
 			"AA",
 			"\x01A",
 		},
+		{
+			"AAA",
+			"\x02A",
+		},
+		{
+			"AB",
+			"\xfeAB",
+		},
 	}
 	for n, test := range tests {
 		var buf bytes.Buffer
