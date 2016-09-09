@@ -61,7 +61,7 @@ func (r *rle) Read(p []byte) (int, error) {
 	return n, r.Reader.Err
 }
 
-const minRunLength = 1
+const minRunLength = 3
 
 func runLengthEncode(w *byteio.StickyWriter, pix []byte) {
 	if len(pix) == 0 {
@@ -77,17 +77,21 @@ func runLengthEncode(w *byteio.StickyWriter, pix []byte) {
 		} else {
 			if run >= minRunLength {
 				doWrites(w, lastByte, run, pix[:i-1])
+				pix = pix[i:]
+				i = 1
 			}
-			pix = pix[:i]
 			run = 1
-			lastByte = pix[0]
+			lastByte = pix[i]
 		}
+	}
+	if run < minRunLength && uint(len(pix)) != run {
+		run = 0
 	}
 	doWrites(w, lastByte, run, pix)
 }
 
 func doWrites(w *byteio.StickyWriter, lastByte byte, run uint, pix []byte) {
-	if l := uint(len(pix)); l-run > 0 {
+	if l := uint(len(pix)); l > run {
 		writeData(w, pix[:l-run])
 	}
 	if run > 0 {
