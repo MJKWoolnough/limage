@@ -63,58 +63,113 @@ func (r *rle) Read(p []byte) (int, error) {
 
 const minRunLength = 3
 
-func runLengthEncode(w *byteio.StickyWriter, pix []byte) {
-	if len(pix) == 0 {
-		return
+type rleItem struct {
+	char byte
+	num  uint16
+}
+
+type rlencoder struct {
+	Writer *byteio.StickyWriter
+	queue  []rleItem
+}
+
+func (r *rlencoder) Write(p []byte) (int, error) {
+	if r.Writer.Err != nil || len(p) == 0 {
+		return 0, r.Writer.Err
 	}
-	var (
-		lastByte      = pix[0]
-		run      uint = 1
-	)
-	for i := 1; i < len(pix); i++ {
-		if pix[i] == lastByte {
-			run++
-		} else {
-			if run >= minRunLength {
-				doWrites(w, lastByte, run, pix[:i-1])
-				pix = pix[i:]
-				i = 1
-			}
-			run = 1
-			lastByte = pix[i]
+	lastChar := p[0]
+	run := uint(1)
+	if l := len(r.queue); l > 0 {
+		if lastChar == r.queue[l-1].char {
+			run = uint(r.queue[l-1].num) + 1
+			r.queue = r.queue[:l-1]
 		}
 	}
-	if run < minRunLength && uint(len(pix)) != run {
-		run = 0
+	for _, c := range p[1:] {
+		if c == lastChar {
+			run++
+		} else {
+			r.set(lastChar, run)
+			lastChar = c
+			run = 1
+		}
 	}
-	doWrites(w, lastByte, run, pix)
+	r.set(lastChar, run)
+	return len(p), r.Writer.Err
 }
 
-func doWrites(w *byteio.StickyWriter, lastByte byte, run uint, pix []byte) {
-	if l := uint(len(pix)); l > run {
-		writeData(w, pix[:l-run])
+func (r *rlencoder) set(char byte, run uint) {
+	tr := uint16(run)
+	r.queue = append(r.queue, rleItem{char, tr})
+	if tr > minRunLength {
+		r.Flush()
 	}
-	if run > 0 {
-		writeRun(w, lastByte, run)
+	run -= uint(tr)
+	for run > 0 {
+		r.queue = append(r.queue, rleItem{char, 0xffff})
+		run >>= 16
+		r.Flush()
 	}
 }
 
-func writeRun(w *byteio.StickyWriter, b byte, run uint) {
-	if run <= 127 {
-		w.WriteUint8(uint8(run) - 1)
+func (r *rlencoder) Flush() error {
+	switch l := len(r.queue); l {
+	case 0:
+	case 1:
+		r.writeRun(r.queue[0].char, r.queue[0].num)
+	case 2:
+		if r.queue[1].num >= minRunLength {
+			r.writeRun(r.queue[0].char, r.queue[0].num)
+			r.writeRun(r.queue[1].char, r.queue[1].num)
+		} else {
+			r.writeData(r.queue)
+		}
+	default:
+		if r.queue[l-1].num >= minRunLength {
+			r.writeData(r.queue[:l-1])
+			r.writeRun(r.queue[l-1].char, r.queue[l-1].num)
+		} else {
+			r.writeData(r.queue)
+		}
+	}
+	r.queue = r.queue[:0]
+	return r.Writer.Err
+}
+
+func (r *rlencoder) writeRun(char byte, num uint16) {
+	if num < 128 {
+		r.Writer.WriteUint8(uint8(num - 1))
 	} else {
-		w.WriteUint8(127)
-		w.WriteUint16(uint16(run))
+		r.Writer.WriteUint8(127)
+		r.Writer.WriteUint16(num)
 	}
-	w.WriteUint8(b)
+	r.Writer.WriteUint8(char)
 }
 
-func writeData(w *byteio.StickyWriter, pix []byte) {
-	if len(pix) <= 127 {
-		w.WriteUint8(uint8(256 - len(pix)))
-	} else {
-		w.WriteUint8(128)
-		w.WriteUint16(uint16(len(pix)))
+func (r *rlencoder) writeData(data []rleItem) {
+	l := uint(0)
+	for _, i := range data {
+		l += uint(i.num)
 	}
-	w.Write(pix)
+	d := make([]byte, 0, l)
+	for _, i := range data {
+		for j := uint16(0); j < i.num; j++ {
+			d = append(d, i.char)
+		}
+	}
+	for len(d) > 0xffff {
+		r.Writer.WriteUint8(128)
+		r.Writer.WriteUint16(0xffff)
+		r.Writer.Write(d[:0xffff])
+		d = d[0xffff:]
+	}
+	if l := len(d); l == 0 {
+		return
+	} else if l < 128 {
+		r.Writer.WriteUint8(uint8(256 - l))
+	} else {
+		r.Writer.WriteUint16(128)
+		r.Writer.WriteUint16(uint16(l))
+	}
+	r.Writer.Write(d)
 }
