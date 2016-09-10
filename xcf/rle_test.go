@@ -99,6 +99,10 @@ func TestWrites(t *testing.T) {
 			"AB",
 			"\xfeAB",
 		},
+		{
+			"AAAAABBCCCCCFFGGHHIIII",
+			"\x04A\x01B\x04C\xfaFFGGHH\x03I",
+		},
 	}
 	for n, test := range tests {
 		var buf bytes.Buffer
@@ -107,7 +111,9 @@ func TestWrites(t *testing.T) {
 				Writer: &buf,
 			},
 		}
-		runLengthEncode(&w, []byte(test.Input))
+		r := rlencoder{Writer: &w}
+		r.Write([]byte(test.Input))
+		r.Flush()
 		if w.Err != nil {
 			t.Errorf("test %d: unexpected error: %q", n+1, w.Err)
 		} else if str := buf.String(); str != test.Output {
