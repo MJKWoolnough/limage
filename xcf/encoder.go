@@ -70,11 +70,14 @@ func (e *encoder) WriteHeader(c *image.Config) {
 	case color.GrayModel, color.Gray16Model, lcolor.GrayAlphaModel:
 		e.colorModel = lcolor.GrayAlphaModel
 		e.WriteUint32(1)
-	case color.Palette, lcolor.AlphaPalette:
-		e.colorModel = c.ColorModel
-		e.WriteUint32(2)
 	default:
-		e.colorModel = color.RGBAModel
-		e.WriteUint32(0)
+		switch c.ColorModel.(type) {
+		case color.Palette, lcolor.AlphaPalette:
+			e.colorModel = c.ColorModel
+			e.WriteUint32(2)
+		default:
+			e.colorModel = color.RGBAModel
+			e.WriteUint32(0)
+		}
 	}
 }
