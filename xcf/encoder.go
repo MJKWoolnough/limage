@@ -62,7 +62,7 @@ func Encode(w io.WriterAt, i image.Image) error {
 
 var header = []byte{'g', 'i', 'm', 'p', ' ', 'x', 'c', 'f', 'v', '0', '0', '3', '0'}
 
-func (e *encoder) WriteHeader(c *image.Config) {
+func (e *encoder) WriteHeader(c image.Config) {
 	e.Write(header)
 	e.WriteUint32(uint32(c.Width))
 	e.WriteUint32(uint32(c.Height))
