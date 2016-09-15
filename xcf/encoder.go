@@ -14,6 +14,7 @@ type encoder struct {
 	channels map[string]uint64
 
 	colorModel color.Model
+	colorType  uint8
 }
 
 func Encode(w io.WriterAt, i image.Image) error {
@@ -51,6 +52,22 @@ func Encode(w io.WriterAt, i image.Image) error {
 
 	// write property list
 
+	if p, ok := c.ColorModel.(*lcolor.AlphaPalette); ok {
+		e.WriteUint32(propColorMap)
+		e.WriteUint32(3*uint32(len(p)) + 4)
+		e.WriteUint32(uint32(len(p)))
+		for _, colour := range p {
+			rgb := lcolor.RGBModel.Convert(colour).(lcolor.RGB)
+			e.WriteUint8(rgb.R)
+			e.WriteUint8(rgb.G)
+			e.WriteUint8(rgb.B)
+		}
+	}
+
+	e.WriteUint32(propCompression)
+	e.WriteUint32(1)
+	e.WriteUint8(1) // rle
+
 	e.WriteUint32(0)
 
 	// write channel list
@@ -69,15 +86,19 @@ func (e *encoder) WriteHeader(c image.Config) {
 	switch c.ColorModel {
 	case color.GrayModel, color.Gray16Model, lcolor.GrayAlphaModel:
 		e.colorModel = lcolor.GrayAlphaModel
-		e.WriteUint32(1)
+		e.colorType = 1
 	default:
-		switch c.ColorModel.(type) {
-		case color.Palette, lcolor.AlphaPalette:
-			e.colorModel = c.ColorModel
-			e.WriteUint32(2)
+		switch m := c.ColorModel.(type) {
+		case color.Palette:
+			e.colorModel = lcolor.AlphaPalette(m)
+			e.colorType = 2
+		case lcolor.AlphaPalette:
+			e.colorModel = m
+			e.colorType = 2
 		default:
 			e.colorModel = color.RGBAModel
-			e.WriteUint32(0)
+			e.colorType = 0
 		}
 	}
+	e.WriteUint32(uint32(e.colorType))
 }
