@@ -26,6 +26,15 @@ func newWriter(w io.WriterAt) writer {
 	}
 }
 
+func (w writer) WriteAt(p []byte, off int64) (int, error) {
+	if w.Err != nil {
+		return 0, w.Err
+	}
+	var n int
+	n, w.Err = w.WriterAt.WriteAt(p, off)
+	return n, w.Err
+}
+
 type writerAtWriter struct {
 	io.WriterAt
 	pos int64
