@@ -31,9 +31,6 @@ func (d *decoder) ReadLayer() layer {
 	l.alpha = typ&1 == 1
 	l.Name = d.ReadString()
 
-	// defaults
-	l.Opacity = 255
-
 	// read properties
 PropertyLoop:
 	for {
@@ -55,13 +52,13 @@ PropertyLoop:
 			if o > 255 {
 				d.SetError(ErrInvalidOpacity)
 			}
-			l.Opacity = uint8(o)
+			l.Transparency = 255 - uint8(o)
 		case propParasites:
 			l.parasites = d.ReadParasites(plength)
 		case propTattoo:
 			l.tattoo = d.ReadUint32()
 		case propVisible:
-			l.Visible = d.ReadBoolProperty()
+			l.Invisible = !d.ReadBoolProperty()
 
 		//layer properties
 		case propActiveLayer:
@@ -103,7 +100,7 @@ PropertyLoop:
 		case propTextLayerFlags:
 			l.textLayerFlags = d.ReadUint32()
 		case propFloatOpacity:
-			l.Opacity = uint8(d.ReadFloat32() * 256)
+			l.Transparency = 255 - uint8(d.ReadFloat32()*256)
 		default:
 			d.Skip(plength)
 		}

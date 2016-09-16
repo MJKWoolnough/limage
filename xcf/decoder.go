@@ -249,9 +249,6 @@ func Decode(r io.ReadSeeker) (*limage.Image, error) {
 		d.Config.ColorModel = lcolor.GrayAlphaModel
 	}
 
-	// defaults
-	d.Opacity = 255
-
 	// read image properties
 PropertyLoop:
 	for {
@@ -274,7 +271,7 @@ PropertyLoop:
 			if o > 255 {
 				return nil, ErrInvalidOpacity
 			}
-			d.Opacity = uint8(o)
+			d.Transparency = 255 - uint8(o)
 		case propParasites:
 			d.parasites = d.ReadParasites(plength)
 			if c := d.parasites.Get(commentParasiteName); c != nil && len(c.data) > 0 {

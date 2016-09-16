@@ -9,13 +9,13 @@ import (
 // Image represents a layered image
 type Image struct {
 	Group
-	Comment string
-	Opacity uint8
+	Comment      string
+	Transparency uint8
 }
 
 // At returns the colour at the specified coords
 func (i *Image) At(x, y int) color.Color {
-	return transparency(i.Group.At(x, y), i.Opacity)
+	return transparency(i.Group.At(x, y), 255-i.Transparency)
 }
 
 // Layer represents a single layer of a multilayered image
@@ -23,8 +23,8 @@ type Layer struct {
 	Name             string
 	OffsetX, OffsetY int
 	Mode             Composite
-	Visible          bool
-	Opacity          uint8
+	Invisible        bool
+	Transparency     uint8
 	image.Image
 }
 
@@ -36,7 +36,7 @@ func (l *Layer) Bounds() image.Rectangle {
 
 // At returns the colour at the specified coords
 func (l *Layer) At(x, y int) color.Color {
-	return transparency(l.Image.At(x-l.OffsetX, y-l.OffsetY), l.Opacity)
+	return transparency(l.Image.At(x-l.OffsetX, y-l.OffsetY), 255-l.Transparency)
 }
 
 // Group represents a collection of layers
@@ -60,7 +60,7 @@ func (g *Group) At(x, y int) color.Color {
 	var c color.Color = color.Alpha{}
 	point := image.Point{x, y}
 	for i := len(g.Layers) - 1; i >= 0; i-- {
-		if !g.Layers[i].Visible {
+		if g.Layers[i].Invisible {
 			continue
 		}
 		if !point.In(g.Layers[i].Bounds()) {
