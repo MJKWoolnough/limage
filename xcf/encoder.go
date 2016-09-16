@@ -31,15 +31,8 @@ func Encode(w io.WriterAt, i image.Image) error {
 					Width:      b.Dx(),
 					Height:     b.Dy(),
 				},
-				Layers: []limage.Layer{
-					{
-						Image:   i,
-						Visible: true,
-						Opacity: 255,
-					},
-				},
+				Layers: []limage.Layer{{Image: i}},
 			},
-			Opacity: 255,
 		}
 	}
 
@@ -52,7 +45,7 @@ func Encode(w io.WriterAt, i image.Image) error {
 
 	// write property list
 
-	if p, ok := c.ColorModel.(*lcolor.AlphaPalette); ok {
+	if p, ok := e.colorModel.(lcolor.AlphaPalette); ok {
 		e.WriteUint32(propColorMap)
 		e.WriteUint32(3*uint32(len(p)) + 4)
 		e.WriteUint32(uint32(len(p)))
