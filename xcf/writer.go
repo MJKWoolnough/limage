@@ -35,6 +35,12 @@ func (w writer) WriteAt(p []byte, off int64) (int, error) {
 	return n, w.Err
 }
 
+func (w writer) WriteString(str string) {
+	w.WriteUint32(uint32(len(str)) + 1)
+	w.Write([]byte(str))
+	w.WriteUint8(0)
+}
+
 type writerAtWriter struct {
 	io.WriterAt
 	pos int64
