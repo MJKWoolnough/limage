@@ -29,13 +29,13 @@ type Layer struct {
 }
 
 // Bounds returns the limits for the dimensions of the layer
-func (l *Layer) Bounds() image.Rectangle {
+func (l Layer) Bounds() image.Rectangle {
 	max := l.Image.Bounds().Max
 	return image.Rect(l.OffsetX, l.OffsetY, max.X+l.OffsetX, max.Y+l.OffsetY)
 }
 
 // At returns the colour at the specified coords
-func (l *Layer) At(x, y int) color.Color {
+func (l Layer) At(x, y int) color.Color {
 	return transparency(l.Image.At(x-l.OffsetX, y-l.OffsetY), 255-l.Transparency)
 }
 
@@ -46,17 +46,17 @@ type Group struct {
 }
 
 // ColorModel represents the color model of the group
-func (g *Group) ColorModel() color.Model {
+func (g Group) ColorModel() color.Model {
 	return g.Config.ColorModel
 }
 
 // Bounds returns the limites for the dimensions of the group
-func (g *Group) Bounds() image.Rectangle {
+func (g Group) Bounds() image.Rectangle {
 	return image.Rect(0, 0, g.Width, g.Height)
 }
 
 // At returns the colour at the specified coords
-func (g *Group) At(x, y int) color.Color {
+func (g Group) At(x, y int) color.Color {
 	var c color.Color = color.Alpha{}
 	point := image.Point{x, y}
 	for i := len(g.Layers) - 1; i >= 0; i-- {
