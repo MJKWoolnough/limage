@@ -16,7 +16,7 @@ type encoder struct {
 	colorModel color.Model
 	colorType  uint8
 
-	channelPos int64
+	channelPos writer
 }
 
 func Encode(w io.WriterAt, i image.Image) error {
@@ -65,9 +65,7 @@ func Encode(w io.WriterAt, i image.Image) error {
 
 	e.WriteUint32(0)
 
-	e.channelPos = e.Count
-
-	e.Write(make([]byte, layerCount(&im.Group)<<2))
+	e.channelPos = e.ReserveSpace(layerCount(&im.Group) << 2)
 
 	e.WriteLayer(&im.Group)
 
@@ -102,8 +100,8 @@ func (e *encoder) WriteHeader(c image.Config) {
 	e.WriteUint32(uint32(e.colorType))
 }
 
-func layerCount(g *limage.Group) uint32 {
-	count := uint32(len(g.Layers))
+func layerCount(g *limage.Group) int64 {
+	count := int64(len(g.Layers))
 	for _, l := range g.Layers {
 		switch g := l.Image.(type) {
 		case limage.Group:
