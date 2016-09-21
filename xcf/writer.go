@@ -44,12 +44,12 @@ func (w writer) WriteString(str string) {
 
 func (w writer) ReserveSpace(l int64) writer {
 	nw := writer{
-		byteio.StickyWriter{
+		&byteio.StickyWriter{
 			Writer: byteio.BigEndianWriter{
 				Writer: &limitedWriter{
 					Writer: writerAtWriter{
 						WriterAt: w.WriterAt,
-						Pos:      w.Count,
+						pos:      w.Count,
 					},
 					MaxPos: w.Count + l,
 				},
@@ -78,12 +78,10 @@ type limitedWriter struct {
 }
 
 func (l *limitedWriter) Write(p []byte) (int, error) {
-	if l.MaxPos + int64(len(p)) {
+	if l.Writer.pos+int64(len(p)) > l.MaxPos {
 		return 0, ErrTooBig
 	}
-	n, err := l.Writer.Write(p)
-	l.MaxPos += n
-	return n, err
+	return l.Writer.Write(p)
 }
 
 // Errors
