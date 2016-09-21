@@ -67,7 +67,7 @@ func Encode(w io.WriterAt, i image.Image) error {
 
 	e.channelPos = e.ReserveSpace(layerCount(&im.Group) << 2)
 
-	e.WriteLayer(&im.Group)
+	e.WriteGroup(&im.Group)
 
 	e.WriteUint32(0)
 
@@ -114,6 +114,16 @@ func layerCount(g *limage.Group) int64 {
 	return count
 }
 
-func (e *encoder) WriteLayer(g *limage.Group) {
+func (e *encoder) WriteGroup(g *limage.Group) {
+}
 
+func (e *encoder) WriteChannel(d []byte) uint32 {
+	if ptr, ok := e.channels[string(d)]; ok {
+		return ptr
+	}
+	ptr := uint32(e.Count)
+	r := rlencoder{Writer: e.StickyWriter}
+	r.Write(p)
+	r.Flush()
+	return ptr
 }
