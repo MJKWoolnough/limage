@@ -11,7 +11,7 @@ import (
 
 type encoder struct {
 	writer
-	channels map[string]uint64
+	channels map[string]uint32
 
 	colorModel color.Model
 	colorType  uint8
@@ -40,7 +40,7 @@ func Encode(w io.WriterAt, i image.Image) error {
 
 	e := encoder{
 		writer:   newWriter(w),
-		channels: make(map[string]uint64),
+		channels: make(map[string]uint32),
 	}
 
 	e.WriteHeader(im.Config)
@@ -122,8 +122,9 @@ func (e *encoder) WriteChannel(d []byte) uint32 {
 		return ptr
 	}
 	ptr := uint32(e.Count)
+	e.channels[string(d)] = ptr
 	r := rlencoder{Writer: e.StickyWriter}
-	r.Write(p)
+	r.Write(d)
 	r.Flush()
 	return ptr
 }
