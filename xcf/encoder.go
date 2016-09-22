@@ -9,12 +9,16 @@ import (
 	"github.com/MJKWoolnough/limage/lcolor"
 )
 
+const chanLen = 64 * 64 * 1 // tile width (64) * tile height (64) * max channels (4) * bitwidth (1)
+
 type encoder struct {
 	writer
 	channels map[string]uint32
 
-	colorModel color.Model
-	colorType  uint8
+	colorPalette lcolor.AlphaPalette
+	colorType    uint8
+
+	channelBuf [chanLen * 4]byte // 4 channels max
 }
 
 func Encode(w io.WriterAt, im image.Image) error {
@@ -32,11 +36,11 @@ func Encode(w io.WriterAt, im image.Image) error {
 
 	// write property list
 
-	if p, ok := e.colorModel.(lcolor.AlphaPalette); ok {
+	if e.colorPalette != nil {
 		e.WriteUint32(propColorMap)
-		e.WriteUint32(3*uint32(len(p)) + 4)
-		e.WriteUint32(uint32(len(p)))
-		for _, colour := range p {
+		e.WriteUint32(3*uint32(len(e.colorPalette)) + 4)
+		e.WriteUint32(uint32(len(e.colorPalette)))
+		for _, colour := range e.colorPalette {
 			rgb := lcolor.RGBModel.Convert(colour).(lcolor.RGB)
 			e.WriteUint8(rgb.R)
 			e.WriteUint8(rgb.G)
@@ -74,18 +78,16 @@ func (e *encoder) WriteHeader(im image.Image) {
 	e.WriteUint32(uint32(b.Dy()))
 	switch cm := im.ColorModel(); cm {
 	case color.GrayModel, color.Gray16Model, lcolor.GrayAlphaModel:
-		e.colorModel = lcolor.GrayAlphaModel
 		e.colorType = 1
 	default:
 		switch m := cm.(type) {
 		case color.Palette:
-			e.colorModel = lcolor.AlphaPalette(m)
+			e.colorPalette = lcolor.AlphaPalette(m)
 			e.colorType = 2
 		case lcolor.AlphaPalette:
-			e.colorModel = m
+			e.colorPalette = m
 			e.colorType = 2
 		default:
-			e.colorModel = color.RGBAModel
 			e.colorType = 0
 		}
 	}
@@ -129,6 +131,68 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
 	}
 	e.WriteLayers(g.Layers, groups, w)
 	return ptr
+}
+
+func (e *encoder) WriteRGBTile(im image.Image, bounds image.Rectangle, w writer) {
+	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
+		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
+			red := e.channelBuf[0:0:chanLen]
+			green := e.channelBuf[chanLen:chanLen : chanLen*2]
+			blue := e.channelBuf[chanLen*2 : chanLen*2 : chanLen*3]
+			alpha := e.channelBuf[chanLen*3 : chanLen*3 : chanLen*4]
+			for j := y; j < y+64 && j < bounds.Max.Y; j++ {
+				for i := x; i < x+64 && i < bounds.Max.X; i++ {
+					r, g, b, a := im.At(i, j).RGBA()
+					red = append(red, uint8(r))
+					green = append(green, uint8(g))
+					blue = append(blue, uint8(b))
+					alpha = append(alpha, uint8(a))
+				}
+			}
+			w.WriteUint32(e.WriteChannel(red))
+			w.WriteUint32(e.WriteChannel(green))
+			w.WriteUint32(e.WriteChannel(blue))
+			w.WriteUint32(e.WriteChannel(alpha))
+		}
+	}
+}
+
+func (e *encoder) WriteGrayTile(im image.Image, bounds image.Rectangle, w writer) {
+	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
+		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
+			gamma := e.channelBuf[0:0:chanLen]
+			alpha := e.channelBuf[chanLen*3 : chanLen*3 : chanLen*4]
+			for j := y; j < y+64 && j < bounds.Max.Y; j++ {
+				for i := x; i < x+64 && i < bounds.Max.X; i++ {
+					g, _, _, a := im.At(i, j).RGBA()
+					gamma = append(alpha, uint8(g))
+					alpha = append(alpha, uint8(a))
+				}
+			}
+			w.WriteUint32(e.WriteChannel(gamma))
+			w.WriteUint32(e.WriteChannel(alpha))
+		}
+	}
+}
+
+func (e *encoder) WritePalettedTile(im image.Image, bounds image.Rectangle, w writer) {
+	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
+		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
+			index := e.channelBuf[0:0:chanLen]
+			alpha := e.channelBuf[chanLen*3 : chanLen*3 : chanLen*4]
+			for j := y; j < y+64 && j < bounds.Max.Y; j++ {
+				for i := x; i < x+64 && i < bounds.Max.X; i++ {
+					c := im.At(i, j)
+					in := e.colorPalette.Index(c)
+					_, _, _, a := c.RGBA()
+					index = append(index, uint8(in))
+					alpha = append(alpha, uint8(a))
+				}
+			}
+			w.WriteUint32(e.WriteChannel(index))
+			w.WriteUint32(e.WriteChannel(alpha))
+		}
+	}
 }
 
 func (e *encoder) WriteChannel(d []byte) uint32 {
