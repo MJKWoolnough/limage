@@ -14,7 +14,7 @@ type Image struct {
 }
 
 // At returns the colour at the specified coords
-func (i *Image) At(x, y int) color.Color {
+func (i Image) At(x, y int) color.Color {
 	return transparency(i.Group.At(x, y), 255-i.Transparency)
 }
 
