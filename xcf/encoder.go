@@ -17,24 +17,10 @@ type encoder struct {
 	colorType  uint8
 }
 
-func Encode(w io.WriterAt, i image.Image) error {
+func Encode(w io.WriterAt, im image.Image) error {
 
-	var im *limage.Image
-
-	if m, ok := i.(*limage.Image); ok {
-		im = m
-	} else {
-		b := i.Bounds()
-		im = &limage.Image{
-			Group: limage.Group{
-				Config: image.Config{
-					ColorModel: i.ColorModel(),
-					Width:      b.Dx(),
-					Height:     b.Dy(),
-				},
-				Layers: []limage.Layer{{Image: i}},
-			},
-		}
+	if li, ok := im.(limage.Image); ok {
+		im = &li
 	}
 
 	e := encoder{
@@ -42,7 +28,7 @@ func Encode(w io.WriterAt, i image.Image) error {
 		channels: make(map[string]uint32),
 	}
 
-	e.WriteHeader(im.Config)
+	e.WriteHeader(im)
 
 	// write property list
 
@@ -62,9 +48,17 @@ func Encode(w io.WriterAt, i image.Image) error {
 	e.WriteUint32(1)
 	e.WriteUint8(1) // rle
 
-	e.WriteUint32(0)
-
-	e.WriteGroup(&im.Group, make([]int32, 0, 32), e.ReserveSpace(layerCount(&im.Group)<<2))
+	switch im := im.(type) {
+	case *limage.Image:
+		if im.Comment != "" {
+			// write comment parasite
+		}
+		e.WriteUint32(0)
+		e.WriteLayers(im.Layers, make([]int32, 0, 32), e.ReserveSpace(layerCount(&im.Group)<<2))
+	default:
+		e.WriteUint32(0)
+		e.WriteLayer(limage.Layer{Image: im}, []int32{}, e.ReserveSpace(4))
+	}
 
 	e.WriteUint32(0)
 
@@ -73,16 +67,17 @@ func Encode(w io.WriterAt, i image.Image) error {
 
 var header = []byte{'g', 'i', 'm', 'p', ' ', 'x', 'c', 'f', 'v', '0', '0', '3', 0}
 
-func (e *encoder) WriteHeader(c image.Config) {
+func (e *encoder) WriteHeader(im image.Image) {
 	e.Write(header)
-	e.WriteUint32(uint32(c.Width))
-	e.WriteUint32(uint32(c.Height))
-	switch c.ColorModel {
+	b := im.Bounds()
+	e.WriteUint32(uint32(b.Dx()))
+	e.WriteUint32(uint32(b.Dy()))
+	switch cm := im.ColorModel(); cm {
 	case color.GrayModel, color.Gray16Model, lcolor.GrayAlphaModel:
 		e.colorModel = lcolor.GrayAlphaModel
 		e.colorType = 1
 	default:
-		switch m := c.ColorModel.(type) {
+		switch m := cm.(type) {
 		case color.Palette:
 			e.colorModel = lcolor.AlphaPalette(m)
 			e.colorType = 2
@@ -111,24 +106,29 @@ func layerCount(g *limage.Group) int64 {
 	return count
 }
 
-func (e *encoder) WriteGroup(g *limage.Group, groups []int32, w writer) uint32 {
-	ptr := e.WriterLayer(g)
-	for n, layer := range g.Layers {
-		nGroups := append(groups, n)
-		switch l := layer.Image.(type) {
-		case limage.Group:
-			w.WriteInt32(e.WriteGroup(&l, nGroups, w))
-		case *limage.Group:
-			w.WriteInt32(e.WriteGroup(l, nGroups, w))
-		default:
-			w.WriteInt32(e.WriterLayer(layer.Image, groups))
-		}
+func (e *encoder) WriteLayers(layers []limage.Layer, groups []int32, w writer) {
+	for n, layer := range layers {
+		nGroups := append(groups, int32(n))
+		w.WriteUint32(e.WriteLayer(layer, nGroups, w))
 	}
-	return ptr
 }
 
-func (e *encoder) WriterLayer(l image.Image, groups []int32) uint32 {
+func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
+	var ptr uint32
 
+	// write layer
+
+	var g *limage.Group
+	switch i := im.Image.(type) {
+	case limage.Group:
+		g = &i
+	case *limage.Group:
+		g = i
+	default:
+		return ptr
+	}
+	e.WriteLayers(g.Layers, groups, w)
+	return ptr
 }
 
 func (e *encoder) WriteChannel(d []byte) uint32 {
