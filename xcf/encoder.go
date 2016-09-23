@@ -196,8 +196,8 @@ func (e *encoder) grayToBuf(c color.Color) {
 }
 
 func (e *encoder) paletteAlphaToBuf(c color.Color) {
-	i := e.colourPalette.Index(c)
-	_, _, _, a := c.RGBA()
+	r, g, b, a := c.RGBA()
+	i := e.colourPalette.Index(lcolor.RGB{r, g, b})
 	e.channelBuf[4*chanLen] = uint8(i)
 	e.channelBuf[4*chanLen+1] = uint8(a)
 }
