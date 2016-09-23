@@ -18,7 +18,7 @@ type encoder struct {
 
 	colourPalette  lcolor.AlphaPalette
 	colourType     uint8
-	colourFunc     colorBufFunc
+	colourFunc     colourBufFunc
 	colourChannels uint8
 
 	channelBuf [chanLen*4 + 4]byte // 4 channels max + 4 for max colourBuf
@@ -31,8 +31,7 @@ func Encode(w io.WriterAt, im image.Image) error {
 	}
 
 	e := encoder{
-		writer:   newWriter(w),
-		channels: make(map[string]uint32),
+		writer: newWriter(w),
 	}
 
 	e.WriteHeader(im)
@@ -80,7 +79,7 @@ func (e *encoder) WriteHeader(im image.Image) {
 	e.WriteUint32(uint32(b.Dx()))
 	e.WriteUint32(uint32(b.Dy()))
 	var colourType uint32
-	switch cm := im.ColourModel(); cm {
+	switch cm := im.ColorModel(); cm {
 	case color.GrayModel, color.Gray16Model, lcolor.GrayAlphaModel:
 		colourType = 1
 		e.colourFunc = (*encoder).grayAlphaToBuf
@@ -90,12 +89,12 @@ func (e *encoder) WriteHeader(im image.Image) {
 		case color.Palette:
 			e.colourPalette = lcolor.AlphaPalette(m)
 			colourType = 2
-			e.colourFunc = (*encoder).paletteToBuflpha
+			e.colourFunc = (*encoder).paletteAlphaToBuf
 			e.colourChannels = 2
 		case lcolor.AlphaPalette:
 			e.colourPalette = m
 			colourType = 2
-			e.colourFunc = (*encoder).paletteToBuflpha
+			e.colourFunc = (*encoder).paletteAlphaToBuf
 			e.colourChannels = 2
 		default:
 			colourType = 0
@@ -146,11 +145,11 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
 }
 
 func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourChannels uint8) {
-	n := numtiles
+	n := int64(0)
 	w := e.ReserveSpace(n << 2)
 	channels := make([][]byte, colourChannels)
 	r := rlencoder{Writer: e.StickyWriter}
-	for i := 0; i < len(e.colorBuf); i++ {
+	for i := 0; i < int(colourChannels); i++ {
 		channels[i] = e.channelBuf[i*chanLen : i*chanLen : (i+1)*chanLen]
 	}
 	bounds := im.Bounds()
@@ -161,9 +160,9 @@ func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourCha
 			}
 			for j := y; j < y+64 && j < bounds.Max.Y; j++ {
 				for i := x; i < x+64 && i < bounds.Max.X; i++ {
-					colorFunc(e, im.At(i, j))
-					for n, c := range e.colorBuf {
-						channels[n] = append(channels[n], c)
+					colourFunc(e, im.At(i, j))
+					for n := range channels {
+						channels[n] = append(channels[n], e.channelBuf[4*chanLen+n])
 					}
 				}
 			}
@@ -177,31 +176,28 @@ func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourCha
 	}
 }
 
-func (e *encoder) WriteChannels(data [][]byte) uint32 {
-}
-
 func (e *encoder) rgbAlphaToBuf(c color.Color) {
 	r, g, b, a := c.RGBA()
-	e.colorBuf[3] = uint8(a)
-	e.colorBuf[2] = uint8(b)
-	e.colorBuf[1] = uint8(g)
-	e.colorBuf[0] = uint8(r)
+	e.channelBuf[4*chanLen] = uint8(r)
+	e.channelBuf[4*chanLen+1] = uint8(g)
+	e.channelBuf[4*chanLen+2] = uint8(b)
+	e.channelBuf[4*chanLen+3] = uint8(a)
 }
 
 func (e *encoder) grayAlphaToBuf(c color.Color) {
 	g, _, _, a := c.RGBA()
-	e.colorBuf[1] = append(e.colorBuf[1], uint8(a))
-	e.colorBuf[0] = append(e.colorBuf[0], uint8(g))
+	e.channelBuf[4*chanLen] = uint8(g)
+	e.channelBuf[4*chanLen+1] = uint8(a)
 }
 
 func (e *encoder) grayToBuf(c color.Color) {
 	g, _, _, _ := c.RGBA()
-	e.colorBuf[0] = append(e.colorBuf[0], uint8(g))
+	e.channelBuf[4*chanLen] = uint8(g)
 }
 
 func (e *encoder) paletteAlphaToBuf(c color.Color) {
-	i := e.colorPalette.Index(c)
+	i := e.colourPalette.Index(c)
 	_, _, _, a := c.RGBA()
-	e.colorBuf[1] = uint8(a)
-	e.colorBuf[0] = uint8(i)
+	e.channelBuf[4*chanLen] = uint8(i)
+	e.channelBuf[4*chanLen+1] = uint8(a)
 }
