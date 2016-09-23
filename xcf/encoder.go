@@ -13,7 +13,6 @@ const chanLen = 64 * 64 * 1 // tile width (64) * tile height (64) * max channels
 
 type encoder struct {
 	writer
-	channels map[string]uint32
 
 	colorPalette lcolor.AlphaPalette
 	colorType    uint8
@@ -195,14 +194,12 @@ func (e *encoder) WritePalettedTile(im image.Image, bounds image.Rectangle, w wr
 	}
 }
 
-func (e *encoder) WriteChannel(d []byte) uint32 {
-	if ptr, ok := e.channels[string(d)]; ok {
-		return ptr
-	}
+func (e *encoder) WriteChannels(data ...[]byte) uint32 {
 	ptr := uint32(e.Count)
-	e.channels[string(d)] = ptr
 	r := rlencoder{Writer: e.StickyWriter}
-	r.Write(d)
-	r.Flush()
+	for _, d := range data {
+		r.Write(d)
+		r.Flush()
+	}
 	return ptr
 }
