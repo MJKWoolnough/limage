@@ -177,22 +177,21 @@ func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourCha
 }
 
 func (e *encoder) rgbAlphaToBuf(c color.Color) {
-	r, g, b, a := c.RGBA()
-	e.channelBuf[4*chanLen] = uint8(r)
-	e.channelBuf[4*chanLen+1] = uint8(g)
-	e.channelBuf[4*chanLen+2] = uint8(b)
-	e.channelBuf[4*chanLen+3] = uint8(a)
+	rgba := color.RGBAModel.Convert(c).(color.RGBA)
+	e.channelBuf[4*chanLen] = rgba.R
+	e.channelBuf[4*chanLen+1] = rgba.G
+	e.channelBuf[4*chanLen+2] = rgba.B
+	e.channelBuf[4*chanLen+3] = rgba.A
 }
 
 func (e *encoder) grayAlphaToBuf(c color.Color) {
-	g, _, _, a := c.RGBA()
-	e.channelBuf[4*chanLen] = uint8(g)
-	e.channelBuf[4*chanLen+1] = uint8(a)
+	ga := lcolor.GrayAlphaModel.Convert(c).(lcolor.GrayAlpha)
+	e.channelBuf[4*chanLen] = ga.Y
+	e.channelBuf[4*chanLen+1] = ga.A
 }
 
 func (e *encoder) grayToBuf(c color.Color) {
-	g, _, _, _ := c.RGBA()
-	e.channelBuf[4*chanLen] = uint8(g)
+	e.channelBuf[4*chanLen] = color.GrayModel.Convert(c).(color.Gray).Y
 }
 
 func (e *encoder) paletteAlphaToBuf(c color.Color) {
