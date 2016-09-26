@@ -145,14 +145,27 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
 }
 
 func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourChannels uint8) {
-	n := int64(0)
-	w := e.ReserveSpace(n << 2)
+	bounds := im.Bounds()
+
+	dx := int64(bounds.Dx())
+	dy := int64(bounds.Dy())
+
+	nx := dx >> 6 // each tile is 64 wide
+	ny := dy >> 6 // each tile is 64 high
+
+	if dx&63 > 0 { // last tile not as wide
+		nx++
+	}
+	if dy&63 > 0 { // lasy tile not as high
+		ny++
+	}
+
+	w := e.ReserveSpace((nx * ny) << 2)
 	channels := make([][]byte, colourChannels)
 	r := rlencoder{Writer: e.StickyWriter}
 	for i := 0; i < int(colourChannels); i++ {
 		channels[i] = e.channelBuf[i*chanLen : i*chanLen : (i+1)*chanLen]
 	}
-	bounds := im.Bounds()
 	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
 		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
 			for n := range channels {
