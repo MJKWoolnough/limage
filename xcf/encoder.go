@@ -156,7 +156,7 @@ func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourCha
 	if dx&63 > 0 { // last tile not as wide
 		nx++
 	}
-	if dy&63 > 0 { // lasy tile not as high
+	if dy&63 > 0 { // last tile not as high
 		ny++
 	}
 
