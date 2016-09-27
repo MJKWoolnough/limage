@@ -144,6 +144,39 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
 	return ptr
 }
 
+func (e *encoder) WriteImage(im image.Image) {
+	w := e.ReserveSpace(8) // 2 uint32 pointers
+
+	var mask *image.Gray
+
+	switch imm := im.(type) {
+	case limage.MaskedImage:
+		im = imm.Image
+		mask = imm.Mask
+	case *limage.MaskedImage:
+		im = imm.Image
+		mask = imm.Mask
+	}
+
+	w.WriteUint32(e.Count)
+
+	// image hierarchy
+
+	bounds := im.Bounds()
+
+	e.WriteUint32(uint32(bounds.Dx()))
+	e.WriteUint32(uint32(bounds.Dy()))
+	e.WriteUint32(uint32(e.colourChannels))
+
+	e.WriteTiles(im, e.colourFunc, e.colourChannels)
+
+	if mask != nil {
+		w.WriteUint32(e.Count)
+		e.WriteTiles(mask, grayToBuf, 1)
+	}
+
+}
+
 func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourChannels uint8) {
 	bounds := im.Bounds()
 
