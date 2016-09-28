@@ -21,7 +21,11 @@ type encoder struct {
 	colourFunc     colourBufFunc
 	colourChannels uint8
 
-	channelBuf [chanLen*4 + 4]byte // 4 channels max + 4 for max colourBuf
+	channelBufA [chanLen]byte
+	channelBufB [chanLen]byte
+	channelBufC [chanLen]byte
+	channelBufD [chanLen]byte
+	colourBuf   [4]byte
 }
 
 func Encode(w io.WriterAt, im image.Image) error {
@@ -158,7 +162,7 @@ func (e *encoder) WriteImage(im image.Image) {
 		mask = imm.Mask
 	}
 
-	w.WriteUint32(e.Count)
+	w.WriteUint32(uint32(e.Count))
 
 	// image hierarchy
 
@@ -171,8 +175,8 @@ func (e *encoder) WriteImage(im image.Image) {
 	e.WriteTiles(im, e.colourFunc, e.colourChannels)
 
 	if mask != nil {
-		w.WriteUint32(e.Count)
-		e.WriteTiles(mask, grayToBuf, 1)
+		w.WriteUint32(uint32(e.Count))
+		e.WriteTiles(mask, (*encoder).grayToBuf, 1)
 	}
 
 }
@@ -194,11 +198,14 @@ func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourCha
 	}
 
 	w := e.ReserveSpace((nx * ny) << 2)
-	channels := make([][]byte, colourChannels)
-	r := rlencoder{Writer: e.StickyWriter}
-	for i := 0; i < int(colourChannels); i++ {
-		channels[i] = e.channelBuf[i*chanLen : i*chanLen : (i+1)*chanLen]
+	channels := [][]byte{
+		e.channelBufA[:],
+		e.channelBufB[:],
+		e.channelBufC[:],
+		e.channelBufD[:],
 	}
+	channels = channels[:colourChannels]
+	r := rlencoder{Writer: e.StickyWriter}
 	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
 		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
 			for n := range channels {
@@ -208,7 +215,7 @@ func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourCha
 				for i := x; i < x+64 && i < bounds.Max.X; i++ {
 					colourFunc(e, im.At(i, j))
 					for n := range channels {
-						channels[n] = append(channels[n], e.channelBuf[4*chanLen+n])
+						channels[n] = append(channels[n], e.colourBuf[n])
 					}
 				}
 			}
@@ -224,25 +231,25 @@ func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourCha
 
 func (e *encoder) rgbAlphaToBuf(c color.Color) {
 	rgba := color.RGBAModel.Convert(c).(color.RGBA)
-	e.channelBuf[4*chanLen] = rgba.R
-	e.channelBuf[4*chanLen+1] = rgba.G
-	e.channelBuf[4*chanLen+2] = rgba.B
-	e.channelBuf[4*chanLen+3] = rgba.A
+	e.colourBuf[0] = rgba.R
+	e.colourBuf[1] = rgba.G
+	e.colourBuf[2] = rgba.B
+	e.colourBuf[3] = rgba.A
 }
 
 func (e *encoder) grayAlphaToBuf(c color.Color) {
 	ga := lcolor.GrayAlphaModel.Convert(c).(lcolor.GrayAlpha)
-	e.channelBuf[4*chanLen] = ga.Y
-	e.channelBuf[4*chanLen+1] = ga.A
+	e.colourBuf[0] = ga.Y
+	e.colourBuf[1] = ga.A
 }
 
 func (e *encoder) grayToBuf(c color.Color) {
-	e.channelBuf[4*chanLen] = color.GrayModel.Convert(c).(color.Gray).Y
+	e.colourBuf[0] = color.GrayModel.Convert(c).(color.Gray).Y
 }
 
 func (e *encoder) paletteAlphaToBuf(c color.Color) {
 	r, g, b, a := c.RGBA()
 	i := e.colourPalette.Index(lcolor.RGB{uint8(r), uint8(g), uint8(b)})
-	e.channelBuf[4*chanLen] = uint8(i)
-	e.channelBuf[4*chanLen+1] = uint8(a)
+	e.colourBuf[0] = uint8(i)
+	e.colourBuf[1] = uint8(a)
 }
