@@ -85,7 +85,7 @@ type MaskedImage struct {
 }
 
 // At returns the colour at the specified coords after masking
-func (m *MaskedImage) At(x, y int) color.Color {
+func (m MaskedImage) At(x, y int) color.Color {
 	return transparency(m.Image.At(x, y), m.Mask.GrayAt(x, y).Y)
 }
 
