@@ -9,7 +9,7 @@ import (
 	"github.com/MJKWoolnough/limage/lcolor"
 )
 
-const chanLen = 64 * 64 * 1 // tile width (64) * tile height (64) * max channels (4) * bitwidth (1)
+const chanLen = 64 * 64 * 1 // tile width (64) * tile height (64) * max channels (4) * bytewidth (1)
 
 type colourBufFunc func(*encoder, color.Color)
 
@@ -21,11 +21,8 @@ type encoder struct {
 	colourFunc     colourBufFunc
 	colourChannels uint8
 
-	channelBufA [chanLen]byte
-	channelBufB [chanLen]byte
-	channelBufC [chanLen]byte
-	channelBufD [chanLen]byte
-	colourBuf   [4]byte
+	channelBuf [4][chanLen]byte
+	colourBuf  [4]byte
 }
 
 func Encode(w io.WriterAt, im image.Image) error {
@@ -198,33 +195,25 @@ func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourCha
 	}
 
 	w := e.ReserveSpace((nx * ny) << 2)
-	channels := [][]byte{
-		e.channelBufA[:],
-		e.channelBufB[:],
-		e.channelBufC[:],
-		e.channelBufD[:],
-	}
-	channels = channels[:colourChannels]
+
 	r := rlencoder{Writer: e.StickyWriter}
 	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
 		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
-			for n := range channels {
-				channels[n] = channels[n][:0]
-			}
+			l := 0
 			for j := y; j < y+64 && j < bounds.Max.Y; j++ {
 				for i := x; i < x+64 && i < bounds.Max.X; i++ {
 					colourFunc(e, im.At(i, j))
-					for n := range channels {
-						channels[n] = append(channels[n], e.colourBuf[n])
+					for n := uint8(0); n < colourChannels; n++ {
+						e.channelBuf[n] = e.colourBuf[n]
 					}
+					l++
 				}
 			}
-			ptr := uint32(e.Count)
-			for _, channel := range channels {
-				r.Write(channel)
+			w.WriteUint32(uint32(e.Count))
+			for n := uint8(0); n < colourChannels; n++ {
+				r.Write(e.channelBuf[n][:l])
 				r.Flush()
 			}
-			w.WriteUint32(ptr)
 		}
 	}
 }
