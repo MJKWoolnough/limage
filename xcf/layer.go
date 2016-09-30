@@ -129,6 +129,31 @@ PropertyLoop:
 	return l
 }
 
+func (e *encoder) WriteLayers(layers []limage.Layer, groups []int32, w writer) {
+	for n, layer := range layers {
+		nGroups := append(groups, int32(n))
+		w.WriteUint32(e.WriteLayer(layer, nGroups, w))
+	}
+}
+
+func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
+	var ptr uint32
+
+	// write layer
+
+	var g *limage.Group
+	switch i := im.Image.(type) {
+	case limage.Group:
+		g = &i
+	case *limage.Group:
+		g = i
+	default:
+		return ptr
+	}
+	e.WriteLayers(g.Layers, groups, w)
+	return ptr
+}
+
 // Errors
 var (
 	ErrInvalidLayerType      errors.Error = "invalid layer type"

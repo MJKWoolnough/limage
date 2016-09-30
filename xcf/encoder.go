@@ -35,46 +35,6 @@ func Encode(w io.WriterAt, im image.Image) error {
 		writer: newWriter(w),
 	}
 
-	e.WriteHeader(im)
-
-	// write property list
-
-	if e.colourPalette != nil {
-		e.WriteUint32(propColorMap)
-		e.WriteUint32(3*uint32(len(e.colourPalette)) + 4)
-		e.WriteUint32(uint32(len(e.colourPalette)))
-		for _, colour := range e.colourPalette {
-			rgb := lcolor.RGBModel.Convert(colour).(lcolor.RGB)
-			e.WriteUint8(rgb.R)
-			e.WriteUint8(rgb.G)
-			e.WriteUint8(rgb.B)
-		}
-	}
-
-	e.WriteUint32(propCompression)
-	e.WriteUint32(1)
-	e.WriteUint8(1) // rle
-
-	switch im := im.(type) {
-	case *limage.Image:
-		if im.Comment != "" {
-			// write comment parasite
-		}
-		e.WriteUint32(0)
-		e.WriteLayers(im.Layers, make([]int32, 0, 32), e.ReserveSpace(layerCount(&im.Group)<<2))
-	default:
-		e.WriteUint32(0)
-		e.WriteLayer(limage.Layer{Image: im}, []int32{}, e.ReserveSpace(4))
-	}
-
-	e.WriteUint32(0)
-
-	return e.Err
-}
-
-var header = []byte{'g', 'i', 'm', 'p', ' ', 'x', 'c', 'f', 'v', '0', '0', '3', 0}
-
-func (e *encoder) WriteHeader(im image.Image) {
 	e.Write(header)
 	b := im.Bounds()
 	e.WriteUint32(uint32(b.Dx()))
@@ -104,141 +64,50 @@ func (e *encoder) WriteHeader(im image.Image) {
 		}
 	}
 	e.WriteUint32(colourType)
-}
 
-func layerCount(g *limage.Group) int64 {
-	count := int64(len(g.Layers))
-	for _, l := range g.Layers {
-		switch g := l.Image.(type) {
-		case limage.Group:
-			count += layerCount(&g)
-		case *limage.Group:
-			count += layerCount(g)
+	// write property list
+
+	if e.colourPalette != nil {
+		e.WriteUint32(propColorMap)
+		e.WriteUint32(3*uint32(len(e.colourPalette)) + 4)
+		e.WriteUint32(uint32(len(e.colourPalette)))
+		for _, colour := range e.colourPalette {
+			rgb := lcolor.RGBModel.Convert(colour).(lcolor.RGB)
+			e.WriteUint8(rgb.R)
+			e.WriteUint8(rgb.G)
+			e.WriteUint8(rgb.B)
 		}
-
 	}
-	return count
-}
 
-func (e *encoder) WriteLayers(layers []limage.Layer, groups []int32, w writer) {
-	for n, layer := range layers {
-		nGroups := append(groups, int32(n))
-		w.WriteUint32(e.WriteLayer(layer, nGroups, w))
-	}
-}
+	e.WriteUint32(propCompression)
+	e.WriteUint32(1)
+	e.WriteUint8(1) // rle
 
-func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
-	var ptr uint32
+	switch im := im.(type) {
+	case *limage.Image:
+		if im.Comment != "" {
+			// write comment parasite
+		}
+		e.WriteUint32(0)
+		count := int64(len(g.Layers))
+		for _, l := range g.Layers {
+			switch g := l.Image.(type) {
+			case limage.Group:
+				count += layerCount(&g)
+			case *limage.Group:
+				count += layerCount(g)
+			}
 
-	// write layer
-
-	var g *limage.Group
-	switch i := im.Image.(type) {
-	case limage.Group:
-		g = &i
-	case *limage.Group:
-		g = i
+		}
+		e.WriteLayers(im.Layers, make([]int32, 0, 32), e.ReserveSpace(count<<2))
 	default:
-		return ptr
-	}
-	e.WriteLayers(g.Layers, groups, w)
-	return ptr
-}
-
-func (e *encoder) WriteImage(im image.Image) {
-	w := e.ReserveSpace(8) // 2 uint32 pointers
-
-	var mask *image.Gray
-
-	switch imm := im.(type) {
-	case limage.MaskedImage:
-		im = imm.Image
-		mask = imm.Mask
-	case *limage.MaskedImage:
-		im = imm.Image
-		mask = imm.Mask
+		e.WriteUint32(0)
+		e.WriteLayer(limage.Layer{Image: im}, []int32{}, e.ReserveSpace(4))
 	}
 
-	w.WriteUint32(uint32(e.Count))
+	e.WriteUint32(0)
 
-	// image hierarchy
-
-	bounds := im.Bounds()
-
-	e.WriteUint32(uint32(bounds.Dx()))
-	e.WriteUint32(uint32(bounds.Dy()))
-	e.WriteUint32(uint32(e.colourChannels))
-
-	e.WriteTiles(im, e.colourFunc, e.colourChannels)
-
-	if mask != nil {
-		w.WriteUint32(uint32(e.Count))
-		e.WriteTiles(mask, (*encoder).grayToBuf, 1)
-	}
-
+	return e.Err
 }
 
-func (e *encoder) WriteTiles(im image.Image, colourFunc colourBufFunc, colourChannels uint8) {
-	bounds := im.Bounds()
-
-	dx := int64(bounds.Dx())
-	dy := int64(bounds.Dy())
-
-	nx := dx >> 6 // each tile is 64 wide
-	ny := dy >> 6 // each tile is 64 high
-
-	if dx&63 > 0 { // last tile not as wide
-		nx++
-	}
-	if dy&63 > 0 { // last tile not as high
-		ny++
-	}
-
-	w := e.ReserveSpace((nx * ny) << 2)
-
-	r := rlencoder{Writer: e.StickyWriter}
-	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
-		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
-			l := 0
-			for j := y; j < y+64 && j < bounds.Max.Y; j++ {
-				for i := x; i < x+64 && i < bounds.Max.X; i++ {
-					colourFunc(e, im.At(i, j))
-					for n := uint8(0); n < colourChannels; n++ {
-						e.channelBuf[n] = e.colourBuf[n]
-					}
-					l++
-				}
-			}
-			w.WriteUint32(uint32(e.Count))
-			for n := uint8(0); n < colourChannels; n++ {
-				r.Write(e.channelBuf[n][:l])
-				r.Flush()
-			}
-		}
-	}
-}
-
-func (e *encoder) rgbAlphaToBuf(c color.Color) {
-	rgba := color.RGBAModel.Convert(c).(color.RGBA)
-	e.colourBuf[0] = rgba.R
-	e.colourBuf[1] = rgba.G
-	e.colourBuf[2] = rgba.B
-	e.colourBuf[3] = rgba.A
-}
-
-func (e *encoder) grayAlphaToBuf(c color.Color) {
-	ga := lcolor.GrayAlphaModel.Convert(c).(lcolor.GrayAlpha)
-	e.colourBuf[0] = ga.Y
-	e.colourBuf[1] = ga.A
-}
-
-func (e *encoder) grayToBuf(c color.Color) {
-	e.colourBuf[0] = color.GrayModel.Convert(c).(color.Gray).Y
-}
-
-func (e *encoder) paletteAlphaToBuf(c color.Color) {
-	r, g, b, a := c.RGBA()
-	i := e.colourPalette.Index(lcolor.RGB{uint8(r), uint8(g), uint8(b)})
-	e.colourBuf[0] = uint8(i)
-	e.colourBuf[1] = uint8(a)
-}
+var header = []byte{'g', 'i', 'm', 'p', ' ', 'x', 'c', 'f', 'v', '0', '0', '3', 0}
