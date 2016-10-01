@@ -89,6 +89,7 @@ func Encode(w io.WriterAt, im image.Image) error {
 			// write comment parasite
 		}
 		e.WriteUint32(0)
+		e.WriteUint32(0)
 		count := int64(len(g.Layers))
 		for _, l := range g.Layers {
 			switch g := l.Image.(type) {
@@ -101,6 +102,7 @@ func Encode(w io.WriterAt, im image.Image) error {
 		}
 		e.WriteLayers(im.Layers, make([]int32, 0, 32), e.ReserveSpace(count<<2))
 	default:
+		e.WriteUint32(0)
 		e.WriteUint32(0)
 		e.WriteLayer(limage.Layer{Image: im}, []int32{}, e.ReserveSpace(4))
 	}
