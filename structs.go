@@ -6,18 +6,6 @@ import (
 	"image/color"
 )
 
-// Image represents a layered image
-type Image struct {
-	Group
-	Comment      string
-	Transparency uint8
-}
-
-// At returns the colour at the specified coords
-func (i Image) At(x, y int) color.Color {
-	return transparency(i.Group.At(x, y), 255-i.Transparency)
-}
-
 // Layer represents a single layer of a multilayered image
 type Layer struct {
 	Name             string
@@ -30,8 +18,8 @@ type Layer struct {
 
 // Bounds returns the limits for the dimensions of the layer
 func (l Layer) Bounds() image.Rectangle {
-	max := l.Image.Bounds().Max
-	return image.Rect(l.OffsetX, l.OffsetY, max.X+l.OffsetX, max.Y+l.OffsetY)
+	b := l.Image.Bounds()
+	return image.Rect(l.OffsetX, l.OffsetY, b.Dx()+l.OffsetX, b.Dy()+l.OffsetY)
 }
 
 // At returns the colour at the specified coords
@@ -39,40 +27,51 @@ func (l Layer) At(x, y int) color.Color {
 	return transparency(l.Image.At(x-l.OffsetX, y-l.OffsetY), 255-l.Transparency)
 }
 
-// Group represents a collection of layers
-type Group struct {
-	image.Config
-	Layers []Layer
+// Image represents a collection of layers
+type Image []Layer
+
+// ColorModel represents the color model of the group. It uses the first layer
+// to determine the color model
+func (g Image) ColorModel() color.Model {
+	if len(g) == 0 {
+		return color.AlphaModel
+	}
+	return g[0].ColorModel()
 }
 
-// ColorModel represents the color model of the group
-func (g Group) ColorModel() color.Model {
-	return g.Config.ColorModel
-}
-
-// Bounds returns the limites for the dimensions of the group
-func (g Group) Bounds() image.Rectangle {
-	return image.Rect(0, 0, g.Width, g.Height)
+// Bounds returns the limits for the dimensions of the group
+func (g Image) Bounds() image.Rectangle {
+	var maxX, maxY int
+	for _, l := range g {
+		b := l.Bounds()
+		if dx := b.Dx(); dx > maxX {
+			maxX = dx
+		}
+		if dy := b.Dy(); dy > maxY {
+			maxY = dy
+		}
+	}
+	return image.Rect(0, 0, maxX, maxY)
 }
 
 // At returns the colour at the specified coords
-func (g Group) At(x, y int) color.Color {
+func (g Image) At(x, y int) color.Color {
 	var c color.Color = color.Alpha{}
 	point := image.Point{x, y}
-	for i := len(g.Layers) - 1; i >= 0; i-- {
-		if g.Layers[i].Invisible {
+	for i := len(g) - 1; i >= 0; i-- {
+		if g[i].Invisible {
 			continue
 		}
-		if !point.In(g.Layers[i].Bounds()) {
+		if !point.In(g[i].Bounds()) {
 			continue
 		}
-		if _, ok := g.Config.ColorModel.(color.Palette); g.Layers[i].Mode != CompositeDissolve && ok {
-			if d := colourToNRGBA(g.Layers[i].At(x, y)); d.A > 0x7fff {
+		if _, ok := g.ColorModel().(color.Palette); g[i].Mode != CompositeDissolve && ok {
+			if d := colourToNRGBA(g[i].At(x, y)); d.A > 0x7fff {
 				d.A = 0xffff
 				c = d
 			}
 		} else {
-			c = g.Layers[i].Mode.Composite(c, g.Layers[i].At(x, y))
+			c = g[i].Mode.Composite(c, g[i].At(x, y))
 		}
 	}
 	return c
