@@ -56,8 +56,10 @@ const (
 )
 
 type decoder struct {
-	*limage.Image
+	limage.Image
+	image.Config
 	reader
+	Width, Height                int
 	baseType                     uint32
 	linked, lockContent, visible bool
 	parasites                    parasites
@@ -91,7 +93,7 @@ type samplePoint struct {
 func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 	var c image.Config
 
-	d := decoder{Image: new(limage.Image), reader: newReader(r)}
+	d := decoder{Image: make(limage.Image, 0), reader: newReader(r)}
 
 	// check header
 
@@ -217,8 +219,8 @@ func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 }
 
 // Decode reads an XCF layered image from the given ReadSeeker
-func Decode(r io.ReadSeeker) (*limage.Image, error) {
-	d := decoder{Image: new(limage.Image), reader: newReader(r)}
+func Decode(r io.ReadSeeker) (limage.Image, error) {
+	d := decoder{Image: make(limage.Image, 0), reader: newReader(r)}
 
 	// check header
 
@@ -271,12 +273,12 @@ PropertyLoop:
 			if o > 255 {
 				return nil, ErrInvalidOpacity
 			}
-			d.Transparency = 255 - uint8(o)
+			//d.Transparency = 255 - uint8(o)
 		case propParasites:
 			d.parasites = d.ReadParasites(plength)
-			if c := d.parasites.Get(commentParasiteName); c != nil && len(c.data) > 0 {
+			/*if c := d.parasites.Get(commentParasiteName); c != nil && len(c.data) > 0 {
 				d.Comment = string(c.data)
-			}
+			}*/
 		case propTattoo:
 			d.tattoo = d.ReadUint32()
 		case propVisible:
@@ -378,7 +380,7 @@ PropertyLoop:
 	*/
 
 	type groupOffset struct {
-		*limage.Group
+		Group            limage.Image
 		OffsetX, OffsetY int
 	}
 
@@ -387,7 +389,7 @@ PropertyLoop:
 		n      rune
 		alpha  = true
 	)
-	groups[""] = groupOffset{Group: &d.Group}
+	groups[""] = groupOffset{Group: d.Image}
 	for _, lptr := range layerptrs {
 		if !alpha {
 			return nil, ErrMissingAlpha
@@ -407,10 +409,10 @@ PropertyLoop:
 			return nil, ErrInvalidGroup
 		}
 		if l.group {
-			gp := new(limage.Group)
-			gp.Width = int(l.width)
+			gp := make(limage.Image, 0)
+			/*gp.Width = int(l.width)
 			gp.Height = int(l.height)
-			gp.Config.ColorModel = d.Config.ColorModel
+			gp.Config.ColorModel = d.Config.ColorModel*/
 			l.Image = gp
 			groups[string(l.itemPath)] = groupOffset{
 				Group:   gp,
@@ -438,13 +440,13 @@ PropertyLoop:
 		}
 		l.OffsetX -= g.OffsetX
 		l.OffsetY -= g.OffsetY
-		g.Layers = append(g.Layers, l.Layer)
+		g.Group = append(g.Group, l.Layer)
 	}
 
-	switch d.Layers[len(d.Layers)-1].Mode {
+	switch d.Image[len(d.Image)-1].Mode {
 	case limage.CompositeNormal, limage.CompositeDissolve:
 	default:
-		d.Layers[len(d.Layers)-1].Mode = 0
+		d.Image[len(d.Image)-1].Mode = 0
 	}
 
 	/*
