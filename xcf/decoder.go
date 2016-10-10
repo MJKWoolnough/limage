@@ -380,7 +380,7 @@ PropertyLoop:
 	*/
 
 	type groupOffset struct {
-		Group            limage.Image
+		Group            *limage.Image
 		OffsetX, OffsetY int
 	}
 
@@ -389,7 +389,7 @@ PropertyLoop:
 		n      rune
 		alpha  = true
 	)
-	groups[""] = groupOffset{Group: d.Image}
+	groups[""] = groupOffset{Group: &d.Image}
 	for _, lptr := range layerptrs {
 		if !alpha {
 			return nil, ErrMissingAlpha
@@ -410,12 +410,9 @@ PropertyLoop:
 		}
 		if l.group {
 			gp := make(limage.Image, 0)
-			/*gp.Width = int(l.width)
-			gp.Height = int(l.height)
-			gp.Config.ColorModel = d.Config.ColorModel*/
 			l.Image = gp
 			groups[string(l.itemPath)] = groupOffset{
-				Group:   gp,
+				Group:   &gp,
 				OffsetX: l.OffsetX,
 				OffsetY: l.OffsetY,
 			}
@@ -440,13 +437,15 @@ PropertyLoop:
 		}
 		l.OffsetX -= g.OffsetX
 		l.OffsetY -= g.OffsetY
-		g.Group = append(g.Group, l.Layer)
+		*g.Group = append(*g.Group, l.Layer)
 	}
 
-	switch d.Image[len(d.Image)-1].Mode {
-	case limage.CompositeNormal, limage.CompositeDissolve:
-	default:
-		d.Image[len(d.Image)-1].Mode = 0
+	if len(d.Image) > 0 {
+		switch d.Image[len(d.Image)-1].Mode {
+		case limage.CompositeNormal, limage.CompositeDissolve:
+		default:
+			d.Image[len(d.Image)-1].Mode = 0
+		}
 	}
 
 	/*
