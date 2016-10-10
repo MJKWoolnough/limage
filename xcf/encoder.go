@@ -83,33 +83,32 @@ func Encode(w io.WriterAt, im image.Image) error {
 	e.WriteUint32(1)
 	e.WriteUint8(1) // rle
 
+	e.WriteUint32(0)
+	e.WriteUint32(0)
+
 	switch im := im.(type) {
 	case *limage.Image:
-		if im.Comment != "" {
-			// write comment parasite
-		}
-		e.WriteUint32(0)
-		e.WriteUint32(0)
-		count := int64(len(g.Layers))
-		for _, l := range g.Layers {
-			switch g := l.Image.(type) {
-			case limage.Group:
-				count += layerCount(&g)
-			case *limage.Group:
-				count += layerCount(g)
-			}
-
-		}
-		e.WriteLayers(im.Layers, make([]int32, 0, 32), e.ReserveSpace(count<<2))
+		e.WriteLayers(*im, make([]int32, 0, 32), e.ReserveSpace(layerCount(*im)<<2))
 	default:
-		e.WriteUint32(0)
-		e.WriteUint32(0)
 		e.WriteLayer(limage.Layer{Image: im}, []int32{}, e.ReserveSpace(4))
 	}
 
 	e.WriteUint32(0)
 
 	return e.Err
+}
+func layerCount(g limage.Image) int64 {
+	count := int64(len(g))
+	for _, l := range g {
+		switch g := l.Image.(type) {
+		case limage.Image:
+			count += layerCount(g)
+		case *limage.Image:
+			count += layerCount(*g)
+		}
+
+	}
+	return count
 }
 
 var header = []byte{'g', 'i', 'm', 'p', ' ', 'x', 'c', 'f', 'v', '0', '0', '3', 0}

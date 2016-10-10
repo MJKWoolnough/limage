@@ -23,8 +23,6 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 	e.WriteUint32(uint32(dx))
 	e.WriteUint32(uint32(dy))
 
-	e.WriteTiles(im, e.colourFunc, e.colourChannels)
-
 	nx := dx >> 6 // each tile is 64 wide
 	ny := dy >> 6 // each tile is 64 high
 
@@ -45,7 +43,7 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 				for i := x; i < x+64 && i < bounds.Max.X; i++ {
 					colourFunc(e, im.At(i, j))
 					for n := uint8(0); n < colourChannels; n++ {
-						e.channelBuf[n] = e.colourBuf[n]
+						e.channelBuf[n][l] = e.colourBuf[n]
 					}
 					l++
 				}

@@ -129,7 +129,7 @@ PropertyLoop:
 	return l
 }
 
-func (e *encoder) WriteLayers(layers []limage.Layer, groups []int32, w writer) {
+func (e *encoder) WriteLayers(layers limage.Image, groups []int32, w writer) {
 	for n, layer := range layers {
 		nGroups := append(groups, int32(n))
 		w.WriteUint32(e.WriteLayer(layer, nGroups, w))
@@ -141,16 +141,16 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
 
 	// write layer
 
-	var g *limage.Group
+	var g *limage.Image
 	switch i := im.Image.(type) {
-	case limage.Group:
+	case limage.Image:
 		g = &i
-	case *limage.Group:
+	case *limage.Image:
 		g = i
 	default:
 		return ptr
 	}
-	e.WriteLayers(g.Layers, groups, w)
+	e.WriteLayers(*g, groups, w)
 	return ptr
 }
 

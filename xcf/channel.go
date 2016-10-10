@@ -77,3 +77,17 @@ PropertyLoop:
 	c.image = d.ReadImage(c.width, c.height, 2) // gray
 	return c
 }
+
+func (e *encoder) WriteChannel(c channel) {
+	b := c.image.Bounds()
+	e.WriteUint32(uint32(b.Dx()))
+	e.WriteUint32(uint32(b.Dy()))
+	e.WriteString(c.name)
+
+	if c.linked {
+
+	}
+
+	e.WriteUint32(0)
+	e.WriteUint32(0)
+}
