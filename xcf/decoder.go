@@ -56,7 +56,6 @@ const (
 )
 
 type decoder struct {
-	limage.Image
 	image.Config
 	reader
 	Width, Height                int
@@ -93,7 +92,7 @@ type samplePoint struct {
 func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 	var c image.Config
 
-	d := decoder{Image: make(limage.Image, 0), reader: newReader(r)}
+	d := decoder{reader: newReader(r)}
 
 	// check header
 
@@ -220,7 +219,7 @@ func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 
 // Decode reads an XCF layered image from the given ReadSeeker
 func Decode(r io.ReadSeeker) (limage.Image, error) {
-	d := decoder{Image: make(limage.Image, 0), reader: newReader(r)}
+	d := decoder{reader: newReader(r)}
 
 	// check header
 
@@ -380,16 +379,18 @@ PropertyLoop:
 	*/
 
 	type groupOffset struct {
-		Group            *limage.Image
+		Group            limage.Image
 		OffsetX, OffsetY int
+		Parent           *limage.Image
+		Offset           int
 	}
 
 	var (
-		groups = make(map[string]groupOffset)
+		groups = make(map[string]*groupOffset)
 		n      rune
 		alpha  = true
 	)
-	groups[""] = groupOffset{Group: &d.Image}
+	groups[""] = &groupOffset{Group: make(limage.Image, 0, 32)}
 	for _, lptr := range layerptrs {
 		if !alpha {
 			return nil, ErrMissingAlpha
@@ -405,25 +406,24 @@ PropertyLoop:
 			n++
 		}
 		g := groups[string(l.itemPath[:len(l.itemPath)-1])]
-		if g.Group == nil {
+		if g == nil {
 			return nil, ErrInvalidGroup
 		}
 		if l.group {
-			gp := make(limage.Image, 0)
-			l.Image = gp
-			groups[string(l.itemPath)] = groupOffset{
-				Group:   &gp,
+			groups[string(l.itemPath)] = &groupOffset{
+				Group:   make(limage.Image, 0, 32),
 				OffsetX: l.OffsetX,
 				OffsetY: l.OffsetY,
+				Parent:  &g.Group,
+				Offset:  len(g.Group),
 			}
-
 		} else {
 			if t := l.parasites.Get(textParasiteName); t != nil {
 				textData, err := parseTextData(t)
 				if err != nil {
 					return nil, err
 				}
-				l.Image = &limage.Text{
+				l.Image = limage.Text{
 					Image:    l.Image,
 					TextData: textData,
 				}
@@ -437,14 +437,27 @@ PropertyLoop:
 		}
 		l.OffsetX -= g.OffsetX
 		l.OffsetY -= g.OffsetY
-		*g.Group = append(*g.Group, l.Layer)
+		g.Group = append(g.Group, l.Layer)
 	}
 
-	if len(d.Image) > 0 {
-		switch d.Image[len(d.Image)-1].Mode {
+	var im limage.Image
+
+	for _, g := range groups {
+		ng := make(limage.Image, len(g.Group))
+		copy(ng, g.Group)
+		g.Group = ng
+		if g.Parent == nil {
+			im = ng
+		} else {
+			(*g.Parent)[g.Offset].Image = ng
+		}
+	}
+
+	if len(im) > 0 {
+		switch im[len(im)-1].Mode {
 		case limage.CompositeNormal, limage.CompositeDissolve:
 		default:
-			d.Image[len(d.Image)-1].Mode = 0
+			im[len(im)-1].Mode = 0
 		}
 	}
 
@@ -460,7 +473,7 @@ PropertyLoop:
 		}
 	*/
 
-	return d.Image, nil
+	return im, nil
 }
 
 func (d *decoder) SetError(err error) {
