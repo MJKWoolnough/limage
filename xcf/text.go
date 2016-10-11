@@ -24,6 +24,8 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 	defaultText.ForeColor = color.Gray{}
 	for _, tag := range tags {
 		switch tag.Name {
+		case "text":
+			defaultText.Data, _ = tag.Values[0].(string)
 		case "markup":
 			if len(tag.Values) == 1 {
 				textData, _ = tag.Values[0].(string)
@@ -57,6 +59,9 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 			//		case "box-unit":
 		case "hinting":
 		}
+	}
+	if defaultText.Data != "" {
+		return limage.TextData{defaultText}, nil
 	}
 	xd := xml.NewDecoder(strings.NewReader(textData))
 	stack := limage.TextData{defaultText}
