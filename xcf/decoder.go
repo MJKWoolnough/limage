@@ -5,36 +5,34 @@ import (
 	"image"
 	"image/color"
 	"io"
+	"sync"
 
 	"github.com/MJKWoolnough/errors"
 	"github.com/MJKWoolnough/limage"
 	"github.com/MJKWoolnough/limage/lcolor"
 )
 
-func getReadSeeker(r io.Reader) (io.ReadSeeker, error) {
+func getReaderAt(r io.Reader) io.ReaderAt {
 	if bb, ok := r.(*bufio.Reader); ok {
-		r = bufioToReader(bb)
+		return bufioToReader(bb)
 	}
-	if rs, ok := r.(io.ReadSeeker); ok {
-		return rs, nil
-	}
-	return nil, errors.Error("requires read seeker")
+	return nil
 }
 
 func decodeConfig(r io.Reader) (image.Config, error) {
-	rs, err := getReadSeeker(r)
-	if err != nil {
-		return image.Config{}, err
+	ra := getReaderAt(r)
+	if ra == nil {
+		return image.Config{}, errors.Error("need a io.ReaderAt")
 	}
-	return DecodeConfig(rs)
+	return DecodeConfig(ra)
 }
 
 func decode(r io.Reader) (image.Image, error) {
-	rs, err := getReadSeeker(r)
-	if err != nil {
-		return nil, err
+	ra := getReaderAt(r)
+	if ra == nil {
+		return nil, errors.Error("need a io.ReaderAt")
 	}
-	return Decode(rs)
+	return Decode(ra)
 }
 
 func init() {
@@ -56,27 +54,11 @@ const (
 )
 
 type decoder struct {
-	image.Config
 	reader
-	Width, Height                int
-	baseType                     uint32
-	linked, lockContent, visible bool
-	parasites                    parasites
-	tattoo                       uint32
-	palette                      lcolor.AlphaPalette
-	compression                  uint8
-	guides                       []guide
-	paths                        paths
-	hres, vres                   float32
-	samplePoints                 []samplePoint
-	unit                         uint32
-	userUnit                     struct {
-		factor                           float32
-		digits                           uint32
-		id, symbol, abbrev, sname, pname string
-	}
-	vectors vectors
-	//channels []channel
+	Width, Height int
+	baseType      uint32
+	palette       lcolor.AlphaPalette
+	compression   uint8
 }
 
 type guide struct {
@@ -89,7 +71,7 @@ type samplePoint struct {
 }
 
 // DecodeConfig retrieves the color model and dimensions of the XCF image
-func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
+func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 	var c image.Config
 
 	d := decoder{reader: newReader(r)}
@@ -218,7 +200,7 @@ func DecodeConfig(r io.ReadSeeker) (image.Config, error) {
 }
 
 // Decode reads an XCF layered image from the given ReadSeeker
-func Decode(r io.ReadSeeker) (limage.Image, error) {
+func Decode(r io.ReaderAt) (limage.Image, error) {
 	d := decoder{reader: newReader(r)}
 
 	// check header
@@ -243,12 +225,6 @@ func Decode(r io.ReadSeeker) (limage.Image, error) {
 	d.Width = int(d.ReadUint32())
 	d.Height = int(d.ReadUint32())
 	d.baseType = d.ReadUint32()
-	switch d.baseType {
-	case 0:
-		d.Config.ColorModel = color.RGBAModel
-	case 1:
-		d.Config.ColorModel = lcolor.GrayAlphaModel
-	}
 
 	// read image properties
 PropertyLoop:
@@ -264,24 +240,20 @@ PropertyLoop:
 
 		//general properties
 		case propLinked:
-			d.linked = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propLockContent:
-			d.lockContent = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propOpacity:
 			o := d.ReadUint32()
 			if o > 255 {
 				return nil, ErrInvalidOpacity
 			}
-			//d.Transparency = 255 - uint8(o)
 		case propParasites:
-			d.parasites = d.ReadParasites(plength)
-			/*if c := d.parasites.Get(commentParasiteName); c != nil && len(c.data) > 0 {
-				d.Comment = string(c.data)
-			}*/
+			d.ReadParasites(plength)
 		case propTattoo:
-			d.tattoo = d.ReadUint32()
+			d.ReadUint32()
 		case propVisible:
-			d.visible = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 
 		// image properties
 		case propColorMap:
@@ -300,7 +272,6 @@ PropertyLoop:
 					B: b,
 				}
 			}
-			d.Config.ColorModel = d.palette
 		case propCompression:
 			d.compression = d.ReadUint8()
 			if d.compression > 1 {
@@ -311,40 +282,38 @@ PropertyLoop:
 			if ng*5 != plength {
 				return nil, ErrInvalidGuideLength
 			}
-			d.guides = make([]guide, ng)
-			for n := range d.guides {
-				d.guides[n].coord = d.ReadInt32()
-				d.guides[n].hv = d.ReadBoolProperty()
+			for n := uint32(0); n < ng; n++ {
+				d.ReadInt32()
+				d.ReadBoolProperty()
 			}
 		case propPaths:
-			d.paths = d.ReadPaths()
+			d.ReadPaths()
 		case propResolution:
-			d.hres = d.ReadFloat32()
-			d.vres = d.ReadFloat32()
+			d.ReadFloat32()
+			d.ReadFloat32()
 		case propSamplePoints:
 			if plength&1 == 1 {
 				return nil, ErrInvalidSampleLength
 			}
-			d.samplePoints = make([]samplePoint, plength>>1)
 			for i := uint32(0); i < plength>>1; i++ {
-				d.samplePoints[i].x = d.ReadUint32()
-				d.samplePoints[i].y = d.ReadUint32()
+				d.ReadUint32()
+				d.ReadUint32()
 			}
 		case propUnit:
-			d.unit = d.ReadUint32()
-			if d.unit < 0 || d.unit > 4 {
+			u := d.ReadUint32()
+			if u < 0 || u > 4 {
 				return nil, ErrInvalidUnit
 			}
 		case propUserUnit:
-			d.userUnit.factor = d.ReadFloat32()
-			d.userUnit.digits = d.ReadUint32()
-			d.userUnit.id = d.ReadString()
-			d.userUnit.symbol = d.ReadString()
-			d.userUnit.abbrev = d.ReadString()
-			d.userUnit.sname = d.ReadString()
-			d.userUnit.pname = d.ReadString()
+			d.ReadFloat32()
+			d.ReadUint32()
+			d.ReadString()
+			d.ReadString()
+			d.ReadString()
+			d.ReadString()
+			d.ReadString()
 		case propVectors:
-			d.vectors = d.ReadVectors()
+			d.ReadVectors()
 		default:
 			d.Skip(plength)
 		}
@@ -362,22 +331,6 @@ PropertyLoop:
 		layerptrs = append(layerptrs, lptr)
 	}
 
-	/*
-		channelptrs := make([]uint32, 0, 32)
-		for {
-			cptr := d.ReadUint32()
-			if cptr == 0 {
-				break
-			}
-			channelptrs = append(channelptrs, cptr)
-		}
-
-		if d.Err != nil {
-			return nil, d.Err
-		}
-
-	*/
-
 	type groupOffset struct {
 		Group            limage.Image
 		OffsetX, OffsetY int
@@ -390,15 +343,45 @@ PropertyLoop:
 		n      rune
 		alpha  = true
 	)
+
+	layers := make([]layer, len(layerptrs))
+
+	var (
+		errLock sync.Mutex
+		wg      sync.WaitGroup
+	)
+	wg.Add(len(layerptrs))
+	for n, lptr := range layerptrs {
+		go func(n int, lptr uint32) {
+			nd := decoder{
+				reader:      newReader(r),
+				Width:       d.Width,
+				Height:      d.Height,
+				baseType:    d.baseType,
+				palette:     d.palette,
+				compression: d.compression,
+			}
+			nd.Goto(lptr)
+			layers[n] = nd.ReadLayer()
+			if nd.Err != nil {
+				errLock.Lock()
+				d.SetError(nd.Err)
+				errLock.Unlock()
+			}
+			wg.Done()
+		}(n, lptr)
+	}
+
+	wg.Wait()
+
+	if d.Err != nil {
+		return nil, d.Err
+	}
+
 	groups[""] = &groupOffset{Group: make(limage.Image, 0, 32)}
-	for _, lptr := range layerptrs {
+	for _, l := range layers {
 		if !alpha {
 			return nil, ErrMissingAlpha
-		}
-		d.Goto(lptr)
-		l := d.ReadLayer()
-		if d.Err != nil {
-			return nil, d.Err
 		}
 		alpha = l.alpha
 		if len(l.itemPath) == 0 {
@@ -460,18 +443,6 @@ PropertyLoop:
 			im[len(im)-1].Mode = 0
 		}
 	}
-
-	/*
-		d.channels = make([]channel, len(channelptrs))
-
-		for i := range d.channels {
-			d.Goto(channelptrs[i])
-			d.channels[i] = d.ReadChannel()
-			if d.Err != nil {
-				return nil, d.Err
-			}
-		}
-	*/
 
 	return im, nil
 }

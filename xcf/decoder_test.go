@@ -39,8 +39,7 @@ func TestDecoder(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 		return
 	}
-	fmt.Println(float64(255-i.Transparency)/2.55, "%")
-	printGroup(&i.Group, "")
+	printGroup(i, "")
 	f, err = os.Create("all.png")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
@@ -50,10 +49,11 @@ func TestDecoder(t *testing.T) {
 	f.Close()
 }
 
-func printGroup(g *limage.Image, indent string) {
-	fmt.Println(indent, g.Width, "x", g.Height, " - ")
+func printGroup(g limage.Image, indent string) {
+	b := g.Bounds()
+	fmt.Println(indent, b.Dx(), "x", b.Dy(), " - ")
 	indent += "	"
-	for _, l := range g.Layers {
+	for _, l := range g {
 		fmt.Print(indent, l.Name, " - ", float64(255-l.Transparency)/2.55, "% - ", l.Mode, " - ")
 		/*
 			f, err := os.Create(l.Name + ".png")
@@ -64,13 +64,13 @@ func printGroup(g *limage.Image, indent string) {
 			f.Close()
 		*/
 		switch i := l.Image.(type) {
-		case *limage.Group:
+		case limage.Image:
 			fmt.Println("Group")
 			printGroup(i, indent)
 			fmt.Print(indent, "Offset")
-		case *limage.Text:
+		case limage.Text:
 			fmt.Print("Text - ", i.String())
-		case *limage.MaskedImage:
+		case limage.MaskedImage:
 			fmt.Print("Masked Image")
 		default:
 			fmt.Print("Image")
