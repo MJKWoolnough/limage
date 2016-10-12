@@ -52,6 +52,6 @@ func (d *decoder) ReadBoolProperty() bool {
 }
 
 // Errors
-var (
+const (
 	ErrInvalidBoolean errors.Error = "invalid boolean value"
 )

@@ -454,7 +454,7 @@ func (d *decoder) SetError(err error) {
 }
 
 // Errors
-var (
+const (
 	ErrInvalidFileTypeID   errors.Error = "invalid file type identification"
 	ErrUnsupportedVersion  errors.Error = "unsupported file version"
 	ErrInvalidHeader       errors.Error = "invalid header"

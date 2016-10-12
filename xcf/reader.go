@@ -91,7 +91,7 @@ func (r *reader) Skip(n uint32) {
 }
 
 // Errors
-var (
+const (
 	ErrInvalidString errors.Error = "string is invalid"
 	ErrStringTooLong errors.Error = "string exceeds maximum length"
 	ErrInvalidSeek   errors.Error = "invalid seek"

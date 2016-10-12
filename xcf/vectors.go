@@ -87,7 +87,7 @@ func (d *decoder) ReadVectors() vectors {
 }
 
 // Errors
-var (
+const (
 	ErrUnknownVectorVersion errors.Error = "unknown vector version"
 	ErrUnknownStrokeType    errors.Error = "unknown stroke type"
 	ErrInvalidFloatsNumber  errors.Error = "invalids number of floats"

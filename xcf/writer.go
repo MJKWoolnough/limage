@@ -1,10 +1,10 @@
 package xcf
 
 import (
-	"errors"
 	"io"
 
 	"github.com/MJKWoolnough/byteio"
+	"github.com/MJKWoolnough/errors"
 )
 
 type writer struct {
@@ -85,6 +85,6 @@ func (l *limitedWriter) Write(p []byte) (int, error) {
 }
 
 // Errors
-var (
-	ErrTooBig = errors.New("write too big")
+const (
+	ErrTooBig errors.Error = "write too big"
 )

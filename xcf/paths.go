@@ -71,7 +71,7 @@ func (d *decoder) ReadPaths() paths {
 }
 
 // Errors
-var (
+const (
 	ErrInconsistantClosedState errors.Error = "inconsistant closed state"
 	ErrUnknownPathsVersion     errors.Error = "unknown paths version"
 )

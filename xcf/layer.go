@@ -155,7 +155,7 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []int32, w writer) uint32 {
 }
 
 // Errors
-var (
+const (
 	ErrInvalidLayerType      errors.Error = "invalid layer type"
 	ErrInvalidItemPathLength errors.Error = "invalid item path length"
 	ErrInconsistantData      errors.Error = "inconsistant data read"
