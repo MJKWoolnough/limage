@@ -10,8 +10,7 @@ import (
 
 type reader struct {
 	byteio.StickyReader
-	io.Seeker
-	rs readSeeker
+	rs *readSeeker
 }
 
 type readSeeker struct {
@@ -25,24 +24,11 @@ func (r *readSeeker) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func (r *readSeeker) Seek(offset int64, whence int) (int64, error) {
-	switch whence {
-	case io.SeekStart:
-		r.pos = offset
-	case io.SeekCurrent:
-		r.pos += offset
-	default:
-		return 0, ErrInvalidSeek
-	}
-	return r.pos, nil
-}
-
 func newReader(r io.ReaderAt) reader {
 	nr := reader{
-		rs: readSeeker{ReaderAt: r},
+		rs: &readSeeker{ReaderAt: r},
 	}
-	nr.StickyReader.Reader = byteio.BigEndianReader{&nr.rs}
-	nr.Seeker = &nr.rs
+	nr.StickyReader.Reader = byteio.BigEndianReader{nr.rs}
 	return nr
 }
 
@@ -77,17 +63,11 @@ func (r *reader) ReadByte() byte {
 }
 
 func (r *reader) Goto(n uint32) {
-	if r.Err != nil {
-		return
-	}
-	_, r.Err = r.Seeker.Seek(int64(n), io.SeekStart)
+	r.rs.pos = int64(n)
 }
 
 func (r *reader) Skip(n uint32) {
-	if r.Err != nil {
-		return
-	}
-	_, r.Err = r.Seeker.Seek(int64(n), io.SeekCurrent)
+	r.rs.pos += int64(n)
 }
 
 // Errors
