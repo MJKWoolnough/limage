@@ -7,22 +7,18 @@ import (
 
 type layer struct {
 	limage.Layer
-	width, height                               uint32
-	linked, lockContent, alpha                  bool
-	parasites                                   parasites
-	tattoo                                      uint32
-	apply, active, edit, group, lockAlpha, show bool
-	selection                                   uint32
-	itemPath                                    []rune
-	groupItemFlags                              uint32
-	textLayerFlags                              uint32
-	mask                                        channel
+	alpha    bool
+	group    bool
+	itemPath []rune
 }
 
 func (d *decoder) ReadLayer() layer {
-	var l layer
-	l.width = d.ReadUint32()
-	l.height = d.ReadUint32()
+	var (
+		l         layer
+		parasites parasites
+	)
+	width := d.ReadUint32()
+	height := d.ReadUint32()
 	typ := d.ReadUint32()
 	if typ>>1 != d.baseType {
 		d.SetError(ErrInvalidLayerType)
@@ -44,9 +40,9 @@ PropertyLoop:
 			}
 			break PropertyLoop
 		case propLinked:
-			l.linked = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propLockContent:
-			l.lockContent = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propOpacity:
 			o := d.ReadUint32()
 			if o > 255 {
@@ -54,21 +50,21 @@ PropertyLoop:
 			}
 			l.Transparency = 255 - uint8(o)
 		case propParasites:
-			l.parasites = d.ReadParasites(plength)
+			parasites = d.ReadParasites(plength)
 		case propTattoo:
-			l.tattoo = d.ReadUint32()
+			d.ReadUint32()
 		case propVisible:
 			l.Invisible = !d.ReadBoolProperty()
 
 		//layer properties
 		case propActiveLayer:
-			l.active = true
+			// active layer
 		case propApplyMask:
-			l.apply = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propEditMask:
-			l.edit = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propFloatingSelection:
-			l.selection = d.ReadUint32()
+			d.ReadUint32()
 		case propGroupItem:
 			l.group = true
 		case propItemPath:
@@ -80,9 +76,9 @@ PropertyLoop:
 				l.itemPath[i] = rune(d.ReadUint32())
 			}
 		case propGroupItemFlags:
-			l.groupItemFlags = d.ReadUint32()
+			d.ReadUint32()
 		case propLockAlpha:
-			l.lockAlpha = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propMode:
 			l.Mode = limage.Composite(d.ReadUint32())
 			if d.baseType != 0 {
@@ -96,9 +92,9 @@ PropertyLoop:
 			l.OffsetX = int(d.ReadInt32())
 			l.OffsetY = int(d.ReadInt32())
 		case propShowMask:
-			l.show = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propTextLayerFlags:
-			l.textLayerFlags = d.ReadUint32()
+			d.ReadUint32()
 		case propFloatOpacity:
 			l.Transparency = 255 - uint8(d.ReadFloat32()*256)
 		default:
@@ -116,14 +112,29 @@ PropertyLoop:
 		return l
 	}
 
-	l.Image = d.ReadImage(l.width, l.height, typ)
+	l.Image = d.ReadImage(width, height, typ)
 
 	if mptr != 0 { // read layer mask
 		d.Goto(mptr)
-		l.mask = d.ReadChannel()
-		if l.mask.width != l.width || l.mask.height != l.height {
+		var m limage.MaskedImage
+		m.Image = l.Image
+		m.Mask = d.ReadChannel()
+		b := m.Mask.Bounds()
+		if uint32(b.Dx()) != width || uint32(b.Dy()) != height {
 			d.SetError(ErrInconsistantData)
 			return l
+		}
+		l.Image = m
+	}
+	if t := parasites.Get(textParasiteName); t != nil {
+		textData, err := parseTextData(t)
+		if err != nil {
+			d.SetError(ErrInvalidLayerType)
+			return l
+		}
+		l.Image = limage.Text{
+			Image:    l.Image,
+			TextData: textData,
 		}
 	}
 	return l

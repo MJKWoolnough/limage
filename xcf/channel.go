@@ -1,30 +1,12 @@
 package xcf
 
-import (
-	"image"
+import "image"
 
-	"github.com/MJKWoolnough/limage/lcolor"
-)
+func (d *decoder) ReadChannel() *image.Gray {
+	width := d.ReadUint32()
+	height := d.ReadUint32()
 
-type channel struct {
-	width, height                uint32
-	name                         string
-	linked, lockContent, visible bool
-	opacity                      uint8
-	parasites                    parasites
-	tattoo                       uint32
-	active, selection, show      bool
-	color                        lcolor.RGB
-	image                        image.Image
-}
-
-func (d *decoder) ReadChannel() channel {
-	var c channel
-
-	c.width = d.ReadUint32()
-	c.height = d.ReadUint32()
-
-	c.name = d.ReadString()
+	d.ReadString() // name
 
 PropertyLoop:
 	for {
@@ -38,33 +20,31 @@ PropertyLoop:
 			}
 			break PropertyLoop
 		case propLinked:
-			c.linked = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propLockContent:
-			c.lockContent = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		case propOpacity:
-			o := d.ReadUint32()
-			if o > 255 {
+			if d.ReadUint32() > 255 {
 				d.SetError(ErrInvalidOpacity)
 			}
-			c.opacity = uint8(o)
 		case propParasites:
-			c.parasites = d.ReadParasites(plength)
+			d.ReadParasites(plength)
 		case propTattoo:
-			c.tattoo = d.ReadUint32()
+			d.ReadUint32()
 		case propVisible:
-			c.visible = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 
 			//channel properties
 		case propActiveChannel:
-			c.active = true
+			// active channel
 		case propColor:
-			c.color.R = d.ReadUint8()
-			c.color.G = d.ReadUint8()
-			c.color.B = d.ReadUint8()
+			d.ReadUint8() // r
+			d.ReadUint8() // g
+			d.ReadUint8() // b
 		case propSelection:
-			c.selection = true
+			// selected
 		case propShowMasked:
-			c.show = d.ReadBoolProperty()
+			d.ReadBoolProperty()
 		default:
 			d.Skip(plength)
 		}
@@ -74,19 +54,14 @@ PropertyLoop:
 	hptr := d.ReadUint32()
 	d.Goto(hptr)
 
-	c.image = d.ReadImage(c.width, c.height, 2) // gray
-	return c
+	return d.ReadImage(width, height, 2).(*image.Gray) // gray
 }
 
-func (e *encoder) WriteChannel(c channel) {
-	b := c.image.Bounds()
+func (e *encoder) WriteChannel(c *image.Gray) {
+	b := c.Bounds()
 	e.WriteUint32(uint32(b.Dx()))
 	e.WriteUint32(uint32(b.Dy()))
-	e.WriteString(c.name)
-
-	if c.linked {
-
-	}
+	e.WriteString("")
 
 	e.WriteUint32(0)
 	e.WriteUint32(0)

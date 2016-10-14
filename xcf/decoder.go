@@ -289,8 +289,8 @@ PropertyLoop:
 		case propPaths:
 			d.ReadPaths()
 		case propResolution:
-			d.ReadFloat32()
-			d.ReadFloat32()
+			d.ReadFloat32() // x
+			d.ReadFloat32() // y
 		case propSamplePoints:
 			if plength&1 == 1 {
 				return nil, ErrInvalidSampleLength
@@ -305,13 +305,13 @@ PropertyLoop:
 				return nil, ErrInvalidUnit
 			}
 		case propUserUnit:
-			d.ReadFloat32()
-			d.ReadUint32()
-			d.ReadString()
-			d.ReadString()
-			d.ReadString()
-			d.ReadString()
-			d.ReadString()
+			d.ReadFloat32() // factor
+			d.ReadUint32()  // number of decimal igits
+			d.ReadString()  // id
+			d.ReadString()  // symbol
+			d.ReadString()  // abbr.
+			d.ReadString()  // singular name
+			d.ReadString()  // plural name
 		case propVectors:
 			d.ReadVectors()
 		default:
@@ -399,23 +399,6 @@ PropertyLoop:
 				OffsetY: l.OffsetY,
 				Parent:  &g.Group,
 				Offset:  len(g.Group),
-			}
-		} else {
-			if t := l.parasites.Get(textParasiteName); t != nil {
-				textData, err := parseTextData(t)
-				if err != nil {
-					return nil, err
-				}
-				l.Image = limage.Text{
-					Image:    l.Image,
-					TextData: textData,
-				}
-			}
-			if l.mask.image != nil {
-				l.Image = &limage.MaskedImage{
-					Image: l.Image,
-					Mask:  l.mask.image.(*image.Gray),
-				}
 			}
 		}
 		l.OffsetX -= g.OffsetX
