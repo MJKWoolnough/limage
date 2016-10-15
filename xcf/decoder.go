@@ -61,27 +61,18 @@ type decoder struct {
 	compression   uint8
 }
 
-type guide struct {
-	coord int32
-	hv    bool
-}
-
-type samplePoint struct {
-	x, y uint32
-}
-
 // DecodeConfig retrieves the color model and dimensions of the XCF image
 func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 	var c image.Config
 
-	d := decoder{reader: newReader(r)}
+	dr := newReader(r)
 
 	// check header
 
 	var header [14]byte
-	d.Read(header[:])
-	if d.Err != nil {
-		return c, d.Err
+	dr.Read(header[:])
+	if dr.Err != nil {
+		return c, dr.Err
 	}
 	if string(header[:9]) != fileTypeID {
 		return c, ErrInvalidFileTypeID
@@ -95,9 +86,9 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 		return c, ErrInvalidHeader
 	}
 
-	c.Width = int(d.ReadUint32())
-	c.Height = int(d.ReadUint32())
-	baseType := d.ReadUint32()
+	c.Width = int(dr.ReadUint32())
+	c.Height = int(dr.ReadUint32())
+	baseType := dr.ReadUint32()
 	switch baseType {
 	case 0:
 		c.ColorModel = color.RGBAModel
@@ -106,8 +97,8 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 	case 2:
 	PropertyLoop:
 		for {
-			typ := d.ReadUint32()
-			plength := d.ReadUint32()
+			typ := dr.ReadUint32()
+			plength := dr.ReadUint32()
 			switch typ {
 			case propEnd:
 				if plength != 0 {
@@ -118,15 +109,14 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 			// the one we care about
 			case propColorMap:
 				if baseType != baseIndexed {
-					d.Skip(plength) // skip
+					dr.Skip(plength) // skip
 				}
-				numColours := d.ReadUint32()
-				palette := make(lcolor.AlphaPalette, numColours)
-				for i := uint32(0); i < numColours; i++ {
-					r := d.ReadUint8()
-					g := d.ReadUint8()
-					b := d.ReadUint8()
-					palette[i] = lcolor.RGB{
+				palette := make(lcolor.AlphaPalette, dr.ReadUint32())
+				for n := range palette {
+					r := dr.ReadUint8()
+					g := dr.ReadUint8()
+					b := dr.ReadUint8()
+					palette[n] = lcolor.RGB{
 						R: r,
 						G: g,
 						B: b,
@@ -137,21 +127,21 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 
 			//general properties
 			case propLinked:
-				d.ReadBoolProperty()
+				dr.ReadBoolProperty()
 			case propLockContent:
-				d.ReadBoolProperty()
+				dr.ReadBoolProperty()
 			case propOpacity:
-				if o := d.ReadUint32(); o > 255 {
+				if o := dr.ReadUint32(); o > 255 {
 					return c, ErrInvalidOpacity
 				}
 			case propParasites:
-				d.ReadParasites(plength)
+				dr.ReadParasites(plength)
 			case propTattoo:
-				d.ReadUint32()
+				dr.ReadUint32()
 			case propVisible:
-				d.ReadBoolProperty()
+				dr.ReadBoolProperty()
 			case propCompression:
-				if d.ReadUint8() > 1 {
+				if dr.ReadUint8() > 1 {
 					return c, ErrUnknownCompression
 				}
 			case propGuides:
@@ -160,55 +150,55 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 					return c, ErrInvalidGuideLength
 				}
 				for n := uint32(0); n < ng; n++ {
-					d.ReadInt32()
-					d.ReadBoolProperty()
+					dr.ReadInt32()
+					dr.ReadBoolProperty()
 				}
 			case propPaths:
-				d.ReadPaths()
+				dr.ReadPaths()
 			case propResolution:
-				d.ReadFloat32()
-				d.ReadFloat32()
+				dr.ReadFloat32()
+				dr.ReadFloat32()
 			case propSamplePoints:
 				if plength&1 == 1 {
 					return c, ErrInvalidSampleLength
 				}
 				for i := uint32(0); i < plength>>1; i++ {
-					d.ReadUint32()
-					d.ReadUint32()
+					dr.ReadUint32()
+					dr.ReadUint32()
 				}
 			case propUnit:
-				if unit := d.ReadUint32(); unit < 0 || unit > 4 {
+				if unit := dr.ReadUint32(); unit < 0 || unit > 4 {
 					return c, ErrInvalidUnit
 				}
 			case propUserUnit:
-				d.ReadFloat32()
-				d.ReadUint32()
-				d.ReadString()
-				d.ReadString()
-				d.ReadString()
-				d.ReadString()
-				d.ReadString()
+				dr.ReadFloat32()
+				dr.ReadUint32()
+				dr.ReadString()
+				dr.ReadString()
+				dr.ReadString()
+				dr.ReadString()
+				dr.ReadString()
 			case propVectors:
-				d.ReadVectors()
+				dr.ReadVectors()
 			default:
-				d.Skip(plength)
+				dr.Skip(plength)
 			}
 		}
 	}
 
-	return c, d.Err
+	return c, dr.Err
 }
 
 // Decode reads an XCF layered image from the given ReadSeeker
 func Decode(r io.ReaderAt) (limage.Image, error) {
-	d := decoder{reader: newReader(r)}
+	dr := newReader(r)
 
 	// check header
 
 	var header [14]byte
-	d.Read(header[:])
-	if d.Err != nil {
-		return nil, d.Err // wrap?
+	dr.Read(header[:])
+	if dr.Err != nil {
+		return nil, dr.Err // wrap?
 	}
 	if string(header[:9]) != fileTypeID {
 		return nil, ErrInvalidFileTypeID
@@ -222,15 +212,20 @@ func Decode(r io.ReaderAt) (limage.Image, error) {
 		return nil, ErrInvalidHeader
 	}
 
-	d.Width = int(d.ReadUint32())
-	d.Height = int(d.ReadUint32())
-	d.baseType = d.ReadUint32()
+	width := int(dr.ReadUint32())
+	height := int(dr.ReadUint32())
+	baseType := dr.ReadUint32()
+
+	var (
+		palette     lcolor.AlphaPalette
+		compression uint8
+	)
 
 	// read image properties
 PropertyLoop:
 	for {
-		typ := d.ReadUint32()
-		plength := d.ReadUint32()
+		typ := dr.ReadUint32()
+		plength := dr.ReadUint32()
 		switch typ {
 		case propEnd:
 			if plength != 0 {
@@ -240,41 +235,40 @@ PropertyLoop:
 
 		//general properties
 		case propLinked:
-			d.ReadBoolProperty()
+			dr.ReadBoolProperty()
 		case propLockContent:
-			d.ReadBoolProperty()
+			dr.ReadBoolProperty()
 		case propOpacity:
-			o := d.ReadUint32()
+			o := dr.ReadUint32()
 			if o > 255 {
 				return nil, ErrInvalidOpacity
 			}
 		case propParasites:
-			d.ReadParasites(plength)
+			dr.ReadParasites(plength)
 		case propTattoo:
-			d.ReadUint32()
+			dr.ReadUint32()
 		case propVisible:
-			d.ReadBoolProperty()
+			dr.ReadBoolProperty()
 
 		// image properties
 		case propColorMap:
-			if d.baseType != baseIndexed {
-				d.Skip(plength) // skip
+			if baseType != baseIndexed {
+				dr.Skip(plength) // skip
 			}
-			numColours := d.ReadUint32()
-			d.palette = make(lcolor.AlphaPalette, numColours)
-			for i := uint32(0); i < numColours; i++ {
-				r := d.ReadUint8()
-				g := d.ReadUint8()
-				b := d.ReadUint8()
-				d.palette[i] = lcolor.RGB{
+			palette = make(lcolor.AlphaPalette, dr.ReadUint32())
+			for n := range palette {
+				r := dr.ReadUint8()
+				g := dr.ReadUint8()
+				b := dr.ReadUint8()
+				palette[n] = lcolor.RGB{
 					R: r,
 					G: g,
 					B: b,
 				}
 			}
 		case propCompression:
-			d.compression = d.ReadUint8()
-			if d.compression > 1 {
+			compression = dr.ReadUint8()
+			if compression > 1 {
 				return nil, ErrUnknownCompression
 			}
 		case propGuides:
@@ -283,52 +277,53 @@ PropertyLoop:
 				return nil, ErrInvalidGuideLength
 			}
 			for n := uint32(0); n < ng; n++ {
-				d.ReadInt32()
-				d.ReadBoolProperty()
+				dr.ReadInt32()
+				dr.ReadBoolProperty()
 			}
 		case propPaths:
-			d.ReadPaths()
+			dr.ReadPaths()
 		case propResolution:
-			d.ReadFloat32() // x
-			d.ReadFloat32() // y
+			dr.ReadFloat32() // x
+			dr.ReadFloat32() // y
 		case propSamplePoints:
 			if plength&1 == 1 {
 				return nil, ErrInvalidSampleLength
 			}
 			for i := uint32(0); i < plength>>1; i++ {
-				d.ReadUint32()
-				d.ReadUint32()
+				dr.ReadUint32()
+				dr.ReadUint32()
 			}
 		case propUnit:
-			u := d.ReadUint32()
+			u := dr.ReadUint32()
 			if u < 0 || u > 4 {
 				return nil, ErrInvalidUnit
 			}
 		case propUserUnit:
-			d.ReadFloat32() // factor
-			d.ReadUint32()  // number of decimal igits
-			d.ReadString()  // id
-			d.ReadString()  // symbol
-			d.ReadString()  // abbr.
-			d.ReadString()  // singular name
-			d.ReadString()  // plural name
+			dr.ReadFloat32() // factor
+			dr.ReadUint32()  // number of decimal igits
+			dr.ReadString()  // id
+			dr.ReadString()  // symbol
+			dr.ReadString()  // abbr.
+			dr.ReadString()  // singular name
+			dr.ReadString()  // plural name
 		case propVectors:
-			d.ReadVectors()
+			dr.ReadVectors()
 		default:
-			d.Skip(plength)
+			dr.Skip(plength)
 		}
 	}
 
-	if d.Err != nil {
-		return nil, d.Err
-	}
 	layerptrs := make([]uint32, 0, 32)
 	for {
-		lptr := d.ReadUint32()
+		lptr := dr.ReadUint32()
 		if lptr == 0 {
 			break
 		}
 		layerptrs = append(layerptrs, lptr)
+	}
+
+	if dr.Err != nil {
+		return nil, dr.Err
 	}
 
 	type groupOffset struct {
@@ -353,19 +348,19 @@ PropertyLoop:
 	wg.Add(len(layerptrs))
 	for n, lptr := range layerptrs {
 		go func(n int, lptr uint32) {
-			nd := decoder{
+			d := decoder{
 				reader:      newReader(r),
-				Width:       d.Width,
-				Height:      d.Height,
-				baseType:    d.baseType,
-				palette:     d.palette,
-				compression: d.compression,
+				Width:       width,
+				Height:      height,
+				baseType:    baseType,
+				palette:     palette,
+				compression: compression,
 			}
-			nd.Goto(lptr)
-			layers[n] = nd.ReadLayer()
-			if nd.Err != nil {
+			d.Goto(lptr)
+			layers[n] = d.ReadLayer()
+			if d.Err != nil {
 				errLock.Lock()
-				d.SetError(nd.Err)
+				dr.SetError(d.Err)
 				errLock.Unlock()
 			}
 			wg.Done()
@@ -374,8 +369,8 @@ PropertyLoop:
 
 	wg.Wait()
 
-	if d.Err != nil {
-		return nil, d.Err
+	if dr.Err != nil {
+		return nil, dr.Err
 	}
 
 	groups[""] = &groupOffset{Group: make(limage.Image, 0, 32)}
@@ -428,12 +423,6 @@ PropertyLoop:
 	}
 
 	return im, nil
-}
-
-func (d *decoder) SetError(err error) {
-	if d.Err == nil {
-		d.Err = err
-	}
 }
 
 // Errors

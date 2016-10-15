@@ -39,7 +39,7 @@ const (
 	propFloatOpacity      = 33
 )
 
-func (d *decoder) ReadBoolProperty() bool {
+func (d *reader) ReadBoolProperty() bool {
 	switch d.ReadUint32() {
 	case 0:
 		return false

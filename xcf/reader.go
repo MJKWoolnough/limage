@@ -70,6 +70,12 @@ func (r *reader) Skip(n uint32) {
 	r.rs.pos += int64(n)
 }
 
+func (r *reader) SetError(err error) {
+	if r.Err == nil {
+		r.Err = err
+	}
+}
+
 // Errors
 const (
 	ErrInvalidString errors.Error = "string is invalid"

@@ -22,7 +22,7 @@ type pathPoint struct {
 	x, y    float64
 }
 
-func (d *decoder) ReadPaths() paths {
+func (d *reader) ReadPaths() paths {
 	var p paths
 	p.aIndex = d.ReadUint32()
 	n := d.ReadUint32()

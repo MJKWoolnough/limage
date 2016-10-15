@@ -32,7 +32,7 @@ func (p parasites) Get(name string) *parasite {
 	return nil
 }
 
-func (d *decoder) ReadParasites(l uint32) parasites {
+func (d *reader) ReadParasites(l uint32) parasites {
 	ps := make(parasites, 0, 32)
 	for l > 0 {
 		var p parasite
@@ -56,7 +56,7 @@ func (d *decoder) ReadParasites(l uint32) parasites {
 	return ps
 }
 
-func (d *decoder) ReadParasite() parasite {
+func (d *reader) ReadParasite() parasite {
 	var p parasite
 
 	p.name = d.ReadString()

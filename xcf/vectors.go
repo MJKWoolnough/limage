@@ -25,7 +25,7 @@ type point struct {
 	x, y, pressure, xtilt, ytilt, wheel float32
 }
 
-func (d *decoder) ReadVectors() vectors {
+func (d *reader) ReadVectors() vectors {
 	v := d.ReadUint32()
 	if v != 1 {
 		d.SetError(ErrUnknownVectorVersion)

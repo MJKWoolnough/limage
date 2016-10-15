@@ -22,16 +22,6 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 	bpp := d.ReadUint32()
 
 	switch mode {
-	case 0:
-		if bpp != 3 {
-			d.SetError(ErrInconsistantData)
-			return nil
-		}
-	case 1:
-		if bpp != 4 {
-			d.SetError(ErrInconsistantData)
-			return nil
-		}
 	case 2, 4:
 		if bpp != 1 {
 			d.SetError(ErrInconsistantData)
@@ -42,17 +32,19 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 			d.SetError(ErrInconsistantData)
 			return nil
 		}
+	case 0:
+		if bpp != 3 {
+			d.SetError(ErrInconsistantData)
+			return nil
+		}
+	case 1:
+		if bpp != 4 {
+			d.SetError(ErrInconsistantData)
+			return nil
+		}
 	}
 
 	lptr := d.ReadUint32()
-
-	/*
-		for {
-			if d.ReadUint32() == 0 { // dummy level
-				break
-			}
-		}
-	*/
 
 	d.Goto(lptr)
 
