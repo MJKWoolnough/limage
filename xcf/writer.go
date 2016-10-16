@@ -9,7 +9,7 @@ import (
 
 type writer struct {
 	*byteio.StickyWriter
-	io.WriterAt
+	*writerAtWriter
 }
 
 func newWriter(w io.WriterAt) writer {
@@ -17,13 +17,11 @@ func newWriter(w io.WriterAt) writer {
 		wr io.Writer
 		ok bool
 	)
-	if wr, ok = w.(io.Writer); !ok {
-		wr = &writerAtWriter{WriterAt: w}
-	}
-
 	return writer{
-		&byteio.StickyWriter{Writer: byteio.BigEndianWriter{Writer: wr}},
-		w,
+		StickyWriter: &byteio.StickyWriter{Writer: byteio.BigEndianWriter{Writer: wr}},
+		writerAtWriter: &writerAtWriter{
+			WriterAt: w,
+		},
 	}
 }
 
@@ -42,23 +40,38 @@ func (w writer) WriteString(str string) {
 	w.WriteUint8(0)
 }
 
-func (w writer) ReserveSpace(l int64) writer {
-	nw := writer{
-		&byteio.StickyWriter{
+type pointerWriter struct {
+	bw      byteio.StickyWriter
+	toWrite uint32
+	obw     *byteio.StickyWriter
+}
+
+func (p *pointerWriter) WritePointer(ptr uint32) {
+	if p.toWrite > 0 {
+		p.bw.WriteUint32(ptr)
+		p.toWrite--
+		if p.bw.Err != nil {
+			p.obw.Err = p.bw.Err
+		}
+	}
+}
+
+func (w writer) ReservePointers(n uint32) *pointerWriter {
+	p := &pointerWriter{
+		bw: byteio.StickyWriter{
 			Writer: byteio.BigEndianWriter{
-				Writer: &limitedWriter{
-					Writer: writerAtWriter{
-						WriterAt: w.WriterAt,
-						pos:      w.Count,
-					},
-					MaxPos: w.Count + l,
+				Writer: &writerAtWriter{
+					WriterAt: w.writerAtWriter.WriterAt,
+					pos:      w.pos,
 				},
 			},
 		},
-		w.WriterAt,
+		toWrite: n,
+		obw:     w.StickyWriter,
 	}
-	w.Write(make([]byte, l))
-	return nw
+	w.pos += int64(n) * 4
+	w.WriteUint32(0)
+	return p
 }
 
 type writerAtWriter struct {
@@ -70,18 +83,6 @@ func (w *writerAtWriter) Write(p []byte) (int, error) {
 	n, err := w.WriteAt(p, w.pos)
 	w.pos += int64(n)
 	return n, err
-}
-
-type limitedWriter struct {
-	Writer writerAtWriter
-	MaxPos int64
-}
-
-func (l *limitedWriter) Write(p []byte) (int, error) {
-	if l.Writer.pos+int64(len(p)) > l.MaxPos {
-		return 0, ErrTooBig
-	}
-	return l.Writer.Write(p)
 }
 
 // Errors
