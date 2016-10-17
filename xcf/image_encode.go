@@ -33,7 +33,7 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 		ny++
 	}
 
-	w := e.ReserveSpace((nx * ny) << 2)
+	w := e.ReservePointers(uint32(nx * ny))
 
 	r := rlencoder{Writer: e.StickyWriter}
 	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
@@ -48,7 +48,7 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 					l++
 				}
 			}
-			w.WriteUint32(uint32(e.Count))
+			w.WritePointer(uint32(e.pos))
 			for n := uint8(0); n < colourChannels; n++ {
 				r.Write(e.channelBuf[n][:l])
 				r.Flush()
