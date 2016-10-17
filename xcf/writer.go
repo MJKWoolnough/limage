@@ -13,15 +13,12 @@ type writer struct {
 }
 
 func newWriter(w io.WriterAt) writer {
-	var (
-		wr io.Writer
-		ok bool
-	)
+	wr := &writerAtWriter{
+		WriterAt: w,
+	}
 	return writer{
-		StickyWriter: &byteio.StickyWriter{Writer: byteio.BigEndianWriter{Writer: wr}},
-		writerAtWriter: &writerAtWriter{
-			WriterAt: w,
-		},
+		StickyWriter:   &byteio.StickyWriter{Writer: byteio.BigEndianWriter{Writer: wr}},
+		writerAtWriter: wr,
 	}
 }
 
@@ -32,6 +29,10 @@ func (w writer) WriteAt(p []byte, off int64) (int, error) {
 	var n int
 	n, w.Err = w.WriterAt.WriteAt(p, off)
 	return n, w.Err
+}
+
+func (w writer) Write(p []byte) {
+	w.StickyWriter.Write(p)
 }
 
 func (w writer) WriteString(str string) {
