@@ -90,7 +90,7 @@ func Encode(w io.WriterAt, im image.Image) error {
 	case *limage.Image:
 		e.WriteLayers(*im, make([]uint32, 0, 32), e.ReservePointers(layerCount(*im)))
 	default:
-		e.WriteLayer(limage.Layer{Image: im}, []uint32{}, e.ReservePointers(4))
+		e.WriteLayer(limage.Layer{Image: im}, []uint32{}, e.ReservePointers(1))
 	}
 
 	e.WriteUint32(0)
