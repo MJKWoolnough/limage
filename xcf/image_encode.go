@@ -13,12 +13,16 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 	dx := int64(bounds.Dx())
 	dy := int64(bounds.Dy())
 
+	// Hierarchy
+
 	e.WriteUint32(uint32(dx))
 	e.WriteUint32(uint32(dy))
-	e.WriteUint32(uint32(e.colourChannels))
+	e.WriteUint32(uint32(colourChannels))
 
 	e.WriteUint32(uint32(e.Count) + 8) // currPos + this pointer (4) + zero pointer (4)
 	e.WriteUint32(0)
+
+	// Level
 
 	e.WriteUint32(uint32(dx))
 	e.WriteUint32(uint32(dy))
@@ -34,6 +38,8 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 	}
 
 	w := e.ReservePointers(uint32(nx * ny))
+
+	// Tiles
 
 	r := rlencoder{Writer: e.StickyWriter}
 	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
