@@ -136,7 +136,6 @@ type TextDatum struct {
 	Size, LetterSpacing, Rise              float64
 	Bold, Italic, Underline, Strikethrough bool
 	Font, Data                             string
-	FontUnit                               uint8
 }
 
 func transparency(ac color.Color, ao uint8) color.Color {
