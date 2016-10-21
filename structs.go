@@ -133,7 +133,7 @@ func (t TextData) String() string {
 // TextDatum is a collection of styling for a single piece of text
 type TextDatum struct {
 	ForeColor, BackColor                   color.Color
-	Size, LetterSpacing, Rise              float64
+	Size, LetterSpacing, Rise              uint32
 	Bold, Italic, Underline, Strikethrough bool
 	Font, Data                             string
 }

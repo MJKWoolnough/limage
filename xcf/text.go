@@ -53,10 +53,10 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 				}
 			}
 		case "justify":
-			//		case "box-mode":
-			//		case "box-width":
-			//		case "box-height":
-			//		case "box-unit":
+		case "box-mode":
+		case "box-width":
+		case "box-height":
+		case "box-unit":
 		case "hinting":
 		}
 	}
@@ -105,17 +105,17 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 							nt.ForeColor = color.RGBA{uint8(r), uint8(g), uint8(b), 255}
 						}
 					case "size":
-						nt.Size, err = strconv.ParseFloat(a.Value, 64)
+						nt.Size, err = strconv.ParseUint(a.Value, 10, 32)
 						if err != nil {
 							return nil, err
 						}
 					case "letter_spacing":
-						nt.LetterSpacing, err = strconv.ParseFloat(a.Value, 64)
+						nt.LetterSpacing, err = strconv.ParseUint(a.Value, 10, 32)
 						if err != nil {
 							return nil, err
 						}
 					case "rise":
-						nt.Rise, err = strconv.ParseFloat(a.Value, 64)
+						nt.Rise, err = strconv.ParseUint(a.Value, 10, 32)
 						if err != nil {
 							return nil, err
 						}
