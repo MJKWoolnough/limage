@@ -1,7 +1,10 @@
 package xcf
 
 import (
+	"bytes"
 	"encoding/xml"
+	"fmt"
+	"image"
 	"image/color"
 	"io"
 	"strconv"
@@ -36,7 +39,8 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 			}
 		case "font-size":
 			if len(tag.Values) == 1 {
-				defaultText.Size, _ = tag.Values[0].(float64)
+				f, _ := tag.Values[0].(float64)
+				defaultText.Size = uint32(f)
 			}
 		case "font-size-unit":
 		case "antialias":
@@ -105,20 +109,23 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 							nt.ForeColor = color.RGBA{uint8(r), uint8(g), uint8(b), 255}
 						}
 					case "size":
-						nt.Size, err = strconv.ParseUint(a.Value, 10, 32)
+						s, err := strconv.ParseUint(a.Value, 10, 32)
 						if err != nil {
 							return nil, err
 						}
+						nt.Size = uint32(s) >> 10
 					case "letter_spacing":
-						nt.LetterSpacing, err = strconv.ParseUint(a.Value, 10, 32)
+						ls, err := strconv.ParseUint(a.Value, 10, 32)
 						if err != nil {
 							return nil, err
 						}
+						nt.LetterSpacing = uint32(ls) >> 10
 					case "rise":
-						nt.Rise, err = strconv.ParseUint(a.Value, 10, 32)
+						r, err := strconv.ParseUint(a.Value, 10, 32)
 						if err != nil {
 							return nil, err
 						}
+						nt.Rise = uint32(r) >> 10
 					}
 				}
 			case "b":
@@ -140,4 +147,111 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 		}
 	}
 	return td, nil
+}
+
+func (e *encoder) WriteText(bounds image.Rectangle, text limage.TextData) {
+	e.WriteUint32(propTextLayerFlags)
+	e.WriteUint32(4)
+	e.WriteUint32(1)
+	e.WriteUint32(21)
+
+	var (
+		buf  bytes.Buffer
+		base limage.TextDatum
+	)
+
+	if len(text) == 1 {
+		base = text[0]
+		fmt.Fprintf(&buf, "(text %q)\n", base.Data)
+	} else {
+		base = limage.TextDatum{
+			BackColor: lcolor.RGB{0, 0, 0},
+			ForeColor: lcolor.RGB{0, 0, 0},
+			Font:      "Sans",
+			Size:      18,
+		}
+
+		buf.WriteString("(markup \"<markup>")
+
+		for _, td := range text {
+			if td.Font != "Sans" {
+				fmt.Fprintf(&buf, "<span font=%q>", strconv.Quote(td.Font))
+			}
+			if td.Bold {
+				buf.WriteString("<b>")
+			}
+			if td.Italic {
+				buf.WriteString("<i>")
+			}
+			if td.Underline {
+				buf.WriteString("<u>")
+			}
+			if td.Strikethrough {
+				buf.WriteString("<s>")
+			}
+			if td.LetterSpacing != 0 {
+				fmt.Fprintf(&buf, "<span letter_spacing=\"%d\">", td.LetterSpacing<<10)
+			}
+			if td.Size != 18 {
+				fmt.Fprintf(&buf, "<span size=\"%d\">", td.Size<<10)
+			}
+			if td.Rise != 0 {
+				fmt.Fprintf(&buf, "<span rise=\"%d\">", td.Rise<<10)
+			}
+			buf.WriteString(strconv.Quote(td.Data))
+			if td.Rise != 0 {
+				buf.WriteString("</span>")
+			}
+			if td.Size != 18 {
+				buf.WriteString("</span>")
+			}
+			if td.LetterSpacing != 0 {
+				buf.WriteString("</span>")
+			}
+			if td.Strikethrough {
+				buf.WriteString("</s>")
+			}
+			if td.Underline {
+				buf.WriteString("</u>")
+			}
+			if td.Italic {
+				buf.WriteString("</i>")
+			}
+			if td.Bold {
+				buf.WriteString("</b>")
+			}
+			if td.Font != "Sans" {
+				buf.WriteString("</span>")
+			}
+		}
+
+		buf.WriteString("</markup>\")\n")
+	}
+
+	r, g, b, _ := base.ForeColor.RGBA()
+
+	fmt.Fprintf(&buf, "(font %q)\n"+
+		"(font-size %.9f)\n"+
+		"(font-size-units pixels)\n"+
+		"(antialias yes)\n"+
+		"(base-direction ltr)\n"+
+		"(color (color-rgb %.6f %.6f %.6f))\n"+
+		"(justify left)\n"+
+		"(box-mode dynamic)\n"+
+		"(box-width %.6f)\n"+
+		"(box-height %.6f)\n"+
+		"(box-unit pixels)\n"+
+		"(hinting yes)\n"+
+		"\x00", base.Font, base.Size, float32(r>>8), float32(g>>8), float32(b>>8), float64(bounds.Dx()), float64(bounds.Dy()))
+
+	// write base
+
+	data := buf.Bytes()
+
+	e.WriteUint32(uint32(4 + len(textParasiteName) + 1 + 4 + 4 + len(data)))
+
+	e.WriteString(textParasiteName)
+	e.WriteUint32(0)
+	e.WriteUint32(uint32(len(data)))
+	e.Write(data)
 }

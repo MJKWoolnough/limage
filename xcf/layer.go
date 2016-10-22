@@ -207,18 +207,17 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter
 		e.WriteUint32(4 * uint32(len(groups)))
 	}
 
-	if text != nil {
-		e.WriteUint32(propTextLayerFlags)
-		e.WriteUint32(4)
-		e.WriteUint32(1)
-		// write text data
-		_ = text
+	if len(text) > 0 {
+		e.WriteText(b, text)
 	}
 
 	if group != nil {
 		e.WriteUint32(propGroupItem)
 		e.WriteUint32(0)
 	}
+
+	e.WriteUint32(0) // end of properties
+	e.WriteUint32(0)
 
 	// write layer
 
