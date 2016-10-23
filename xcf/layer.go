@@ -180,8 +180,9 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter
 	}
 
 	b := im.Bounds()
-	e.WriteUint32(uint32(b.Dx()))
-	e.WriteUint32(uint32(b.Dy()))
+	dx, dy := uint32(b.Dx()), uint32(b.Dy())
+	e.WriteUint32(dx)
+	e.WriteUint32(dy)
 	e.WriteUint32(uint32(e.colourType)<<1 | 1)
 	e.WriteString(im.Name)
 
@@ -208,7 +209,7 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter
 	}
 
 	if len(text) > 0 {
-		e.WriteText(b, text)
+		e.WriteText(text, dx, dy)
 	}
 
 	if group != nil {

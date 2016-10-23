@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"image"
 	"image/color"
 	"io"
 	"strconv"
@@ -149,7 +148,7 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 	return td, nil
 }
 
-func (e *encoder) WriteText(bounds image.Rectangle, text limage.TextData) {
+func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 	e.WriteUint32(propTextLayerFlags)
 	e.WriteUint32(4)
 	e.WriteUint32(1)
@@ -242,7 +241,7 @@ func (e *encoder) WriteText(bounds image.Rectangle, text limage.TextData) {
 		"(box-height %.6f)\n"+
 		"(box-unit pixels)\n"+
 		"(hinting yes)\n"+
-		"\x00", base.Font, base.Size, float32(r>>8), float32(g>>8), float32(b>>8), float64(bounds.Dx()), float64(bounds.Dy()))
+		"\x00", base.Font, base.Size, float32(r>>8), float32(g>>8), float32(b>>8), float64(dx), float64(dy))
 
 	// write base
 
