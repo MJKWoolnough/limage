@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"html"
 	"image/color"
 	"io"
 	"strconv"
@@ -197,7 +198,7 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 			if td.Rise != 0 {
 				fmt.Fprintf(&buf, "<span rise=\"%d\">", td.Rise<<10)
 			}
-			buf.WriteString(strconv.Quote(td.Data))
+			buf.WriteString(strconv.Quote(html.EscapeString(td.Data)))
 			if td.Rise != 0 {
 				buf.WriteString("</span>")
 			}
