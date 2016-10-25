@@ -231,18 +231,18 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 	r, g, b, _ := base.ForeColor.RGBA()
 
 	fmt.Fprintf(&buf, "(font %q)\n"+
-		"(font-size %.9f)\n"+
+		"(font-size %d.000000000)\n"+
 		"(font-size-units pixels)\n"+
 		"(antialias yes)\n"+
 		"(base-direction ltr)\n"+
-		"(color (color-rgb %.6f %.6f %.6f))\n"+
+		"(color (color-rgb %d.000000 %d.000000 %d.000000))\n"+
 		"(justify left)\n"+
 		"(box-mode dynamic)\n"+
-		"(box-width %.6f)\n"+
-		"(box-height %.6f)\n"+
+		"(box-width %d.000000)\n"+
+		"(box-height %d.000000)\n"+
 		"(box-unit pixels)\n"+
 		"(hinting yes)\n"+
-		"\x00", base.Font, base.Size, float32(r>>8), float32(g>>8), float32(b>>8), float64(dx), float64(dy))
+		"\x00", base.Font, base.Size, r>>8, g>>8, b>>8, dx, dy)
 
 	// write base
 
