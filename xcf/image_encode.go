@@ -83,7 +83,7 @@ func (e *encoder) grayToBuf(c color.Color) {
 
 func (e *encoder) paletteAlphaToBuf(c color.Color) {
 	r, g, b, a := c.RGBA()
-	i := e.colourPalette.Index(lcolor.RGB{uint8(r), uint8(g), uint8(b)})
+	i := e.colourPalette.Index(lcolor.RGB{R: uint8(r), G: uint8(g), B: uint8(b)})
 	e.colourBuf[0] = uint8(i)
 	e.colourBuf[1] = uint8(a)
 }

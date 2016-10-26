@@ -53,7 +53,7 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 					r, _ := t.Values[0].(float64)
 					g, _ := t.Values[1].(float64)
 					b, _ := t.Values[2].(float64)
-					defaultText.ForeColor = lcolor.RGB{uint8(r), uint8(g), uint8(b)}
+					defaultText.ForeColor = lcolor.RGB{R: uint8(r), G: uint8(g), B: uint8(b)}
 				}
 			}
 		case "justify":
@@ -165,8 +165,8 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 		fmt.Fprintf(&buf, "(text %q)\n", base.Data)
 	} else {
 		base = limage.TextDatum{
-			BackColor: lcolor.RGB{0, 0, 0},
-			ForeColor: lcolor.RGB{0, 0, 0},
+			BackColor: lcolor.RGB{},
+			ForeColor: lcolor.RGB{},
 			Font:      "Sans",
 			Size:      18,
 		}

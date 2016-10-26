@@ -184,7 +184,7 @@ type grayAlphaImageReader struct {
 }
 
 func (ga grayAlphaImageReader) ReadColour(x, y int, pixels []byte) {
-	ga.SetGrayAlpha(x, y, lcolor.GrayAlpha{pixels[0], pixels[1]})
+	ga.SetGrayAlpha(x, y, lcolor.GrayAlpha{Y: pixels[0], A: pixels[1]})
 }
 
 type palettedAlphaReader struct {
