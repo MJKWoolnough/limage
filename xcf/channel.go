@@ -67,6 +67,9 @@ func (e *encoder) WriteChannel(c *image.Gray) {
 	e.WriteUint32(uint32(b.Dy()))
 	e.WriteString("")
 
+	e.WriteUint32(0) // No properties
 	e.WriteUint32(0)
-	e.WriteUint32(0)
+
+	e.WriteUint32(uint32(e.pos) + 4) // hptr
+	e.WriteImage(c, (*encoder).grayToBuf, 1)
 }
