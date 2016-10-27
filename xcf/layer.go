@@ -212,6 +212,9 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter
 	if len(groups) > 1 {
 		e.WriteUint32(propItemPath)
 		e.WriteUint32(4 * uint32(len(groups)))
+		for _, g := range groups {
+			e.WriteUint32(g)
+		}
 	}
 
 	if len(text) > 0 {
