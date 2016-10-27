@@ -151,12 +151,12 @@ PropertyLoop:
 func (e *encoder) WriteLayers(layers limage.Image, groups []uint32, pw *pointerWriter) {
 	for n, layer := range layers {
 		nGroups := append(groups, uint32(n))
-		pw.WritePointer(uint32(e.pos))
 		e.WriteLayer(layer, nGroups, pw)
 	}
 }
 
 func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter) {
+	pw.WritePointer(uint32(e.pos))
 
 	var (
 		mask  *image.Gray
