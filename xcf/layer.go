@@ -234,6 +234,8 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter
 	e.WriteImage(img, e.colourFunc, e.colourChannels)
 	if mask != nil {
 		e.WriteChannel(mask)
+	} else {
+		e.WriteUint32(0)
 	}
 	if group != nil {
 		e.WriteLayers(group, groups, pw)
