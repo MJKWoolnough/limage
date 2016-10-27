@@ -111,4 +111,4 @@ func layerCount(g limage.Image) uint32 {
 	return count
 }
 
-var header = []byte{'g', 'i', 'm', 'p', ' ', 'x', 'c', 'f', 'v', '0', '0', '3', 0}
+var header = []byte{'g', 'i', 'm', 'p', ' ', 'x', 'c', 'f', ' ', 'v', '0', '0', '3', 0}
