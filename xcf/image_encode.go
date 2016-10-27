@@ -19,7 +19,7 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 	e.WriteUint32(uint32(dy))
 	e.WriteUint32(uint32(colourChannels))
 
-	e.WriteUint32(uint32(e.Count) + 8) // currPos + this pointer (4) + zero pointer (4)
+	e.WriteUint32(uint32(e.pos) + 8) // currPos + this pointer (4) + zero pointer (4)
 	e.WriteUint32(0)
 
 	// Level
