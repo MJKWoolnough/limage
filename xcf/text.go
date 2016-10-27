@@ -150,11 +150,6 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 }
 
 func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
-	e.WriteUint32(propTextLayerFlags)
-	e.WriteUint32(4)
-	e.WriteUint32(1)
-	e.WriteUint32(21)
-
 	var (
 		buf  bytes.Buffer
 		base limage.TextDatum
@@ -248,10 +243,14 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 
 	data := buf.Bytes()
 
-	e.WriteUint32(uint32(4 + len(textParasiteName) + 1 + 4 + 4 + len(data)))
+	e.WriteUint32(propTextLayerFlags)
+	e.WriteUint32(4)
+	e.WriteUint32(1)
 
+	e.WriteUint32(propParasites)
+	e.WriteUint32(uint32(4 + len(textParasiteName) + 1 + 4 + 4 + len(data)))
 	e.WriteString(textParasiteName)
-	e.WriteUint32(0)
+	e.WriteUint32(0) //flags
 	e.WriteUint32(uint32(len(data)))
 	e.Write(data)
 }
