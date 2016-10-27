@@ -115,12 +115,18 @@ PropertyLoop:
 	}
 
 	l.Image = d.ReadImage(width, height, typ)
+	if l.Image == nil {
+		return l
+	}
 
 	if mptr != 0 { // read layer mask
 		d.Goto(mptr)
 		var m limage.MaskedImage
 		m.Image = l.Image
 		m.Mask = d.ReadChannel()
+		if m.Mask == nil {
+			return l
+		}
 		b := m.Mask.Bounds()
 		if uint32(b.Dx()) != width || uint32(b.Dy()) != height {
 			d.SetError(ErrInconsistantData)

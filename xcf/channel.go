@@ -54,7 +54,11 @@ PropertyLoop:
 	hptr := d.ReadUint32()
 	d.Goto(hptr)
 
-	return d.ReadImage(width, height, 2).(*image.Gray) // gray
+	im := d.ReadImage(width, height, 2)
+	if im != nil {
+		return im.(*image.Gray) // gray
+	}
+	return nil
 }
 
 func (e *encoder) WriteChannel(c *image.Gray) {
