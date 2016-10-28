@@ -148,14 +148,14 @@ PropertyLoop:
 	return l
 }
 
-func (e *encoder) WriteLayers(layers limage.Image, groups []uint32, pw *pointerWriter) {
+func (e *encoder) WriteLayers(layers limage.Image, offsetX, offsetY int32, groups []uint32, pw *pointerWriter) {
 	for n, layer := range layers {
 		nGroups := append(groups, uint32(n))
-		e.WriteLayer(layer, nGroups, pw)
+		e.WriteLayer(layer, offsetX+int32(layer.OffsetX), offsetY+int32(layer.OffsetY), nGroups, pw)
 	}
 }
 
-func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter) {
+func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []uint32, pw *pointerWriter) {
 	pw.WritePointer(uint32(e.pos))
 
 	var (
@@ -206,8 +206,8 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter
 
 	e.WriteUint32(propOffsets)
 	e.WriteUint32(8)
-	e.WriteUint32(uint32(im.OffsetX))
-	e.WriteUint32(uint32(im.OffsetY))
+	e.WriteInt32(offsetX)
+	e.WriteInt32(offsetY)
 
 	if len(groups) > 1 {
 		e.WriteUint32(propItemPath)
@@ -242,7 +242,7 @@ func (e *encoder) WriteLayer(im limage.Layer, groups []uint32, pw *pointerWriter
 		ptrs.WritePointer(0)
 	}
 	if group != nil {
-		e.WriteLayers(group, groups, pw)
+		e.WriteLayers(group, offsetX, offsetY, groups, pw)
 	}
 }
 
