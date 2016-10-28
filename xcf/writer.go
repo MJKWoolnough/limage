@@ -71,8 +71,13 @@ func (w writer) ReservePointers(n uint32) *pointerWriter {
 		obw:     w.StickyWriter,
 	}
 	w.pos += int64(n) * 4
-	w.WriteUint32(0)
 	return p
+}
+
+func (w writer) ReservePointerList(n uint32) *pointerWriter {
+	pw := w.ReservePointers(n)
+	w.WriteUint32(0)
+	return pw
 }
 
 type writerAtWriter struct {

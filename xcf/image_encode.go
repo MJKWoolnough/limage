@@ -37,7 +37,7 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 		ny++
 	}
 
-	w := e.ReservePointers(uint32(nx * ny))
+	w := e.ReservePointerList(uint32(nx * ny))
 
 	// Tiles
 
