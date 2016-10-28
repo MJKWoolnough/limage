@@ -9,12 +9,14 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"github.com/MJKWoolnough/limage"
 	"github.com/MJKWoolnough/limage/lcolor"
 )
 
 func parseTextData(t *parasite) (limage.TextData, error) {
+	fmt.Println(string(t.data))
 	tags, err := t.Parse()
 	if err != nil {
 		return nil, err
@@ -149,6 +151,22 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 	return td, nil
 }
 
+type quoteWriter struct {
+	*bytes.Buffer
+	buf []byte
+}
+
+func (q *quoteWriter) Write(b []byte) (int, error) {
+	return q.WriteString(*(*string)(unsafe.Pointer(&b)))
+}
+
+func (q *quoteWriter) WriteString(s string) (int, error) {
+	q.buf = strconv.AppendQuote(q.buf, s)
+	q.Buffer.Write(q.buf[1 : len(q.buf)-1])
+	q.buf = q.buf[:0]
+	return len(s), nil
+}
+
 func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 	var (
 		buf  bytes.Buffer
@@ -168,9 +186,11 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 
 		buf.WriteString("(markup \"<markup>")
 
+		qw := &quoteWriter{Buffer: &buf}
+
 		for _, td := range text {
 			if td.Font != "Sans" {
-				fmt.Fprintf(&buf, "<span font=%q>", strconv.Quote(td.Font))
+				fmt.Fprintf(qw, "<span font=%q>", td.Font)
 			}
 			if td.Bold {
 				buf.WriteString("<b>")
@@ -185,15 +205,15 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 				buf.WriteString("<s>")
 			}
 			if td.LetterSpacing != 0 {
-				fmt.Fprintf(&buf, "<span letter_spacing=\"%d\">", td.LetterSpacing<<10)
+				fmt.Fprintf(&buf, "<span letter_spacing=\\\"%d\\\">", td.LetterSpacing<<10)
 			}
 			if td.Size != 18 {
-				fmt.Fprintf(&buf, "<span size=\"%d\">", td.Size<<10)
+				fmt.Fprintf(&buf, "<span size=\\\"%d\\\">", td.Size<<10)
 			}
 			if td.Rise != 0 {
-				fmt.Fprintf(&buf, "<span rise=\"%d\">", td.Rise<<10)
+				fmt.Fprintf(&buf, "<span rise=\\\"%d\\\">", td.Rise<<10)
 			}
-			buf.WriteString(strconv.Quote(html.EscapeString(td.Data)))
+			qw.WriteString(html.EscapeString(td.Data))
 			if td.Rise != 0 {
 				buf.WriteString("</span>")
 			}
@@ -242,6 +262,8 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 	// write base
 
 	data := buf.Bytes()
+
+	fmt.Println(string(data))
 
 	e.WriteUint32(propTextLayerFlags)
 	e.WriteUint32(4)
