@@ -88,12 +88,14 @@ func Encode(w io.WriterAt, im image.Image) error {
 
 	switch im := im.(type) {
 	case *limage.Image:
-		e.WriteLayers(*im, 0, 0, make([]uint32, 0, 32), e.ReservePointers(layerCount(*im)))
+		pw := e.ReservePointers(layerCount(*im))
+		e.WriteUint32(0) // no channels
+		e.WriteLayers(*im, 0, 0, make([]uint32, 0, 32), pw)
 	default:
-		e.WriteLayer(limage.Layer{Image: im}, 0, 0, []uint32{}, e.ReservePointers(1))
+		pw := e.ReservePointers(1)
+		e.WriteUint32(0) // no channels
+		e.WriteLayer(limage.Layer{Image: im}, 0, 0, []uint32{}, pw)
 	}
-
-	e.WriteUint32(0)
 
 	return e.Err
 }
