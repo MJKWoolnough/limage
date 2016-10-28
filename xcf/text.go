@@ -16,7 +16,6 @@ import (
 )
 
 func parseTextData(t *parasite) (limage.TextData, error) {
-	fmt.Println(string(t.data))
 	tags, err := t.Parse()
 	if err != nil {
 		return nil, err
@@ -262,8 +261,6 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 	// write base
 
 	data := buf.Bytes()
-
-	fmt.Println(string(data))
 
 	e.WriteUint32(propTextLayerFlags)
 	e.WriteUint32(4)
