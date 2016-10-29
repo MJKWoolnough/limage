@@ -16,7 +16,6 @@ import (
 )
 
 func parseTextData(t *parasite) (limage.TextData, error) {
-	fmt.Println(string(t.data))
 	tags, err := t.Parse()
 	if err != nil {
 		return nil, err
