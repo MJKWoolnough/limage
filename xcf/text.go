@@ -152,7 +152,6 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 
 type quoteWriter struct {
 	*bytes.Buffer
-	buf []byte
 }
 
 func (q *quoteWriter) Write(b []byte) (int, error) {
@@ -160,9 +159,16 @@ func (q *quoteWriter) Write(b []byte) (int, error) {
 }
 
 func (q *quoteWriter) WriteString(s string) (int, error) {
-	q.buf = strconv.AppendQuote(q.buf, s)
-	q.Buffer.Write(q.buf[1 : len(q.buf)-1])
-	q.buf = q.buf[:0]
+	for _, r := range s {
+		switch r {
+		case '\\':
+			q.Buffer.WriteString("\\\\")
+		case '"':
+			q.Buffer.WriteString("\\\"")
+		default:
+			q.Buffer.WriteRune(r)
+		}
+	}
 	return len(s), nil
 }
 
