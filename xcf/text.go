@@ -16,6 +16,7 @@ import (
 )
 
 func parseTextData(t *parasite) (limage.TextData, error) {
+	fmt.Println(string(t.data))
 	tags, err := t.Parse()
 	if err != nil {
 		return nil, err
@@ -194,6 +195,15 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 		qw := &quoteWriter{Buffer: &buf}
 
 		for _, td := range text {
+			var foreground, background bool
+			if r, g, b, _ := td.ForeColor.RGBA(); r != 0 || g != 0 || b != 0 {
+				foreground = true
+				fmt.Fprintf(&buf, "<span foreground=\\\"#%02X%02X%02X\\\">", r, g, b)
+			}
+			if r, g, b, _ := td.BackColor.RGBA(); r != 0 || g != 0 || b != 0 {
+				background = true
+				fmt.Fprintf(&buf, "<span background=\\\"#%02X%02X%02X\\\">", r, g, b)
+			}
 			if td.Font != "Sans" {
 				fmt.Fprintf(qw, "<span font=%q>", td.Font)
 			}
@@ -241,6 +251,12 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 				buf.WriteString("</b>")
 			}
 			if td.Font != "Sans" {
+				buf.WriteString("</span>")
+			}
+			if background {
+				buf.WriteString("</span>")
+			}
+			if foreground {
 				buf.WriteString("</span>")
 			}
 		}
