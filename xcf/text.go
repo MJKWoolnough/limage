@@ -197,7 +197,7 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 			var foreground, background bool
 			if r, g, b, _ := td.ForeColor.RGBA(); r != 0 || g != 0 || b != 0 {
 				foreground = true
-				fmt.Fprintf(&buf, "<span foreground=\\\"#%02X%02X%02X\\\">", r, g, b)
+				fmt.Fprintf(&buf, "<span foreground=\\\"#%02X%02X%02X\\\">", r>>8, g>>8, b>>8)
 			}
 			if r, g, b, _ := td.BackColor.RGBA(); r != 0 || g != 0 || b != 0 {
 				background = true
