@@ -227,7 +227,8 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 	}
 
 	e.WriteUint32(propMode)
-	e.WriteUint32(uint32(layer.Mode))
+	e.WriteUint32(4)
+	e.WriteUint32(uint32(im.Mode))
 
 	e.WriteUint32(0) // end of properties
 	e.WriteUint32(0)
