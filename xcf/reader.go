@@ -38,11 +38,8 @@ func (r *reader) ReadString() string {
 	length := r.ReadUint32()
 	if length == 0 {
 		return ""
-	}
-	if length > maxString {
-		if r.Err == nil {
-			r.Err = ErrStringTooLong
-		}
+	} else if length > maxString {
+		r.SetError(ErrStringTooLong)
 		return ""
 	}
 	b := make([]byte, length)
@@ -52,7 +49,7 @@ func (r *reader) ReadString() string {
 		return ""
 	}
 	if b[length-1] != 0 || !utf8.Valid(b[:length-1]) {
-		r.Err = ErrInvalidString
+		r.SetError(ErrInvalidString)
 		return ""
 	}
 	return string(b[:length-1])
@@ -64,10 +61,6 @@ func (r *reader) ReadByte() byte {
 
 func (r *reader) Goto(n uint32) {
 	r.rs.pos = int64(n)
-}
-
-func (r *reader) Skip(n uint32) {
-	r.rs.pos += int64(n)
 }
 
 func (r *reader) SetError(err error) {
