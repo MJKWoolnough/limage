@@ -59,8 +59,9 @@ func (d *reader) ReadVectors() vectors {
 				d.SetError(ErrInvalidFloatsNumber)
 				return vs
 			}
-			vs.paths[i].strokes[j].points = make([]point, nf)
-			for ii := uint32(0); ii < nf; ii++ {
+			np := d.ReadUint32()
+			vs.paths[i].strokes[j].points = make([]point, np)
+			for ii := uint32(0); ii < np; ii++ {
 				vs.paths[i].strokes[j].points[ii].control = d.ReadBoolProperty()
 				vs.paths[i].strokes[j].points[ii].x = d.ReadFloat32()
 				vs.paths[i].strokes[j].points[ii].y = d.ReadFloat32()
