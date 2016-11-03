@@ -26,9 +26,13 @@ type encoder struct {
 }
 
 func Encode(w io.WriterAt, im image.Image) error {
-
-	if li, ok := im.(limage.Image); ok {
-		im = &li
+	switch imt := im.(type) {
+	case *limage.Image:
+		im = *imt
+	case limage.Layer:
+		im = limage.Image{imt}
+	case *limage.Layer:
+		im = limage.Image{*imt}
 	}
 
 	e := encoder{
@@ -87,10 +91,10 @@ func Encode(w io.WriterAt, im image.Image) error {
 	e.WriteUint32(0)
 
 	switch im := im.(type) {
-	case *limage.Image:
-		pw := e.ReservePointerList(layerCount(*im))
+	case limage.Image:
+		pw := e.ReservePointerList(layerCount(im))
 		e.WriteUint32(0) // no channels
-		e.WriteLayers(*im, 0, 0, make([]uint32, 0, 32), pw)
+		e.WriteLayers(im, 0, 0, make([]uint32, 0, 32), pw)
 	default:
 		pw := e.ReservePointerList(1)
 		e.WriteUint32(0) // no channels
