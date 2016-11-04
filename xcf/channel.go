@@ -6,7 +6,7 @@ func (d *decoder) ReadChannel() *image.Gray {
 	width := d.ReadUint32()
 	height := d.ReadUint32()
 
-	d.ReadString() // name
+	d.SkipString() // name
 
 PropertyLoop:
 	for {
@@ -20,31 +20,31 @@ PropertyLoop:
 			}
 			break PropertyLoop
 		case propLinked:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		case propLockContent:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		case propOpacity:
 			if d.ReadUint32() > 255 {
 				d.SetError(ErrInvalidOpacity)
 			}
 		case propParasites:
-			d.ReadParasites(plength)
+			d.SkipParasites(plength)
 		case propTattoo:
-			d.ReadUint32()
+			d.SkipUint32()
 		case propVisible:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 
 			//channel properties
 		case propActiveChannel:
 			// active channel
 		case propColor:
-			d.ReadUint8() // r
-			d.ReadUint8() // g
-			d.ReadUint8() // b
+			d.SkipByte() // r
+			d.SkipByte() // g
+			d.SkipByte() // b
 		case propSelection:
 			// selected
 		case propShowMasked:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		default:
 			d.Skip(plength)
 		}

@@ -50,7 +50,7 @@ func (d *reader) ReadPaths() paths {
 			return p
 		}
 		if v == 2 || v == 3 {
-			d.ReadUint32()
+			d.SkipUint32()
 		}
 		if v == 3 {
 			p.paths[i].tattoo = d.ReadUint32()

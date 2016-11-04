@@ -127,19 +127,19 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 
 			//general properties
 			case propLinked:
-				dr.ReadBoolProperty()
+				dr.SkipBoolProperty()
 			case propLockContent:
-				dr.ReadBoolProperty()
+				dr.SkipBoolProperty()
 			case propOpacity:
 				if o := dr.ReadUint32(); o > 255 {
 					return c, ErrInvalidOpacity
 				}
 			case propParasites:
-				dr.ReadParasites(plength)
+				dr.SkipParasites(plength)
 			case propTattoo:
-				dr.ReadUint32()
+				dr.SkipUint32()
 			case propVisible:
-				dr.ReadBoolProperty()
+				dr.SkipBoolProperty()
 			case propCompression:
 				if dr.ReadUint8() > 1 {
 					return c, ErrUnknownCompression
@@ -150,36 +150,36 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 					return c, ErrInvalidGuideLength
 				}
 				for n := uint32(0); n < ng; n++ {
-					dr.ReadInt32()
-					dr.ReadBoolProperty()
+					dr.SkipUint32()
+					dr.SkipBoolProperty()
 				}
 			case propPaths:
-				dr.ReadPaths()
+				dr.SkipPaths()
 			case propResolution:
-				dr.ReadFloat32()
-				dr.ReadFloat32()
+				dr.SkipFloat32()
+				dr.SkipFloat32()
 			case propSamplePoints:
 				if plength&1 == 1 {
 					return c, ErrInvalidSampleLength
 				}
 				for i := uint32(0); i < plength>>1; i++ {
-					dr.ReadUint32()
-					dr.ReadUint32()
+					dr.SkipUint32()
+					dr.SkipUint32()
 				}
 			case propUnit:
 				if unit := dr.ReadUint32(); unit < 0 || unit > 4 {
 					return c, ErrInvalidUnit
 				}
 			case propUserUnit:
-				dr.ReadFloat32()
-				dr.ReadUint32()
-				dr.ReadString()
-				dr.ReadString()
-				dr.ReadString()
-				dr.ReadString()
-				dr.ReadString()
+				dr.SkipFloat32()
+				dr.SkipUint32()
+				dr.SkipString()
+				dr.SkipString()
+				dr.SkipString()
+				dr.SkipString()
+				dr.SkipString()
 			case propVectors:
-				dr.ReadVectors()
+				dr.SkipVectors()
 			default:
 				dr.Skip(plength)
 			}
@@ -277,21 +277,21 @@ PropertyLoop:
 				return nil, ErrInvalidGuideLength
 			}
 			for n := uint32(0); n < ng; n++ {
-				dr.ReadInt32()
-				dr.ReadBoolProperty()
+				dr.SkipUint32()
+				dr.SkipBoolProperty()
 			}
 		case propPaths:
-			dr.ReadPaths()
+			dr.SkipPaths()
 		case propResolution:
-			dr.ReadFloat32() // x
-			dr.ReadFloat32() // y
+			dr.SkipFloat32() // x
+			dr.SkipFloat32() // y
 		case propSamplePoints:
 			if plength&1 == 1 {
 				return nil, ErrInvalidSampleLength
 			}
 			for i := uint32(0); i < plength>>1; i++ {
-				dr.ReadUint32()
-				dr.ReadUint32()
+				dr.SkipUint32()
+				dr.SkipUint32()
 			}
 		case propUnit:
 			u := dr.ReadUint32()
@@ -299,15 +299,15 @@ PropertyLoop:
 				return nil, ErrInvalidUnit
 			}
 		case propUserUnit:
-			dr.ReadFloat32() // factor
-			dr.ReadUint32()  // number of decimal igits
-			dr.ReadString()  // id
-			dr.ReadString()  // symbol
-			dr.ReadString()  // abbr.
-			dr.ReadString()  // singular name
-			dr.ReadString()  // plural name
+			dr.SkipFloat32() // factor
+			dr.SkipUint32()  // number of decimal igits
+			dr.SkipString()  // id
+			dr.SkipString()  // symbol
+			dr.SkipString()  // abbr.
+			dr.SkipString()  // singular name
+			dr.SkipString()  // plural name
 		case propVectors:
-			dr.ReadVectors()
+			dr.SkipVectors()
 		default:
 			dr.Skip(plength)
 		}

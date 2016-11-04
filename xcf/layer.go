@@ -42,9 +42,9 @@ PropertyLoop:
 			}
 			break PropertyLoop
 		case propLinked:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		case propLockContent:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		case propOpacity:
 			o := d.ReadUint32()
 			if o > 255 {
@@ -54,7 +54,7 @@ PropertyLoop:
 		case propParasites:
 			parasites = d.ReadParasites(plength)
 		case propTattoo:
-			d.ReadUint32()
+			d.SkipUint32()
 		case propVisible:
 			l.Invisible = !d.ReadBoolProperty()
 
@@ -62,11 +62,11 @@ PropertyLoop:
 		case propActiveLayer:
 			// active layer
 		case propApplyMask:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		case propEditMask:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		case propFloatingSelection:
-			d.ReadUint32()
+			d.SkipUint32()
 		case propGroupItem:
 			l.group = true
 		case propItemPath:
@@ -78,9 +78,9 @@ PropertyLoop:
 				l.itemPath[i] = rune(d.ReadUint32())
 			}
 		case propGroupItemFlags:
-			d.ReadUint32()
+			d.SkipUint32()
 		case propLockAlpha:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		case propMode:
 			l.Mode = limage.Composite(d.ReadUint32())
 			if d.baseType != 0 {
@@ -94,9 +94,9 @@ PropertyLoop:
 			l.OffsetX = int(d.ReadInt32())
 			l.OffsetY = int(d.ReadInt32())
 		case propShowMask:
-			d.ReadBoolProperty()
+			d.SkipBoolProperty()
 		case propTextLayerFlags:
-			d.ReadUint32()
+			d.SkipUint32()
 		case propFloatOpacity:
 			l.Transparency = 255 - uint8(d.ReadFloat32()*256)
 		default:
