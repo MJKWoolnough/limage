@@ -64,7 +64,7 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 }
 
 func (e *encoder) rgbAlphaToBuf(c color.Color) {
-	rgba := color.RGBAModel.Convert(c).(color.RGBA)
+	rgba := color.NRGBAModel.Convert(c).(color.NRGBA)
 	e.colourBuf[0] = rgba.R
 	e.colourBuf[1] = rgba.G
 	e.colourBuf[2] = rgba.B
