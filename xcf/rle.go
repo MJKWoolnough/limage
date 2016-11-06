@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/MJKWoolnough/byteio"
+	"github.com/MJKWoolnough/errors"
 )
 
 type rle struct {
@@ -57,6 +58,9 @@ func (r *rle) Read(p []byte) (int, error) {
 		r.count -= uint16(c)
 		p = p[c:]
 		n += c
+	}
+	if r.count != 0 {
+		return n, ErrInvalidRLE
 	}
 	return n, r.Reader.Err
 }
@@ -173,3 +177,7 @@ func (r *rlencoder) writeData(data []rleItem) {
 	}
 	r.Writer.Write(d)
 }
+
+const (
+	ErrInvalidRLE errors.Error = "invalid RLE data"
+)
