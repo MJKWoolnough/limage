@@ -128,7 +128,8 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 				h = 64
 			}
 			n := w * h
-			cr.Read(pixBuffer[:n*bpp])
+			_, err := cr.Read(pixBuffer[:n*bpp])
+			d.SetError(err)
 			for i := uint32(0); i < bpp; i++ {
 				channels[i] = pixBuffer[n*i : n*(i+1)]
 			}

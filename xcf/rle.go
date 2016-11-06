@@ -59,7 +59,7 @@ func (r *rle) Read(p []byte) (int, error) {
 		p = p[c:]
 		n += c
 	}
-	if r.count != 0 {
+	if r.count != 0 && r.Reader.Err == nil {
 		return n, ErrInvalidRLE
 	}
 	return n, r.Reader.Err
