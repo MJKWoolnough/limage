@@ -67,115 +67,45 @@ func (r *rle) Read(p []byte) (int, error) {
 
 const minRunLength = 3
 
-type rleItem struct {
-	char byte
-	num  uint16
-}
-
-type rlencoder struct {
-	Writer *byteio.StickyWriter
-	queue  []rleItem
-}
-
-func (r *rlencoder) Write(p []byte) (int, error) {
-	if r.Writer.Err != nil || len(p) == 0 {
-		return 0, r.Writer.Err
-	}
-	lastChar := p[0]
-	run := uint(1)
-	if l := len(r.queue); l > 0 {
-		if lastChar == r.queue[l-1].char {
-			run = uint(r.queue[l-1].num) + 1
-			r.queue = r.queue[:l-1]
-		}
-	}
-	for _, c := range p[1:] {
-		if c == lastChar {
+func (w *writer) WriteRLE(data []byte) {
+	var (
+		last         byte
+		run, written int
+	)
+	for n, b := range data {
+		if b == last {
 			run++
 		} else {
-			r.set(lastChar, run)
-			lastChar = c
-			run = 1
+			if run > minRunLength {
+				nm := n - run - written
+				w.WriteRLEData(data[written:], run, nm, last)
+				written += nm + run
+			}
+			run = 0
 		}
+		last = b
 	}
-	r.set(lastChar, run)
-	return len(p), r.Writer.Err
+	nm := len(data) - run - written
+	w.WriteRLEData(data[written:], run, nm, last)
 }
 
-func (r *rlencoder) set(char byte, run uint) {
-	tr := uint16(run)
-	r.queue = append(r.queue, rleItem{char, tr})
-	if tr > minRunLength {
-		r.Flush()
-	}
-	run -= uint(tr)
-	for run > 0 {
-		r.queue = append(r.queue, rleItem{char, 0xffff})
-		run >>= 16
-		r.Flush()
-	}
-}
-
-func (r *rlencoder) Flush() error {
-	switch l := len(r.queue); l {
-	case 0:
-	case 1:
-		r.writeRun(r.queue[0].char, r.queue[0].num)
-	case 2:
-		if r.queue[1].num >= minRunLength {
-			r.writeRun(r.queue[0].char, r.queue[0].num)
-			r.writeRun(r.queue[1].char, r.queue[1].num)
+func (w *writer) WriteRLEData(data []byte, run, l int, last byte) {
+	if nm := n - run - written; l > 0 {
+		if nm < 128 {
+			w.WriteUint8(255 - uint8(nm-1))
 		} else {
-			r.writeData(r.queue)
+			w.WriteUint8(128)
+			w.WriteUint16(uint16(nm))
 		}
-	default:
-		if r.queue[l-1].num >= minRunLength {
-			r.writeData(r.queue[:l-1])
-			r.writeRun(r.queue[l-1].char, r.queue[l-1].num)
-		} else {
-			r.writeData(r.queue)
-		}
+		w.Write(data[:written+n-run])
 	}
-	r.queue = r.queue[:0]
-	return r.Writer.Err
-}
-
-func (r *rlencoder) writeRun(char byte, num uint16) {
-	if num < 128 {
-		r.Writer.WriteUint8(uint8(num - 1))
+	if run < 128 {
+		w.WriteUint8(uint8(run - 1))
 	} else {
-		r.Writer.WriteUint8(127)
-		r.Writer.WriteUint16(num)
+		w.WriteUint8(127)
+		w.WriteUint16(uint16(run))
 	}
-	r.Writer.WriteUint8(char)
-}
-
-func (r *rlencoder) writeData(data []rleItem) {
-	l := uint(0)
-	for _, i := range data {
-		l += uint(i.num)
-	}
-	d := make([]byte, 0, l)
-	for _, i := range data {
-		for j := uint16(0); j < i.num; j++ {
-			d = append(d, i.char)
-		}
-	}
-	for len(d) > 0xffff {
-		r.Writer.WriteUint8(128)
-		r.Writer.WriteUint16(0xffff)
-		r.Writer.Write(d[:0xffff])
-		d = d[0xffff:]
-	}
-	if l := len(d); l == 0 {
-		return
-	} else if l < 128 {
-		r.Writer.WriteUint8(uint8(256 - l))
-	} else {
-		r.Writer.WriteUint16(128)
-		r.Writer.WriteUint16(uint16(l))
-	}
-	r.Writer.Write(d)
+	w.WriteUint8(last)
 }
 
 const (
