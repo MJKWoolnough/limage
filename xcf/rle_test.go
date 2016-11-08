@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/MJKWoolnough/byteio"
+	"github.com/MJKWoolnough/memio"
 )
 
 func TestReads(t *testing.T) {
@@ -103,20 +104,18 @@ func TestWrites(t *testing.T) {
 			"AAAAABBCCCCCFFGGHHIIII",
 			"\x04A\x01B\x04C\xfaFFGGHH\x03I",
 		},
+		{
+			"ABVGGFHSDFGHDFHGFHDGZDBGNHJSDGSDFGHHTGHDDVFVDBFBDBVF",
+			"\xccABVGGFHSDFGHDFHGFHDGZDBGNHJSDGSDFGHHTGHDDVFVDBFBDBVF",
+		},
 	}
+	d := make([]byte, 0, 2048)
 	for n, test := range tests {
-		var buf bytes.Buffer
-		w := byteio.StickyWriter{
-			Writer: byteio.BigEndianWriter{
-				Writer: &buf,
-			},
-		}
-		r := rlencoder{Writer: &w}
-		r.Write([]byte(test.Input))
-		r.Flush()
+		w := newWriter(memio.Create(&d))
+		w.WriteRLE([]byte(test.Input))
 		if w.Err != nil {
 			t.Errorf("test %d: unexpected error: %q", n+1, w.Err)
-		} else if str := buf.String(); str != test.Output {
+		} else if str := string(d); str != test.Output {
 			t.Errorf("test %d: expecting %q, got %q", n+1, test.Output, str)
 		}
 	}

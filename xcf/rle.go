@@ -90,14 +90,14 @@ func (w *writer) WriteRLE(data []byte) {
 }
 
 func (w *writer) WriteRLEData(data []byte, run, l int, last byte) {
-	if nm := n - run - written; l > 0 {
-		if nm < 128 {
-			w.WriteUint8(255 - uint8(nm-1))
+	if l > 0 {
+		if l < 128 {
+			w.WriteUint8(255 - uint8(l-1))
 		} else {
 			w.WriteUint8(128)
-			w.WriteUint16(uint16(nm))
+			w.WriteUint16(uint16(l))
 		}
-		w.Write(data[:written+n-run])
+		w.Write(data[:l])
 	}
 	if run < 128 {
 		w.WriteUint8(uint8(run - 1))
