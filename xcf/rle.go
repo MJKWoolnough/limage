@@ -68,42 +68,43 @@ func (r *rle) Read(p []byte) (int, error) {
 const minRunLength = 3
 
 func (w *writer) WriteRLE(data []byte) {
-	var (
-		last         byte
-		run, written int
-	)
+	if len(data) == 0 {
+		return
+	}
+	var run, written int
+	last := data[0]
 	for n, b := range data {
 		if b == last {
 			run++
 		} else {
 			if run > minRunLength {
-				nm := n - run - written
-				w.WriteRLEData(data[written:], run, nm, last)
-				written += nm + run
+				w.WriteRLEData(data[written:n-run], run, last)
+				written = n - 1
 			}
 			run = 0
 		}
 		last = b
 	}
-	nm := len(data) - run - written
-	w.WriteRLEData(data[written:], run, nm, last)
+	w.WriteRLEData(data[written:len(data)-run], run, last)
 }
 
-func (w *writer) WriteRLEData(data []byte, run, l int, last byte) {
-	if l > 0 {
-		if l < 128 {
-			w.WriteUint8(255 - uint8(l-1))
+func (w *writer) WriteRLEData(data []byte, run int, last byte) {
+	if len(data) > 0 {
+		if len(data) < 128 {
+			w.WriteUint8(255 - uint8(len(data)-1))
 		} else {
 			w.WriteUint8(128)
-			w.WriteUint16(uint16(l))
+			w.WriteUint16(uint16(len(data)))
 		}
-		w.Write(data[:l])
+		w.Write(data)
 	}
-	if run < 128 {
-		w.WriteUint8(uint8(run - 1))
-	} else {
-		w.WriteUint8(127)
-		w.WriteUint16(uint16(run))
+	if run > 0 {
+		if run < 128 {
+			w.WriteUint8(uint8(run - 1))
+		} else {
+			w.WriteUint8(127)
+			w.WriteUint16(uint16(run))
+		}
 	}
 	w.WriteUint8(last)
 }
