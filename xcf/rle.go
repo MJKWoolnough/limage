@@ -85,6 +85,9 @@ func (w *writer) WriteRLE(data []byte) {
 		}
 		last = b
 	}
+	if run <= minRunLength {
+		run = 0
+	}
 	w.WriteRLEData(data[written:len(data)-run], run, last)
 }
 
