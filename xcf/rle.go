@@ -108,8 +108,8 @@ func (w *writer) WriteRLEData(data []byte, run int, last byte) {
 			w.WriteUint8(127)
 			w.WriteUint16(uint16(run))
 		}
+		w.WriteUint8(last)
 	}
-	w.WriteUint8(last)
 }
 
 const (
