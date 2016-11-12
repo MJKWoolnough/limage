@@ -79,9 +79,9 @@ func (w *writer) WriteRLE(data []byte) {
 		} else {
 			if run > minRunLength {
 				w.WriteRLEData(data[written:n-run], run, last)
-				written = n - 1
+				written = n
 			}
-			run = 0
+			run = 1
 		}
 		last = b
 	}
