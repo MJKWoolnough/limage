@@ -41,7 +41,6 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 
 	// Tiles
 
-	//r := rlencoder{Writer: e.StickyWriter}
 	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
 		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
 			l := uint16(0)
@@ -56,11 +55,7 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 			}
 			w.WritePointer(uint32(e.pos))
 			for n := uint8(0); n < colourChannels; n++ {
-				e.WriteUint8(128)
-				e.WriteUint16(l)
-				e.Write(e.channelBuf[n][:l])
-				//r.Write(e.channelBuf[n][:l])
-				//r.Flush()
+				e.WriteRLE(e.channelBuf[n][:l])
 			}
 		}
 	}
