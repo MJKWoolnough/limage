@@ -69,10 +69,10 @@ func (d *reader) ReadParasite() parasite {
 	return p
 }
 
-func (ps *parasite) Parse() ([]Tag, error) {
+func (ps *parasite) Parse() ([]tag, error) {
 	p := parser.New(parser.NewByteTokeniser(ps.data))
 	p.TokeniserState(openTK)
-	tags := make([]Tag, 0, 32)
+	tags := make([]tag, 0, 32)
 	for {
 		tag, err := readTag(&p)
 		if err != nil {
@@ -105,24 +105,24 @@ const (
 )
 
 // Tag represents a single tag from a parsed Parasite
-type Tag struct {
+type tag struct {
 	Name   string
 	Values []interface{}
 }
 
-func readTag(p *parser.Parser) (Tag, error) {
+func readTag(p *parser.Parser) (tag, error) {
 	if p.Accept(parser.TokenDone) {
-		return Tag{}, io.EOF
+		return tag{}, io.EOF
 	}
 	if !p.Accept(tokenOpen) {
-		return Tag{}, ErrNoOpen
+		return tag{}, ErrNoOpen
 	}
 	p.Get()
 	if !p.Accept(tokenName) {
-		return Tag{}, ErrNoName
+		return tag{}, ErrNoName
 	}
 	nt := p.Get()
-	var tg Tag
+	var tg tag
 	tg.Name = nt[0].Data
 	for {
 		tt := p.AcceptRun(tokenValueString, tokenValueNumber)
@@ -133,7 +133,7 @@ func readTag(p *parser.Parser) (Tag, error) {
 			case tokenValueNumber:
 				num, err := strconv.ParseFloat(v.Data, 64)
 				if err != nil {
-					return Tag{}, err
+					return tag{}, err
 				}
 				tg.Values = append(tg.Values, num)
 			}
@@ -147,13 +147,13 @@ func readTag(p *parser.Parser) (Tag, error) {
 			ttg, err := readTag(p)
 			p.TokeniserState(valueTK)
 			if err != nil {
-				return Tag{}, err
+				return tag{}, err
 			}
 			tg.Values = append(tg.Values, ttg)
 		case parser.TokenDone:
-			return Tag{}, io.EOF
+			return tag{}, io.EOF
 		default:
-			return Tag{}, ErrInvalidParasites
+			return tag{}, ErrInvalidParasites
 		}
 	}
 }

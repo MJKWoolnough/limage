@@ -26,21 +26,21 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 	)
 	defaultText.BackColor = color.Alpha{}
 	defaultText.ForeColor = color.Gray{}
-	for _, tag := range tags {
-		switch tag.Name {
+	for _, tg := range tags {
+		switch tg.Name {
 		case "text":
-			defaultText.Data, _ = tag.Values[0].(string)
+			defaultText.Data, _ = tg.Values[0].(string)
 		case "markup":
-			if len(tag.Values) == 1 {
-				textData, _ = tag.Values[0].(string)
+			if len(tg.Values) == 1 {
+				textData, _ = tg.Values[0].(string)
 			}
 		case "font":
-			if len(tag.Values) == 1 {
-				defaultText.Font, _ = tag.Values[0].(string)
+			if len(tg.Values) == 1 {
+				defaultText.Font, _ = tg.Values[0].(string)
 			}
 		case "font-size":
-			if len(tag.Values) == 1 {
-				f, _ := tag.Values[0].(float64)
+			if len(tg.Values) == 1 {
+				f, _ := tg.Values[0].(float64)
 				defaultText.Size = uint32(f)
 			}
 		case "font-size-unit":
@@ -48,8 +48,8 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 		case "language":
 		case "base-direction":
 		case "color":
-			if len(tag.Values) == 1 {
-				t, _ := tag.Values[0].(Tag)
+			if len(tg.Values) == 1 {
+				t, _ := tg.Values[0].(tag)
 				if t.Name == "color-rgb" && len(t.Values) != 3 {
 					r, _ := t.Values[0].(float64)
 					g, _ := t.Values[1].(float64)
