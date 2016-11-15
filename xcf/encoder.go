@@ -25,6 +25,7 @@ type encoder struct {
 	colourBuf  [4]byte
 }
 
+// Encode encodes the given image as an XCF file to the given WriterAt
 func Encode(w io.WriterAt, im image.Image) error {
 	switch imt := im.(type) {
 	case *limage.Image:
