@@ -189,7 +189,7 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 	return c, dr.Err
 }
 
-// Decode reads an XCF layered image from the given ReadSeeker
+// Decode reads an XCF layered image from the given ReaderAt
 func Decode(r io.ReaderAt) (limage.Image, error) {
 	dr := newReader(r)
 
