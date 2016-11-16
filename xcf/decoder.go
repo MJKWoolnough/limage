@@ -15,6 +15,10 @@ import (
 func getReaderAt(r io.Reader) io.ReaderAt {
 	if bb, ok := r.(*bufio.Reader); ok {
 		return bufioToReader(bb)
+	} else if ra, ok := r.(io.ReaderAt); ok {
+		return ra
+	} else if rs, ok := r.(io.ReadSeeker); ok {
+		return &readerAt{ReadSeeker: rs}
 	}
 	return nil
 }

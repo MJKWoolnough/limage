@@ -20,12 +20,23 @@ type bufioReader struct {
 type readerAt struct {
 	readMutex  sync.Mutex
 	ReadSeeker io.ReadSeeker
+	pos        int64
 }
 
 func (r *readerAt) ReadAt(p []byte, offset int64) (int, error) {
 	r.readMutex.Lock()
-	r.ReadSeeker.Seek(offset, io.SeekStart)
-	n, err := r.ReadSeeker.Read(p)
+	var (
+		n   int
+		err error
+	)
+	if offset != r.pos {
+		r.pos, err = r.ReadSeeker.Seek(offset, io.SeekStart)
+		if err != nil {
+			return 0, err
+		}
+	}
+	n, err = r.ReadSeeker.Read(p)
+	r.pos += int64(n)
 	r.readMutex.Unlock()
 	return n, err
 }
