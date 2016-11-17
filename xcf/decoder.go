@@ -95,7 +95,7 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 	baseType := dr.ReadUint32()
 	switch baseType {
 	case 0:
-		c.ColorModel = color.RGBAModel
+		c.ColorModel = color.NRGBAModel
 	case 1:
 		c.ColorModel = lcolor.GrayAlphaModel
 	case 2:
