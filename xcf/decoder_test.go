@@ -1,80 +1,111 @@
 package xcf
 
 import (
-	"fmt"
+	"bytes"
+	"compress/gzip"
 	"image"
-	"image/png"
-	"os"
+	"image/color"
+	"io"
+	"reflect"
+	"strings"
 	"testing"
-
-	"github.com/MJKWoolnough/limage"
 )
 
+var buf [2098]byte
+
+func openFile(str string) (io.ReaderAt, error) {
+	gz, err := gzip.NewReader(strings.NewReader(str))
+	if err != nil {
+		return nil, err
+	}
+	n, err := gz.Read(buf[:])
+	if err != nil {
+		if err != io.EOF {
+			return nil, err
+		}
+	}
+	return bytes.NewReader(buf[:n]), nil
+}
+
 func TestConfigDecoder(t *testing.T) {
-	return
-	f, err := os.Open("test.xcf")
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-		return
+	tests := []struct {
+		File   string
+		Config image.Config
+	}{
+		{
+			File: abcFile,
+			Config: image.Config{
+				ColorModel: color.NRGBAModel,
+				Width:      36,
+				Height:     13,
+			},
+		},
+		{
+			File: blackMaskFile,
+			Config: image.Config{
+				ColorModel: color.NRGBAModel,
+				Width:      50,
+				Height:     50,
+			},
+		},
+		{
+			File: blackRedBlueFile,
+			Config: image.Config{
+				ColorModel: color.NRGBAModel,
+				Width:      50,
+				Height:     50,
+			},
+		},
+		{
+			File: blackRedFile,
+			Config: image.Config{
+				ColorModel: color.NRGBAModel,
+				Width:      50,
+				Height:     50,
+			},
+		},
+		{
+			File: blackFile,
+			Config: image.Config{
+				ColorModel: color.NRGBAModel,
+				Width:      50,
+				Height:     50,
+			},
+		},
+		{
+			File: redFile,
+			Config: image.Config{
+				ColorModel: color.NRGBAModel,
+				Width:      50,
+				Height:     50,
+			},
+		},
+		{
+			File: whiteFile,
+			Config: image.Config{
+				ColorModel: color.NRGBAModel,
+				Width:      50,
+				Height:     50,
+			},
+		},
 	}
-	c, _, err := image.DecodeConfig(f)
-	f.Close()
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-		return
+
+	for n, test := range tests {
+		f, err := openFile(test.File)
+		if err != nil {
+			t.Errorf("test %d: unexpected error opening file: %s", n+1, err)
+			continue
+		}
+		c, err := DecodeConfig(f)
+		if err != nil {
+			t.Errorf("test %d: unexpected error decoding config: %s", n+1, err)
+			continue
+		}
+		if !reflect.DeepEqual(test.Config, c) {
+			t.Errorf("test %d: no config match", n+1)
+		}
 	}
-	fmt.Println(c)
 }
 
 func TestDecoder(t *testing.T) {
-	return
-	f, err := os.Open("test.xcf")
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-		return
-	}
-	i, err := Decode(f)
-	f.Close()
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-		return
-	}
-	printGroup(i, "")
-	f, err = os.Create("all.png")
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-		return
-	}
-	png.Encode(f, i)
-	f.Close()
-}
-
-func printGroup(g limage.Image, indent string) {
-	b := g.Bounds()
-	fmt.Println(indent, b.Dx(), "x", b.Dy(), " - ")
-	indent += "	"
-	for _, l := range g {
-		fmt.Print(indent, l.Name, " - ", float64(255-l.Transparency)/2.55, "% - ", l.Mode, " - ")
-		/*
-			f, err := os.Create(l.Name + ".png")
-			if err != nil {
-				return
-			}
-			png.Encode(f, l.Image)
-			f.Close()
-		*/
-		switch i := l.Image.(type) {
-		case limage.Image:
-			fmt.Println("Group")
-			printGroup(i, indent)
-			fmt.Print(indent, "Offset")
-		case limage.Text:
-			fmt.Print("Text - ", i.String())
-		case limage.MaskedImage:
-			fmt.Print("Masked Image")
-		default:
-			fmt.Print("Image")
-		}
-		fmt.Println(" - +", l.OffsetX, "+", l.OffsetY)
-	}
 }
