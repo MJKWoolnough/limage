@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/MJKWoolnough/limage"
+	"github.com/MJKWoolnough/limage/lcolor"
 )
 
 var buf [2098]byte
@@ -140,8 +141,8 @@ func TestDecoder(t *testing.T) {
 			File: redFile,
 			Image: limage.Image{
 				limage.Layer{
-					Name:  "Layer",
-					Image: singleColourImage{Colour: color.RGBA{R: 255}},
+					Name:  "Background",
+					Image: singleColourImage{Colour: lcolor.RGB{R: 255}},
 				},
 			},
 		},
@@ -170,28 +171,59 @@ func compareLayers(a, b limage.Image) error {
 	}
 	for n, la := range a {
 		lb := b[n]
-		if la.Invisible != lb.Invisible {
-
+		ia := la.Image
+		ib := lb.Image
+		la.Image = nil
+		lb.Image = nil
+		if !reflect.DeepEqual(la, lb) {
+			return fmt.Errorf("layer properties mismatched, expecting %#v, got %#v", lb, la)
 		}
-		if la.Mode != lb.Mode {
-
+		if mib, ok := ib.(limage.MaskedImage); ok {
+			if mia, ok := ia.(limage.MaskedImage); ok {
+				if err := compareImages(mia.Mask, mib.Mask); err != nil {
+					return err
+				}
+				ia = mia.Image
+				ib = mib.Image
+			} else {
+				return fmt.Errorf("expecting MaskedImage, got %T", ia)
+			}
 		}
-		if la.Transparency != lb.Transparency {
-
+		if layb, ok := ib.(limage.Image); ok {
+			if laya, ok := ia.(limage.Image); ok {
+				if err := compareLayers(laya, layb); err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("expecting Layer Group, got %T", ia)
+			}
+		} else if tb, ok := ib.(limage.Text); ok {
+			if ta, ok := ia.(limage.Text); ok {
+				ta.Image = nil
+				tb.Image = nil
+				if !reflect.DeepEqual(ta, tb) {
+					return fmt.Errorf("expecting text layer %#v, got %#v", tb, ta)
+				}
+			} else {
+				return fmt.Errorf("expecting Text Layer, got %T", ia)
+			}
+		} else if err := compareImages(ia, ib); err != nil {
+			return err
 		}
-		if la.OffsetX != lb.OffsetX {
+	}
+	return nil
+}
 
+func compareImages(ia, ib image.Image) error {
+	bnds := ia.Bounds()
+	for j := 0; j < bnds.Dy(); j++ {
+		for i := 0; i < bnds.Dx(); i++ {
+			ca := ia.At(i, j)
+			cb := ib.At(i, j)
+			if !reflect.DeepEqual(ca, cb) {
+				return fmt.Errorf("pixel mismatch: expecting %#v, got %#v", cb, ca)
+			}
 		}
-		if la.OffsetY != lb.OffsetY {
-
-		}
-		if la.Name != lb.Name {
-
-		}
-		if ba, bb := la.Bounds(), b.Bounds(); ba != bb {
-
-		}
-		// compare images
 	}
 	return nil
 }
