@@ -138,11 +138,99 @@ func TestDecoder(t *testing.T) {
 		Image limage.Image
 	}{
 		{
+			File: blackRedBlueFile,
+			Image: limage.Image{
+				limage.Layer{
+					Name: "Layer Group",
+					Image: limage.Image{
+						limage.Layer{
+							Name: "Blue",
+							Image: singleColourImage{
+								Colour: color.NRGBA{B: 255, A: 255},
+								Width:  30,
+								Height: 30,
+							},
+						},
+						limage.Layer{
+							Name: "Red",
+							Image: singleColourImage{Colour: color.NRGBA{R: 255, A: 255},
+								Width:  30,
+								Height: 30,
+							},
+							OffsetX: 20,
+							OffsetY: 20,
+						},
+					},
+				},
+				limage.Layer{
+					Name: "Background",
+					Image: singleColourImage{
+						Colour: lcolor.RGB{},
+						Width:  50,
+						Height: 50,
+					},
+				},
+			},
+		},
+		{
+			File: blackRedFile,
+			Image: limage.Image{
+				limage.Layer{
+					Name: "Layer",
+					Image: singleColourImage{
+						Colour: color.NRGBA{R: 255, A: 255},
+						Width:  30,
+						Height: 30,
+					},
+					OffsetX: 10,
+					OffsetY: 10,
+				},
+				limage.Layer{
+					Name: "Background",
+					Image: singleColourImage{
+						Colour: lcolor.RGB{},
+						Width:  50,
+						Height: 50,
+					},
+				},
+			},
+		},
+		{
+			File: blackFile,
+			Image: limage.Image{
+				limage.Layer{
+					Name: "Background",
+					Image: singleColourImage{
+						Colour: lcolor.RGB{},
+						Width:  50,
+						Height: 50,
+					},
+				},
+			},
+		},
+		{
 			File: redFile,
 			Image: limage.Image{
 				limage.Layer{
-					Name:  "Background",
-					Image: singleColourImage{Colour: lcolor.RGB{R: 255}},
+					Name: "Background",
+					Image: singleColourImage{
+						Colour: lcolor.RGB{R: 255},
+						Width:  50,
+						Height: 50,
+					},
+				},
+			},
+		},
+		{
+			File: whiteFile,
+			Image: limage.Image{
+				limage.Layer{
+					Name: "Background",
+					Image: singleColourImage{
+						Colour: lcolor.RGB{R: 255, G: 255, B: 255},
+						Width:  50,
+						Height: 50,
+					},
 				},
 			},
 		},
@@ -216,6 +304,10 @@ func compareLayers(a, b limage.Image) error {
 
 func compareImages(ia, ib image.Image) error {
 	bnds := ia.Bounds()
+	bndsb := ib.Bounds()
+	if bnds.Min.X != bndsb.Min.X || bnds.Min.Y != bndsb.Min.Y || bnds.Max.X != bndsb.Max.X || bnds.Max.Y != bndsb.Max.Y {
+		return fmt.Errorf("bounds mismatch, expecting %v, got %v", bndsb, bnds)
+	}
 	for j := 0; j < bnds.Dy(); j++ {
 		for i := 0; i < bnds.Dx(); i++ {
 			ca := ia.At(i, j)
