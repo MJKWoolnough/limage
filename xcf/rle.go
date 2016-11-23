@@ -126,6 +126,7 @@ func (w *writer) WriteRLEData(data []byte, run int, last byte) {
 	}
 }
 
+// Errors
 const (
 	ErrInvalidRLE errors.Error = "invalid RLE data"
 )
