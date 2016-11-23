@@ -56,7 +56,7 @@ func (g Image) Bounds() image.Rectangle {
 
 // At returns the colour at the specified coords
 func (g Image) At(x, y int) color.Color {
-	var c color.Color = color.Alpha{}
+	c := color.Color(color.Alpha{})
 	point := image.Point{x, y}
 	for i := len(g) - 1; i >= 0; i-- {
 		if g[i].Invisible {
