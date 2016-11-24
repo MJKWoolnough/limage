@@ -7,9 +7,17 @@ type HSLA struct {
 	H, S, L, A uint16
 }
 
-func RGBToHSL(cl color.NRGBA64) HSLA {
-	mn := uint32(min(cl.R, cl.G, cl.B))
-	mx := uint32(max(cl.R, cl.G, cl.B))
+// RGBToHSL converts
+func RGBToHSL(cl color.Color) HSLA {
+	var mn, mx uint32
+	if clN, ok := cl.(color.NRGBA64); ok {
+		mn = uint32(min(cl.R, cl.G, cl.B))
+		mx = uint32(max(cl.R, cl.G, cl.B))
+	} else {
+		r, g, b, a := cl.RGBA()
+		mn = uint32(min(uint16(r), uint16(g), uint16(b), uint16(a)))
+		mx = uint32(max(uint16(r), uint16(g), uint16(b), uint16(a)))
+	}
 	l := mx + mn
 	hsl := HSLA{
 		L: uint16(l >> 1),
@@ -56,9 +64,17 @@ type HSVA struct {
 	H, S, V, A uint16
 }
 
-func RGBToHSV(cl color.NRGBA64) HSVA {
-	mn := min(cl.R, cl.G, cl.B)
-	mx := max(cl.R, cl.G, cl.B)
+// RGBToHSV converts a color to the HSV color space
+func RGBToHSV(cl color.Color) HSVA {
+	var mn, mx uint16
+	if clN, ok := cl.(color.NRGBA64); ok {
+		mn = min(cl.R, cl.G, cl.B)
+		mx = max(cl.R, cl.G, cl.B)
+	} else {
+		r, g, b, a := cl.RGBA()
+		mn = min(uint16(r), uint16(g), uint16(b), uint16(a))
+		mx = max(uint16(r), uint16(g), uint16(b), uint16(a))
+	}
 	hsv := HSVA{
 		V: mx,
 		A: cl.A,

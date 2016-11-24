@@ -2,8 +2,11 @@ package lcolor
 
 import "image/color"
 
+// AlphaPalette is an extension to the normal color.Palette type
 type AlphaPalette color.Palette
 
+// Convert converts the given color to the nearest color in the palette, but
+// preserves the alpha channel
 func (ap AlphaPalette) Convert(c color.Color) color.Color {
 	r, g, b, _ := color.Palette(ap).Convert(c).RGBA()
 	_, _, _, a := c.RGBA()
@@ -15,6 +18,7 @@ func (ap AlphaPalette) Convert(c color.Color) color.Color {
 	}
 }
 
+// Index returns the palette index of the nearest color
 func (ap AlphaPalette) Index(c color.Color) int {
 	return color.Palette(ap).Index(c)
 }
