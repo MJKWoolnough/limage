@@ -4,6 +4,8 @@ package limage
 import (
 	"image"
 	"image/color"
+
+	"github.com/MJKWoolnough/limage/internal"
 )
 
 // Layer represents a single layer of a multilayered image
@@ -66,7 +68,7 @@ func (g Image) At(x, y int) color.Color {
 			continue
 		}
 		if _, ok := g.ColorModel().(color.Palette); g[i].Mode != CompositeDissolve && ok {
-			if d := colourToNRGBA(g[i].At(x, y)); d.A > 0x7fff {
+			if d := internal.ColourToNRGBA(g[i].At(x, y)); d.A > 0x7fff {
 				d.A = 0xffff
 				c = d
 			}
@@ -86,30 +88,6 @@ type MaskedImage struct {
 // At returns the colour at the specified coords after masking
 func (m MaskedImage) At(x, y int) color.Color {
 	return transparency(m.Image.At(x, y), m.Mask.GrayAt(x, y).Y)
-}
-
-func colourToNRGBA(c color.Color) color.NRGBA64 {
-	switch c := c.(type) {
-	case color.NRGBA:
-		var d color.NRGBA64
-		d.R = uint16(c.R)
-		d.R |= d.R << 8
-		d.G = uint16(c.G)
-		d.G |= d.G << 8
-		d.B = uint16(c.B)
-		d.B |= d.B << 8
-		d.A = uint16(c.A)
-		d.A |= d.A << 8
-		return d
-	case color.NRGBA64:
-		return c
-	}
-	if n, ok := c.(interface {
-		ToNRGBA() color.NRGBA64
-	}); ok {
-		return n.ToNRGBA()
-	}
-	return color.NRGBA64Model.Convert(c).(color.NRGBA64)
 }
 
 // Text represents a text layer
@@ -144,7 +122,7 @@ func transparency(ac color.Color, ao uint8) color.Color {
 	} else if ao == 0 {
 		return color.NRGBA64{}
 	}
-	c := colourToNRGBA(ac)
+	c := internal.ColourToNRGBA(ac)
 	o := uint32(ao)
 	o |= o << 8
 	c.A = uint16(o * uint32(c.A) / 0xffff)
