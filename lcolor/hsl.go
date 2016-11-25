@@ -1,6 +1,10 @@
 package lcolor
 
-import "image/color"
+import (
+	"image/color"
+
+	"github.com/MJKWoolnough/limage/internal"
+)
 
 // HSLA represents the Hue, Saturation, Lightness and Alpha of a pixel
 type HSLA struct {
@@ -10,18 +14,13 @@ type HSLA struct {
 // RGBToHSL converts
 func RGBToHSL(cl color.Color) HSLA {
 	var mn, mx uint32
-	if clN, ok := cl.(color.NRGBA64); ok {
-		mn = uint32(min(cl.R, cl.G, cl.B))
-		mx = uint32(max(cl.R, cl.G, cl.B))
-	} else {
-		r, g, b, a := cl.RGBA()
-		mn = uint32(min(uint16(r), uint16(g), uint16(b), uint16(a)))
-		mx = uint32(max(uint16(r), uint16(g), uint16(b), uint16(a)))
-	}
+	clN := internal.ColourToNRGBA(cl)
+	mn = uint32(internal.Min(clN.R, clN.G, clN.B))
+	mx = uint32(internal.Max(clN.R, clN.G, clN.B))
 	l := mx + mn
 	hsl := HSLA{
 		L: uint16(l >> 1),
-		A: cl.A,
+		A: clN.A,
 	}
 	c := mx - mn
 	if c == 0 {
@@ -32,7 +31,7 @@ func RGBToHSL(cl color.Color) HSLA {
 	} else {
 		hsl.S = uint16(0xffff * c / (0x1fffe - l))
 	}
-	hsl.H = colourToHue(cl, uint16(mx), c)
+	hsl.H = colourToHue(clN, uint16(mx), c)
 	return hsl
 }
 
@@ -67,24 +66,19 @@ type HSVA struct {
 // RGBToHSV converts a color to the HSV color space
 func RGBToHSV(cl color.Color) HSVA {
 	var mn, mx uint16
-	if clN, ok := cl.(color.NRGBA64); ok {
-		mn = min(cl.R, cl.G, cl.B)
-		mx = max(cl.R, cl.G, cl.B)
-	} else {
-		r, g, b, a := cl.RGBA()
-		mn = min(uint16(r), uint16(g), uint16(b), uint16(a))
-		mx = max(uint16(r), uint16(g), uint16(b), uint16(a))
-	}
+	clN := internal.ColourToNRGBA(cl)
+	mn = internal.Min(clN.R, clN.G, clN.B)
+	mx = internal.Max(clN.R, clN.G, clN.B)
 	hsv := HSVA{
 		V: mx,
-		A: cl.A,
+		A: clN.A,
 	}
 	c := uint32(mx - mn)
 	if c == 0 {
 		return hsv
 	}
 	hsv.S = uint16(0xffff * c / uint32(mx))
-	hsv.H = colourToHue(cl, mx, c)
+	hsv.H = colourToHue(clN, mx, c)
 	return hsv
 }
 
@@ -170,24 +164,4 @@ func hcmaToColour(hue, c uint32, m, a uint16) color.NRGBA64 {
 	cl.G += m
 	cl.B += m
 	return cl
-}
-
-func min(n ...uint16) uint16 {
-	var m uint16 = 0xffff
-	for _, o := range n {
-		if o < m {
-			m = o
-		}
-	}
-	return m
-}
-
-func max(n ...uint16) uint16 {
-	var m uint16
-	for _, o := range n {
-		if o > m {
-			m = o
-		}
-	}
-	return m
 }
