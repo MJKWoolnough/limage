@@ -170,7 +170,7 @@ func (c Composite) Composite(b, t color.Color) color.Color {
 	if bottom.A == 0 {
 		return color.NRGBA{}
 	}
-	ma := min(bottom.A, top.A)
+	ma := internal.Min(bottom.A, top.A)
 	return color.NRGBA64{
 		R: blend(bottom.A, bottom.R, ma, f(bottom.R, top.R)),
 		G: blend(bottom.A, bottom.G, ma, f(bottom.R, top.G)),
@@ -233,11 +233,11 @@ func compositeSubtract(x, y uint16) uint16 {
 }
 
 func compositeDarkenOnly(x, y uint16) uint16 {
-	return min(x, y)
+	return internal.Min(x, y)
 }
 
 func compositeLightenOnly(x, y uint16) uint16 {
-	return max(x, y)
+	return internal.Max(x, y)
 }
 
 func compositeDivide(x, y uint16) uint16 {
@@ -340,30 +340,6 @@ func compositeDstOut(bottom, top color.NRGBA64) color.NRGBA64 {
 
 func compositeAtop(bottom, top color.NRGBA64) color.NRGBA64 {
 	return compositeNormal(bottom, top)
-}
-
-func min(n ...uint16) uint16 {
-	var m uint16 = 0xffff
-	for _, o := range n {
-		if o < m {
-			m = o
-		}
-	}
-	return m
-}
-
-func max(n ...uint16) uint16 {
-	var m uint16
-	for _, o := range n {
-		if o > m {
-			m = o
-		}
-	}
-	return m
-}
-
-func mid(n ...uint16) uint16 {
-	return (min(n...) + max(n...)) >> 1
 }
 
 func clamp(n uint32) uint16 {
