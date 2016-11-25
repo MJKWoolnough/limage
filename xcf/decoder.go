@@ -1,7 +1,6 @@
 package xcf
 
 import (
-	"bufio"
 	"image"
 	"image/color"
 	"io"
@@ -9,22 +8,12 @@ import (
 
 	"github.com/MJKWoolnough/errors"
 	"github.com/MJKWoolnough/limage"
+	"github.com/MJKWoolnough/limage/internal"
 	"github.com/MJKWoolnough/limage/lcolor"
 )
 
-func getReaderAt(r io.Reader) io.ReaderAt {
-	if bb, ok := r.(*bufio.Reader); ok {
-		return bufioToReader(bb)
-	} else if ra, ok := r.(io.ReaderAt); ok {
-		return ra
-	} else if rs, ok := r.(io.ReadSeeker); ok {
-		return &readerAt{ReadSeeker: rs}
-	}
-	return nil
-}
-
 func decodeConfig(r io.Reader) (image.Config, error) {
-	ra := getReaderAt(r)
+	ra := internal.GetReaderAt(r)
 	if ra == nil {
 		return image.Config{}, errors.Error("need a io.ReaderAt")
 	}
@@ -32,7 +21,7 @@ func decodeConfig(r io.Reader) (image.Config, error) {
 }
 
 func decode(r io.Reader) (image.Image, error) {
-	ra := getReaderAt(r)
+	ra := internal.GetReaderAt(r)
 	if ra == nil {
 		return nil, errors.Error("need a io.ReaderAt")
 	}
