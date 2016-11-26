@@ -3,10 +3,15 @@ package ora
 import (
 	"archive/zip"
 	"errors"
+	"image"
 	"io"
 
 	"github.com/MJKWoolnough/limage"
 )
+
+func DecodeConfig(r io.ReaderAt) (image.Config, error) {
+	return image.Config{}, nil
+}
 
 func Decode(r io.ReaderAt, size int64) (*limage.Image, error) {
 	zr, err := zip.NewReader(r, size)
