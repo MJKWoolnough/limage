@@ -9,15 +9,11 @@ import (
 	"github.com/MJKWoolnough/limage"
 )
 
-func DecodeConfig(r io.ReaderAt) (image.Config, error) {
+func DecodeConfig(zr zip.Reader) (image.Config, error) {
 	return image.Config{}, nil
 }
 
-func Decode(r io.ReaderAt, size int64) (*limage.Image, error) {
-	zr, err := zip.NewReader(r, size)
-	if err != nil {
-		return nil, err
-	}
+func Decode(zr zip.Reader) (*limage.Image, error) {
 	required := 0
 	var stack *zip.File
 	for _, f := range zr.File {
@@ -37,7 +33,7 @@ func Decode(r io.ReaderAt, size int64) (*limage.Image, error) {
 	if required < 5 {
 		return nil, ErrMissingRequired
 	}
-
+	return nil, nil
 }
 
 func checkMime(mimetype *zip.File) bool {
