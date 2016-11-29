@@ -4,6 +4,7 @@ import (
 	"image/color"
 	"math/rand"
 
+	"github.com/MJKWoolnough/limage/internal"
 	"github.com/MJKWoolnough/limage/lcolor"
 )
 
@@ -106,8 +107,8 @@ func (c Composite) String() string {
 
 // Composite performs the composition of two layers
 func (c Composite) Composite(b, t color.Color) color.Color {
-	bottom := colourToNRGBA(b)
-	top := colourToNRGBA(t)
+	bottom := internal.ColourToNRGBA(b)
+	top := internal.ColourToNRGBA(t)
 	var f func(uint16, uint16) uint16
 	switch c {
 	case CompositeMultiply:
