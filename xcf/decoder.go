@@ -48,10 +48,9 @@ const (
 
 type decoder struct {
 	reader
-	Width, Height int
-	baseType      uint32
-	palette       lcolor.AlphaPalette
-	compression   uint8
+	baseType    uint32
+	palette     lcolor.AlphaPalette
+	compression uint8
 }
 
 // DecodeConfig retrieves the color model and dimensions of the XCF image
@@ -207,6 +206,7 @@ func Decode(r io.ReaderAt) (limage.Image, error) {
 
 	width := int(dr.ReadUint32())
 	height := int(dr.ReadUint32())
+	bounds := image.Rect(0, 0, width, height)
 	baseType := dr.ReadUint32()
 
 	var (
@@ -343,8 +343,6 @@ PropertyLoop:
 		go func(n int, lptr uint32) {
 			d := decoder{
 				reader:      newReader(r),
-				Width:       width,
-				Height:      height,
 				baseType:    baseType,
 				palette:     palette,
 				compression: compression,
@@ -383,14 +381,13 @@ PropertyLoop:
 		if l.group {
 			groups[string(l.itemPath)] = &groupOffset{
 				Group:   make(limage.Image, 0, 32),
-				OffsetX: l.OffsetX,
-				OffsetY: l.OffsetY,
+				OffsetX: l.LayerBounds.Min.X,
+				OffsetY: l.LayerBounds.Min.Y,
 				Parent:  &g.Group,
 				Offset:  len(g.Group),
 			}
 		}
-		l.OffsetX -= g.OffsetX
-		l.OffsetY -= g.OffsetY
+		l.LayerBounds.Intersect(bounds).Sub(image.Pt(g.OffsetX, g.OffsetY))
 		g.Group = append(g.Group, l.Layer)
 	}
 

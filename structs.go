@@ -10,23 +10,29 @@ import (
 
 // Layer represents a single layer of a multilayered image
 type Layer struct {
-	Name             string
-	OffsetX, OffsetY int
-	Mode             Composite
-	Invisible        bool
-	Transparency     uint8
+	Name         string
+	LayerBounds  image.Rectangle // Bounds within the layer group
+	Mode         Composite
+	Invisible    bool
+	Transparency uint8
 	image.Image
 }
 
 // Bounds returns the limits for the dimensions of the layer
 func (l Layer) Bounds() image.Rectangle {
-	b := l.Image.Bounds()
-	return image.Rect(l.OffsetX, l.OffsetY, b.Dx()+l.OffsetX, b.Dy()+l.OffsetY)
+	return l.LayerBounds
 }
 
 // At returns the colour at the specified coords
 func (l Layer) At(x, y int) color.Color {
-	return transparency(l.Image.At(x-l.OffsetX, y-l.OffsetY), 255-l.Transparency)
+	return transparency(l.Image.At(x-l.LayerBounds.Min.X, y-l.LayerBounds.Min.Y), 255-l.Transparency)
+}
+
+// SubImage returns an image representing the portion of the image p visible
+// through r. The returned value shares pixels with the original image
+func (l Layer) SubImage(r image.Rectangle) image.Image {
+	l.LayerBounds = r.Intersect(l.LayerBounds)
+	return l
 }
 
 // Image represents a collection of layers
@@ -43,17 +49,11 @@ func (g Image) ColorModel() color.Model {
 
 // Bounds returns the limits for the dimensions of the group
 func (g Image) Bounds() image.Rectangle {
-	var maxX, maxY int
+	var r image.Rectangle
 	for _, l := range g {
-		b := l.Bounds()
-		if dx := b.Dx(); dx > maxX {
-			maxX = dx
-		}
-		if dy := b.Dy(); dy > maxY {
-			maxY = dy
-		}
+		r = r.Union(l.Bounds())
 	}
-	return image.Rect(0, 0, maxX, maxY)
+	return r
 }
 
 // At returns the colour at the specified coords
@@ -77,6 +77,16 @@ func (g Image) At(x, y int) color.Color {
 		}
 	}
 	return c
+}
+
+// SubImage returns an image representing the portion of the image p visible
+// through r. The returned value shares pixels with the original image
+func (g Image) SubImage(r image.Rectangle) image.Image {
+	h := make(Image, len(g))
+	for n, l := range g {
+		h[n] = l.SubImage(r).(Layer)
+	}
+	return h
 }
 
 // MaskedImage represents an image that has a to-be-applied mask

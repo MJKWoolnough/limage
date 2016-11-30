@@ -9,7 +9,7 @@ import (
 func (e *encoder) WriteLayers(layers limage.Image, offsetX, offsetY int32, groups []uint32, pw *pointerWriter) {
 	for n, layer := range layers {
 		nGroups := append(groups, uint32(n))
-		e.WriteLayer(layer, offsetX+int32(layer.OffsetX), offsetY+int32(layer.OffsetY), nGroups, pw)
+		e.WriteLayer(layer, offsetX+int32(layer.LayerBounds.Min.X), offsetY+int32(layer.LayerBounds.Min.Y), nGroups, pw)
 	}
 }
 

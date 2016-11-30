@@ -41,6 +41,7 @@ func TestEncode(t *testing.T) {
 							Width:  30,
 							Height: 30,
 						},
+						LayerBounds: image.Rect(0, 0, 30, 30),
 					},
 					limage.Layer{
 						Name: "Red",
@@ -48,8 +49,7 @@ func TestEncode(t *testing.T) {
 							Width:  30,
 							Height: 30,
 						},
-						OffsetX: 20,
-						OffsetY: 20,
+						LayerBounds: image.Rect(20, 20, 50, 50),
 					},
 				},
 			},
@@ -60,6 +60,7 @@ func TestEncode(t *testing.T) {
 					Width:  50,
 					Height: 50,
 				},
+				LayerBounds: image.Rect(0, 0, 50, 50),
 			},
 		},
 		{
@@ -70,8 +71,7 @@ func TestEncode(t *testing.T) {
 					Width:  30,
 					Height: 30,
 				},
-				OffsetX: 10,
-				OffsetY: 10,
+				LayerBounds: image.Rect(10, 10, 40, 40),
 			},
 			limage.Layer{
 				Name: "Background",
@@ -80,6 +80,7 @@ func TestEncode(t *testing.T) {
 					Width:  50,
 					Height: 50,
 				},
+				LayerBounds: image.Rect(0, 0, 50, 50),
 			},
 		},
 		{
@@ -90,6 +91,7 @@ func TestEncode(t *testing.T) {
 					Width:  50,
 					Height: 50,
 				},
+				LayerBounds: image.Rect(0, 0, 50, 50),
 			},
 		},
 		{
@@ -100,6 +102,7 @@ func TestEncode(t *testing.T) {
 					Width:  50,
 					Height: 50,
 				},
+				LayerBounds: image.Rect(0, 0, 50, 50),
 			},
 		},
 		{
@@ -110,6 +113,7 @@ func TestEncode(t *testing.T) {
 					Width:  50,
 					Height: 50,
 				},
+				LayerBounds: image.Rect(0, 0, 50, 50),
 			},
 		},
 	}
