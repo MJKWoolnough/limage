@@ -109,7 +109,7 @@ func checkMime(mimetype *zip.File) bool {
 		if err != nil {
 			return false
 		}
-		var mime [16]byte
+		var mime [len(mimetypeStr)]byte
 		_, err = io.ReadFull(mr, mime[:])
 		mr.Close()
 		if err != nil {
