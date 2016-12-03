@@ -104,19 +104,18 @@ func Decode(zr *zip.Reader) (*limage.Image, error) {
 func checkMime(mimetype *zip.File) bool {
 	if mimetype.UncompressedSize64 != uint64(len(mimetypeStr)) {
 		return false
-	} else {
-		mr, err := mimetype.Open()
-		if err != nil {
-			return false
-		}
-		var mime [len(mimetypeStr)]byte
-		_, err = io.ReadFull(mr, mime[:])
-		mr.Close()
-		if err != nil {
-			return false
-		}
-		return string(mime[:]) == mimetypeStr
 	}
+	mr, err := mimetype.Open()
+	if err != nil {
+		return false
+	}
+	var mime [len(mimetypeStr)]byte
+	_, err = io.ReadFull(mr, mime[:])
+	mr.Close()
+	if err != nil {
+		return false
+	}
+	return string(mime[:]) == mimetypeStr
 }
 
 // Errors
