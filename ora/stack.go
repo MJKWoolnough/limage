@@ -1,7 +1,6 @@
 package ora
 
 import (
-	"archive/zip"
 	"encoding/xml"
 	"errors"
 	"image/png"
@@ -9,11 +8,6 @@ import (
 
 	"github.com/MJKWoolnough/limage"
 )
-
-type decoder struct {
-	zr *zip.Reader
-	x  *xml.Decoder
-}
 
 func (d decoder) readStack() (limage.Image, error) {
 	i := make(limage.Image, 32)
