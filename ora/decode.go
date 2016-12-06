@@ -113,6 +113,21 @@ func Decode(zr *zip.Reader) (*limage.Image, error) {
 	if err := d.getDimensions(); err != nil {
 		return nil, err
 	}
+	for { // skip to first stack tag
+		t, err := d.x.Token()
+		if err != nil {
+			if err == io.EOF {
+				return nil, io.ErrUnexpectedEOF
+			}
+			return nil, err
+		}
+		if se, ok := t.(*xml.StartElement); ok {
+			if se.Name == "stack" {
+				break
+			}
+			d.skipTag()
+		}
+	}
 	return d.readStack()
 }
 
