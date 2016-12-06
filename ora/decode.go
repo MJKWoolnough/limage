@@ -88,7 +88,7 @@ func DecodeConfig(zr *zip.Reader) (image.Config, error) {
 	}
 	d.x = xml.NewDecoder(s)
 	if err := d.getDimensions(); err != nil {
-		return iamge.Config{}, err
+		return image.Config{}, err
 	}
 	s.Close()
 	return image.Config{
