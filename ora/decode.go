@@ -18,27 +18,20 @@ type decoder struct {
 	w, h int
 }
 
-func (d decoder) getStack() (*zip.File, error) {
-	required := 0
-	var stack *zip.File
+func (d decoder) getStack() (stack *zip.File, err error) {
+	err = ErrMissingStack
 	for _, f := range d.zr.File {
 		switch f.Name {
 		case "stack.xml":
-			required++
 			stack = f
-		case "Thumbnails/thumbnail.png", "mergedimage.png":
-			required++
+			err = nil
 		case "mimetype":
 			if !checkMime(f) {
 				return nil, ErrInvalidMimeType
 			}
-			required++
 		}
 	}
-	if required < 4 {
-		return nil, ErrMissingRequired
-	}
-	return stack, nil
+	return stack, err
 }
 
 func (d decoder) getDimensions() error {
@@ -150,7 +143,7 @@ func checkMime(mimetype *zip.File) bool {
 
 // Errors
 var (
-	ErrMissingRequired = errors.New("missing required file")
+	ErrMissingStack    = errors.New("missing stack file")
 	ErrInvalidMimeType = errors.New("invalid mime type")
 	ErrInvalidStack    = errors.New("invalid stack")
 )
