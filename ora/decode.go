@@ -18,7 +18,7 @@ type decoder struct {
 	w, h int
 }
 
-func (d decoder) getStack() (stack *zip.File, err error) {
+func (d *decoder) getStack() (stack *zip.File, err error) {
 	err = ErrMissingStack
 	for _, f := range d.zr.File {
 		switch f.Name {
@@ -34,7 +34,7 @@ func (d decoder) getStack() (stack *zip.File, err error) {
 	return stack, err
 }
 
-func (d decoder) getDimensions() error {
+func (d *decoder) getDimensions() error {
 	for {
 		t, err := d.x.Token()
 		if err != nil {
@@ -91,7 +91,7 @@ func DecodeConfig(zr *zip.Reader) (image.Config, error) {
 	}, nil
 }
 
-func Decode(zr *zip.Reader) (*limage.Image, error) {
+func Decode(zr *zip.Reader) (limage.Image, error) {
 	d := decoder{zr: zr}
 	stack, err := d.getStack()
 	if err != nil {
@@ -115,7 +115,7 @@ func Decode(zr *zip.Reader) (*limage.Image, error) {
 			return nil, err
 		}
 		if se, ok := t.(*xml.StartElement); ok {
-			if se.Name == "stack" {
+			if se.Name.Local == "stack" {
 				break
 			}
 			d.skipTag()
