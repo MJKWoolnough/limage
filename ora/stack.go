@@ -19,7 +19,7 @@ Loop:
 		}
 		switch t := t.(type) {
 		case *xml.StartElement:
-			switch t.Name {
+			switch t.Name.Local {
 			case "stack", "layer":
 				l, err := d.readLayer(t)
 				if err != nil {
@@ -119,7 +119,7 @@ func (d decoder) readLayer(s *xml.StartElement) (limage.Layer, error) {
 			source = a.Value
 		}
 	}
-	if s.Name == "stack" {
+	if s.Name.Local == "stack" {
 		var err error
 		l.Image, err = d.readStack()
 		return l, err
@@ -142,7 +142,7 @@ func (d decoder) readLayer(s *xml.StartElement) (limage.Layer, error) {
 		return l, ErrInvalidSource
 	}
 	if err := d.skipTag(); err != nil {
-		return nil, err
+		return l, err
 	}
 	return l, nil
 }
