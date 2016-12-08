@@ -13,9 +13,9 @@ import (
 )
 
 type decoder struct {
-	zr   *zip.Reader
-	x    *xml.Decoder
-	w, h int
+	zr     *zip.Reader
+	x      *xml.Decoder
+	limits image.Point
 }
 
 func (d *decoder) getStack() (stack *zip.File, err error) {
@@ -49,10 +49,10 @@ func (d *decoder) getDimensions() error {
 				for _, attr := range se.Attr {
 					switch attr.Name.Local {
 					case "w":
-						d.w, err = strconv.Atoi(attr.Value)
+						d.limits.X, err = strconv.Atoi(attr.Value)
 						w = true
 					case "h":
-						d.h, err = strconv.Atoi(attr.Value)
+						d.limits.Y, err = strconv.Atoi(attr.Value)
 						h = true
 					}
 					if err != nil {
@@ -121,7 +121,7 @@ func Decode(zr *zip.Reader) (limage.Image, error) {
 			d.skipTag()
 		}
 	}
-	return d.readStack()
+	return d.readStack(image.Point{})
 }
 
 func checkMime(mimetype *zip.File) bool {

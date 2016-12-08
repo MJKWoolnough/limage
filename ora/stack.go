@@ -9,7 +9,7 @@ import (
 	"github.com/MJKWoolnough/limage"
 )
 
-func (d decoder) readStack() (limage.Image, error) {
+func (d decoder) readStack(offset image.Point) (limage.Image, error) {
 	i := make(limage.Image, 32)
 Loop:
 	for {
@@ -21,7 +21,7 @@ Loop:
 		case *xml.StartElement:
 			switch t.Name.Local {
 			case "stack", "layer":
-				l, err := d.readLayer(t)
+				l, err := d.readLayer(t, offset)
 				if err != nil {
 					return nil, err
 				}
@@ -43,7 +43,7 @@ Loop:
 	return i, nil
 }
 
-func (d decoder) readLayer(s *xml.StartElement) (limage.Layer, error) {
+func (d decoder) readLayer(s *xml.StartElement, offset image.Point) (limage.Layer, error) {
 	var (
 		l      limage.Layer
 		source string
@@ -123,27 +123,29 @@ func (d decoder) readLayer(s *xml.StartElement) (limage.Layer, error) {
 		var err error
 		l.Image, err = d.readStack()
 		return l, err
-	}
-	for _, f := range d.zr.File {
-		if f.Name == source {
-			fr, err := f.Open()
-			if err != nil {
-				return l, err
+	} else {
+		for _, f := range d.zr.File {
+			if f.Name == source {
+				fr, err := f.Open()
+				if err != nil {
+					return l, err
+				}
+				l.Image, _, err = image.Decode(fr)
+				if err != nil {
+					return l, err
+				}
+				fr.Close()
+				break
 			}
-			l.Image, _, err = image.Decode(fr)
-			if err != nil {
-				return l, err
-			}
-			fr.Close()
-			break
+		}
+		if l.Image == nil {
+			return l, ErrInvalidSource
+		}
+		if err := d.skipTag(); err != nil {
+			return l, err
 		}
 	}
-	if l.Image == nil {
-		return l, ErrInvalidSource
-	}
-	if err := d.skipTag(); err != nil {
-		return l, err
-	}
+	l.LayerBounds = l.Image.Bounds().Intersect(image.Rectangle{l.LayerBounds.Min.Add(offset), d.limits}).Sub(offset)
 	return l, nil
 }
 
