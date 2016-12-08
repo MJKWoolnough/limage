@@ -3,7 +3,7 @@ package ora
 import (
 	"encoding/xml"
 	"errors"
-	"image/png"
+	"image"
 	"strconv"
 
 	"github.com/MJKWoolnough/limage"
@@ -130,7 +130,7 @@ func (d decoder) readLayer(s *xml.StartElement) (limage.Layer, error) {
 			if err != nil {
 				return l, err
 			}
-			l.Image, err = png.Decode(fr)
+			l.Image, _, err = image.Decode(fr)
 			if err != nil {
 				return l, err
 			}
