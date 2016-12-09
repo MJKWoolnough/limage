@@ -122,7 +122,9 @@ func (d decoder) readLayer(s *xml.StartElement, offset image.Point) (limage.Laye
 	if s.Name.Local == "stack" {
 		var err error
 		l.Image, err = d.readStack(offset.Add(l.LayerBounds.Min))
-		return l, err
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		for _, f := range d.zr.File {
 			if f.Name == source {
