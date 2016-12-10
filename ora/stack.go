@@ -123,7 +123,7 @@ func (d decoder) readLayer(s *xml.StartElement, offset image.Point) (limage.Laye
 		var err error
 		l.Image, err = d.readStack(offset.Add(l.LayerBounds.Min))
 		if err != nil {
-			return nil, err
+			return l, err
 		}
 	} else {
 		for _, f := range d.zr.File {

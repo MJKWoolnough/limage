@@ -10,7 +10,7 @@ type thumbnail struct {
 	scale float64
 }
 
-func (t thumbnail) Bounds() image.Rect {
+func (t thumbnail) Bounds() image.Rectangle {
 	b := t.Image.Bounds()
 	b.Min.X = int(float64(b.Min.X) / t.scale)
 	b.Min.Y = int(float64(b.Min.Y) / t.scale)
