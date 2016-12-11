@@ -34,6 +34,23 @@ func (d *decoder) getStack() (stack *zip.File, err error) {
 	return stack, err
 }
 
+func checkMime(mimetype *zip.File) bool {
+	if mimetype.UncompressedSize64 != uint64(len(mimetypeStr)) {
+		return false
+	}
+	mr, err := mimetype.Open()
+	if err != nil {
+		return false
+	}
+	var mime [len(mimetypeStr)]byte
+	_, err = io.ReadFull(mr, mime[:])
+	mr.Close()
+	if err != nil {
+		return false
+	}
+	return string(mime[:]) == mimetypeStr
+}
+
 func (d *decoder) getDimensions() error {
 	for {
 		t, err := d.x.Token()
@@ -122,23 +139,6 @@ func Decode(zr *zip.Reader) (limage.Image, error) {
 		}
 	}
 	return d.readStack(image.Point{})
-}
-
-func checkMime(mimetype *zip.File) bool {
-	if mimetype.UncompressedSize64 != uint64(len(mimetypeStr)) {
-		return false
-	}
-	mr, err := mimetype.Open()
-	if err != nil {
-		return false
-	}
-	var mime [len(mimetypeStr)]byte
-	_, err = io.ReadFull(mr, mime[:])
-	mr.Close()
-	if err != nil {
-		return false
-	}
-	return string(mime[:]) == mimetypeStr
 }
 
 // Errors
