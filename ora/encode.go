@@ -10,6 +10,42 @@ import (
 
 const mimetypeStr = "image/openraster"
 
+type children []interface{}
+
+type stack struct {
+	XMLName     struct{} `xml:"stack"`
+	X           uint     `xml:"x,attrib,omitempty"`
+	Y           uint     `xml:"y,attrib,omitempty"`
+	Name        string   `xml:"name,attrib,omitempty"`
+	Opacity     float64  `xml:"opacity,attrib"`
+	Visibility  string   `xml:"visibility,attrib,omitempty"`
+	CompositeOp string   `xml:"composite-op,attrib,omitempty"`
+	children
+}
+
+type layer struct {
+	XMLName     struct{} `xml:"layer"`
+	X           uint     `xml:"x,attrib,omitempty"`
+	Y           uint     `xml:"y,attrib,omitempty"`
+	Name        string   `xml:"name,attrib,omitempty"`
+	Opacity     float64  `xml:"opacity,attrib"`
+	Visibility  string   `xml:"visibility,attrib,omitempty"`
+	CompositeOp string   `xml:"composite-op,attrib,omitempty"`
+	Source      string   `xml:"src,attrib"`
+}
+
+type encoder struct {
+	*zip.Writer
+	xml struct {
+		Image struct {
+			Version string   `xml:"version,attr"`
+			Width   uint     `xml:"w,attr"`
+			Height  uint     `xml:"h,attr"`
+			Stack   children `xml:"stack"`
+		} `xml:"image"`
+	}
+}
+
 func Encode(w io.Writer, m image.Image) error {
 	zw := zip.NewWriter(w)
 	defer zw.Close()
