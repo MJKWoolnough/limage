@@ -102,7 +102,7 @@ func DecodeConfig(zr *zip.Reader) (image.Config, error) {
 	}
 	s.Close()
 	return image.Config{
-		ColorModel: color.NRGBA64Model,
+		ColorModel: color.NRGBAModel,
 		Width:      d.limits.X,
 		Height:     d.limits.Y,
 	}, nil
