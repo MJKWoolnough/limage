@@ -10,7 +10,7 @@ import (
 )
 
 func (d decoder) readStack(offset image.Point) (limage.Image, error) {
-	i := make(limage.Image, 32)
+	i := make(limage.Image, 0, 32)
 Loop:
 	for {
 		t, err := d.x.Token()
