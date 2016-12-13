@@ -131,7 +131,7 @@ func Decode(zr *zip.Reader) (limage.Image, error) {
 			}
 			return nil, err
 		}
-		if se, ok := t.(*xml.StartElement); ok {
+		if se, ok := t.(xml.StartElement); ok {
 			if se.Name.Local == "stack" {
 				break
 			}

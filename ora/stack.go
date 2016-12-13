@@ -18,7 +18,7 @@ Loop:
 			return nil, err
 		}
 		switch t := t.(type) {
-		case *xml.StartElement:
+		case xml.StartElement:
 			switch t.Name.Local {
 			case "stack", "layer":
 				l, err := d.readLayer(t, offset)
@@ -31,7 +31,7 @@ Loop:
 					return nil, err
 				}
 			}
-		case *xml.EndElement:
+		case xml.EndElement:
 			break Loop
 		}
 	}
@@ -43,7 +43,7 @@ Loop:
 	return i, nil
 }
 
-func (d decoder) readLayer(s *xml.StartElement, offset image.Point) (limage.Layer, error) {
+func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer, error) {
 	var (
 		l      limage.Layer
 		source string
@@ -159,9 +159,9 @@ func (d decoder) skipTag() error {
 			return err
 		}
 		switch t.(type) {
-		case *xml.StartElement:
+		case xml.StartElement:
 			toSkip++
-		case *xml.EndElement:
+		case xml.EndElement:
 			if toSkip == 0 {
 				return nil
 			}
