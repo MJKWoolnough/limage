@@ -3,6 +3,7 @@ package ora
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"image"
 	"strconv"
 
@@ -147,7 +148,9 @@ func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer
 			return l, err
 		}
 	}
-	l.LayerBounds = l.Image.Bounds().Intersect(image.Rectangle{l.LayerBounds.Min.Add(offset), d.limits}).Sub(offset)
+	fmt.Println("Start:", l, l.Image.Bounds())
+	l.LayerBounds = l.Image.Bounds().Add(l.LayerBounds.Min).Intersect(image.Rectangle{Max: d.limits.Add(offset)}).Sub(offset)
+	fmt.Println("End:", l, l.Image.Bounds())
 	return l, nil
 }
 
