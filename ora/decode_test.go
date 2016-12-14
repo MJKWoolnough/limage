@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/MJKWoolnough/limage"
-	"github.com/MJKWoolnough/limage/lcolor"
 )
 
 var buf [14485]byte
@@ -167,7 +166,7 @@ func TestDecoder(t *testing.T) {
 				limage.Layer{
 					Name: "Background",
 					Image: singleColourImage{
-						Colour: lcolor.RGB{},
+						Colour: color.RGBA{A: 255},
 						Width:  50,
 						Height: 50,
 					},
@@ -190,7 +189,7 @@ func TestDecoder(t *testing.T) {
 				limage.Layer{
 					Name: "Background",
 					Image: singleColourImage{
-						Colour: lcolor.RGB{},
+						Colour: color.RGBA{A: 255},
 						Width:  50,
 						Height: 50,
 					},
@@ -204,7 +203,7 @@ func TestDecoder(t *testing.T) {
 				limage.Layer{
 					Name: "Background",
 					Image: singleColourImage{
-						Colour: lcolor.RGB{},
+						Colour: color.RGBA{A: 255},
 						Width:  50,
 						Height: 50,
 					},
@@ -218,7 +217,7 @@ func TestDecoder(t *testing.T) {
 				limage.Layer{
 					Name: "Background",
 					Image: singleColourImage{
-						Colour: lcolor.RGB{R: 255},
+						Colour: color.RGBA{R: 255, A: 255},
 						Width:  50,
 						Height: 50,
 					},
@@ -232,7 +231,7 @@ func TestDecoder(t *testing.T) {
 				limage.Layer{
 					Name: "Background",
 					Image: singleColourImage{
-						Colour: lcolor.RGB{R: 255, G: 255, B: 255},
+						Colour: color.RGBA{R: 255, G: 255, B: 255, A: 255},
 						Width:  50,
 						Height: 50,
 					},
