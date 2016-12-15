@@ -2,10 +2,13 @@ package ora
 
 import (
 	"archive/zip"
-	"fmt"
+	"encoding/xml"
 	"image"
 	"image/png"
 	"io"
+	"strconv"
+
+	"github.com/MJKWoolnough/limage"
 )
 
 const mimetypeStr = "image/openraster"
@@ -34,21 +37,30 @@ type layer struct {
 	Source      string   `xml:"src,attrib"`
 }
 
-type encoder struct {
-	*zip.Writer
-	xml struct {
-		Image struct {
-			Version string   `xml:"version,attr"`
-			Width   uint     `xml:"w,attr"`
-			Height  uint     `xml:"h,attr"`
-			Stack   children `xml:"stack"`
-		} `xml:"image"`
-	}
-}
-
 func Encode(w io.Writer, m image.Image) error {
+	var lim limage.Image
+	switch im := m.(type) {
+	case limage.Image:
+		lim = im
+	case *limage.Image:
+		lim = *im
+	case limage.Layer:
+		lim = limage.Image{im}
+	case *limage.Layer:
+		lim = limage.Image{*im}
+	default:
+		lim = limage.Image{
+			limage.Layer{
+				LayerBounds: m.Bounds(),
+				Image:       m,
+			},
+		}
+	}
+
 	zw := zip.NewWriter(w)
-	defer zw.Close()
+	defer e.Close()
+
+	// Write MIME
 	fw, err := zw.Create("mimetype")
 	if err != nil {
 		return err
@@ -57,20 +69,45 @@ func Encode(w io.Writer, m image.Image) error {
 	if err != nil {
 		return err
 	}
+
+	// Write Layer images
+	stack, err := e.WriteLayers(lim)
+	if err != nil {
+		return err
+	}
+
+	// Write Stack
+	b := lim.Bounds()
+	e.xml.Image.Width = b.Dx()
+	e.xml.Image.Height = b.Dy()
 	fw, err = zw.Create("stack.xml")
 	if err != nil {
 		return err
 	}
-	b := m.Bounds()
-	fmt.Fprintf(fw, "<?xml version='1.0' encoding='UTF-8'?>\n<image w=\"%d\" h=\"%d\"><stack><layer composite-op=\"svg:src-over\" name=\"Layer\" opacity=\"1.0\" src=\"data/layer.png\" visibility=\"visible\" x=\"0\" y=\"0\" /></stack></image>", b.Dx(), b.Dy())
-	fw, err = zw.Create("data/layer.png")
+	err = xml.NewEncoder(fw).EncodeElement(stack, xml.StartElement{
+		Name: xml.Name{
+			Local: "image",
+		},
+		Attr: []xml.Attr{
+			{
+				Name:  xml.Name{Local: "version"},
+				Value: "0.0.3",
+			},
+			{
+				Name:  xml.Name{Local: "w"},
+				Value: strconv.Itoa(b.Dx()),
+			},
+			{
+				Name:  xml.Name{Local: "h"},
+				Value: strconv.Itoa(b.Dy()),
+			},
+		},
+	})
 	if err != nil {
 		return err
 	}
-	err = png.Encode(fw, m)
-	if err != nil {
-		return err
-	}
+
+	// Write Merged Image
 	fw, err = zw.Create("mergedimage.png")
 	if err != nil {
 		return err
@@ -80,6 +117,7 @@ func Encode(w io.Writer, m image.Image) error {
 		return err
 	}
 
+	// Write Thumbnail
 	fw, err = zw.Create("Thumbnails/thumbnail.png")
 	if err != nil {
 		return err
