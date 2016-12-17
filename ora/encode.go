@@ -13,6 +13,7 @@ import (
 
 const mimetypeStr = "image/openraster"
 
+// Encode encodes the given image as an ORA file to the given Writer
 func Encode(w io.Writer, m image.Image) error {
 	var lim limage.Layer
 	switch im := m.(type) {
