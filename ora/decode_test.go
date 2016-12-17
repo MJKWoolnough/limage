@@ -146,7 +146,7 @@ func TestDecoder(t *testing.T) {
 						limage.Layer{
 							Name: "Blue",
 							Image: singleColourImage{
-								Colour: color.NRGBA{B: 255, A: 255},
+								Colour: color.RGBA64{B: 65535, A: 65535},
 								Width:  30,
 								Height: 30,
 							},
@@ -154,7 +154,7 @@ func TestDecoder(t *testing.T) {
 						},
 						limage.Layer{
 							Name: "Red",
-							Image: singleColourImage{Colour: color.NRGBA{R: 255, A: 255},
+							Image: singleColourImage{Colour: color.RGBA64{R: 65535, A: 65535},
 								Width:  30,
 								Height: 30,
 							},
@@ -166,7 +166,7 @@ func TestDecoder(t *testing.T) {
 				limage.Layer{
 					Name: "Background",
 					Image: singleColourImage{
-						Colour: color.RGBA{A: 255},
+						Colour: color.RGBA64{A: 65535},
 						Width:  50,
 						Height: 50,
 					},
