@@ -20,9 +20,6 @@ func Encode(w io.Writer, m image.Image) error {
 		lim.Image = im.Image
 	case *limage.Layer:
 		lim.Image = im.Image
-	case *limage.Image:
-		m = *im
-		fallthrough
 	default:
 		lim = limage.Layer{
 			Image: m,
@@ -130,7 +127,10 @@ func Encode(w io.Writer, m image.Image) error {
 }
 
 func writeLayers(zw *zip.Writer, lim limage.Layer, layerNum int) (int, error) {
-	var err error
+	var (
+		err error
+		f   io.Writer
+	)
 	switch im := lim.Image.(type) {
 	case limage.Image:
 		layerNum, err = writeGroup(zw, im, layerNum)
@@ -143,7 +143,7 @@ func writeLayers(zw *zip.Writer, lim limage.Layer, layerNum int) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		err = png.Encode(f, layer.Image)
+		err = png.Encode(f, lim.Image)
 		if err != nil {
 			return 0, err
 		}
@@ -152,12 +152,14 @@ func writeLayers(zw *zip.Writer, lim limage.Layer, layerNum int) (int, error) {
 }
 
 func writeGroup(zw *zip.Writer, lim limage.Image, layerNum int) (int, error) {
+	var err error
 	for _, l := range lim {
 		layerNum, err = writeLayers(zw, l, layerNum)
 		if err != nil {
 			return 0, err
 		}
 	}
+	return layerNum, nil
 }
 
 func writeStack(e *xml.Encoder, lim limage.Layer, layerNum int) (int, error) {
@@ -242,28 +244,31 @@ func writeStack(e *xml.Encoder, lim limage.Layer, layerNum int) (int, error) {
 			Value: op,
 		})
 	}
+	var err error
 	switch im := lim.Image.(type) {
 	case limage.Image:
-		layerNum, err = writeGroupStack(e, im, layerNum)
+		layerNum, err = writeGroupStack(e, im, attrs, layerNum)
 	case *limage.Image:
-		layerNum, err = writeGroupStack(e, *im, layerNum)
+		layerNum, err = writeGroupStack(e, *im, attrs, layerNum)
 	// case limage.Text, *limage.Text: // text is not yet in the spec
 	default:
+		err = e.EncodeToken(xml.StartElement{
+			Name: xml.Name{Local: "layer"},
+			Attr: attrs,
+		})
+		if err == nil {
+			err = e.EncodeToken(xml.EndElement{
+				Name: xml.Name{Local: "layer"},
+			})
+		}
 	}
-	err := e.EncodeToken(xml.StartElement{
-		Name:  xml.Name{Local: "stack"},
-		Attrs: attrs,
-	})
-	if err != nil {
-		return 0, err
-	}
-	return layerNum, nil
+	return layerNum, err
 }
 
-func writeGroupStack(e *xml.Encoder, lim limage.Image, layerNum int) (int, error) {
+func writeGroupStack(e *xml.Encoder, lim limage.Image, attrs []xml.Attr, layerNum int) (int, error) {
 	err := e.EncodeToken(xml.StartElement{
-		Name:  xml.Name{Local: "stack"},
-		Attrs: attrs,
+		Name: xml.Name{Local: "stack"},
+		Attr: attrs,
 	})
 	if err != nil {
 		return 0, err
