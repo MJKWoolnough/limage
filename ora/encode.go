@@ -252,6 +252,11 @@ func writeStack(e *xml.Encoder, lim limage.Layer, layerNum int) (int, error) {
 		layerNum, err = writeGroupStack(e, *im, attrs, layerNum)
 	// case limage.Text, *limage.Text: // text is not yet in the spec
 	default:
+		layerNum++
+		attrs = append(attrs, xml.Attr{
+			Name:  xml.Name{Local: "src"},
+			Value: "data/" + strconv.Itoa(layerNum) + ".png",
+		})
 		err = e.EncodeToken(xml.StartElement{
 			Name: xml.Name{Local: "layer"},
 			Attr: attrs,
