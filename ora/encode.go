@@ -53,7 +53,11 @@ func Encode(w io.Writer, m image.Image) error {
 	if fw, err = zw.Create("stack.xml"); err != nil {
 		return err
 	}
+	if _, err = fw.Write([]byte(xml.Header)); err != nil {
+		return err
+	}
 	e := xml.NewEncoder(fw)
+	e.Indent("", "	")
 	if err = e.EncodeToken(xml.StartElement{
 		Name: xml.Name{
 			Local: "image",
@@ -189,7 +193,7 @@ func writeStack(e *xml.Encoder, lim limage.Layer, layerNum int) (int, error) {
 			Value: "hidden",
 		})
 	}
-	if lim.Transparency != 255 {
+	if lim.Transparency != 0 {
 		attrs = append(attrs, xml.Attr{
 			Name:  xml.Name{Local: "visibility"},
 			Value: strconv.FormatFloat(float64(255-lim.Transparency)/255, 'f', -1, 64),
