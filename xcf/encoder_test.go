@@ -52,6 +52,7 @@ func TestEncode(t *testing.T) {
 						LayerBounds: image.Rect(20, 20, 50, 50),
 					},
 				},
+				LayerBounds: image.Rect(0, 0, 50, 50),
 			},
 			limage.Layer{
 				Name: "Background",
