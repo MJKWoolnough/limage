@@ -17,7 +17,7 @@ func newWriter(w io.WriterAt) writer {
 		WriterAt: w,
 	}
 	return writer{
-		StickyWriter:   &byteio.StickyWriter{Writer: byteio.BigEndianWriter{Writer: wr}},
+		StickyWriter:   &byteio.StickyWriter{Writer: &byteio.BigEndianWriter{Writer: wr}},
 		writerAtWriter: wr,
 	}
 }
@@ -60,7 +60,7 @@ func (p *pointerWriter) WritePointer(ptr uint32) {
 func (w writer) ReservePointers(n uint32) *pointerWriter {
 	p := &pointerWriter{
 		bw: byteio.StickyWriter{
-			Writer: byteio.BigEndianWriter{
+			Writer: &byteio.BigEndianWriter{
 				Writer: &writerAtWriter{
 					WriterAt: w.writerAtWriter.WriterAt,
 					pos:      w.pos,

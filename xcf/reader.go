@@ -28,7 +28,7 @@ func newReader(r io.ReaderAt) reader {
 	nr := reader{
 		rs: &readSeeker{ReaderAt: r},
 	}
-	nr.StickyReader.Reader = byteio.BigEndianReader{Reader: nr.rs}
+	nr.StickyReader.Reader = &byteio.BigEndianReader{Reader: nr.rs}
 	return nr
 }
 
