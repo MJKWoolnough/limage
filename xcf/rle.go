@@ -8,7 +8,7 @@ import (
 )
 
 type rle struct {
-	Reader     byteio.StickyReader
+	Reader     *byteio.StickyBigEndianReader
 	repeatByte bool
 	data       uint8
 	count      uint16

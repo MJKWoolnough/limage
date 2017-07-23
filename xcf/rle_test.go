@@ -67,8 +67,8 @@ func TestReads(t *testing.T) {
 	for n, test := range tests {
 		var buf bytes.Buffer
 		_, err := io.Copy(&buf, &rle{
-			Reader: byteio.StickyReader{
-				Reader: &byteio.BigEndianReader{Reader: strings.NewReader(test.Input)},
+			Reader: &byteio.StickyBigEndianReader{
+				Reader: strings.NewReader(test.Input),
 			},
 		})
 		if err != nil {

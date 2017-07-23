@@ -9,7 +9,7 @@ import (
 )
 
 type reader struct {
-	byteio.StickyReader
+	*byteio.StickyBigEndianReader
 	rs *readSeeker
 }
 
@@ -28,7 +28,7 @@ func newReader(r io.ReaderAt) reader {
 	nr := reader{
 		rs: &readSeeker{ReaderAt: r},
 	}
-	nr.StickyReader.Reader = &byteio.BigEndianReader{Reader: nr.rs}
+	nr.StickyBigEndianReader = &byteio.StickyBigEndianReader{Reader: nr.rs}
 	return nr
 }
 

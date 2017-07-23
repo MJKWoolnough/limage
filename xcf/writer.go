@@ -8,7 +8,7 @@ import (
 )
 
 type writer struct {
-	*byteio.StickyWriter
+	*byteio.StickyBigEndianWriter
 	*writerAtWriter
 }
 
@@ -17,8 +17,8 @@ func newWriter(w io.WriterAt) writer {
 		WriterAt: w,
 	}
 	return writer{
-		StickyWriter:   &byteio.StickyWriter{Writer: &byteio.BigEndianWriter{Writer: wr}},
-		writerAtWriter: wr,
+		StickyBigEndianWriter: &byteio.StickyBigEndianWriter{Writer: wr},
+		writerAtWriter:        wr,
 	}
 }
 
@@ -32,7 +32,7 @@ func (w writer) WriteAt(p []byte, off int64) (int, error) {
 }
 
 func (w writer) Write(p []byte) {
-	w.StickyWriter.Write(p)
+	w.StickyBigEndianWriter.Write(p)
 }
 
 func (w writer) WriteString(str string) {
@@ -42,9 +42,9 @@ func (w writer) WriteString(str string) {
 }
 
 type pointerWriter struct {
-	bw      byteio.StickyWriter
+	bw      *byteio.StickyBigEndianWriter
 	toWrite uint32
-	obw     *byteio.StickyWriter
+	obw     *byteio.StickyBigEndianWriter
 }
 
 func (p *pointerWriter) WritePointer(ptr uint32) {
@@ -59,16 +59,14 @@ func (p *pointerWriter) WritePointer(ptr uint32) {
 
 func (w writer) ReservePointers(n uint32) *pointerWriter {
 	p := &pointerWriter{
-		bw: byteio.StickyWriter{
-			Writer: &byteio.BigEndianWriter{
-				Writer: &writerAtWriter{
-					WriterAt: w.writerAtWriter.WriterAt,
-					pos:      w.pos,
-				},
+		bw: &byteio.StickyBigEndianWriter{
+			Writer: &writerAtWriter{
+				WriterAt: w.writerAtWriter.WriterAt,
+				pos:      w.pos,
 			},
 		},
 		toWrite: n,
-		obw:     w.StickyWriter,
+		obw:     w.StickyBigEndianWriter,
 	}
 	w.pos += int64(n) * 4
 	return p

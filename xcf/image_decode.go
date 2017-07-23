@@ -109,7 +109,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 	if d.compression == 0 { // no compression
 		cr = &d.reader
 	} else { // rle
-		cr = &rle{Reader: d.reader.StickyReader}
+		cr = &rle{Reader: d.reader.StickyBigEndianReader}
 	}
 
 	pixel := make([]byte, bpp)
