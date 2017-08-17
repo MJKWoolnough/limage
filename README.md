@@ -147,85 +147,80 @@ func (g *GrayAlpha) SubImage(r image.Rectangle) image.Image
 ```
 SubImage retuns the Image viewable through the given bounds
 
-#### type Group
-
-```go
-type Group struct {
-	image.Config
-	Layers []Layer
-}
-```
-
-Group represents a collection of layers
-
-#### func (*Group) At
-
-```go
-func (g *Group) At(x, y int) color.Color
-```
-At returns the colour at the specified coords
-
-#### func (*Group) Bounds
-
-```go
-func (g *Group) Bounds() image.Rectangle
-```
-Bounds returns the limites for the dimensions of the group
-
-#### func (*Group) ColorModel
-
-```go
-func (g *Group) ColorModel() color.Model
-```
-ColorModel represents the color model of the group
-
 #### type Image
 
 ```go
-type Image struct {
-	Group
-	Comment string
-	Opacity uint8
-}
+type Image []Layer
 ```
 
-Image represents a layered image
+Image represents a collection of layers
 
-#### func (*Image) At
+#### func (Image) At
 
 ```go
-func (i *Image) At(x, y int) color.Color
+func (g Image) At(x, y int) color.Color
 ```
 At returns the colour at the specified coords
+
+#### func (Image) Bounds
+
+```go
+func (g Image) Bounds() image.Rectangle
+```
+Bounds returns the limits for the dimensions of the group
+
+#### func (Image) ColorModel
+
+```go
+func (g Image) ColorModel() color.Model
+```
+ColorModel represents the color model of the group. It uses the first layer to
+determine the color model
+
+#### func (Image) SubImage
+
+```go
+func (g Image) SubImage(r image.Rectangle) image.Image
+```
+SubImage returns an image representing the portion of the image p visible
+through r. The returned value shares pixels with the original image
 
 #### type Layer
 
 ```go
 type Layer struct {
-	Name             string
-	OffsetX, OffsetY int
-	Mode             Composite
-	Visible          bool
-	Opacity          uint8
+	Name         string
+	LayerBounds  image.Rectangle // Bounds within the layer group
+	Mode         Composite
+	Invisible    bool
+	Transparency uint8
 	image.Image
 }
 ```
 
 Layer represents a single layer of a multilayered image
 
-#### func (*Layer) At
+#### func (Layer) At
 
 ```go
-func (l *Layer) At(x, y int) color.Color
+func (l Layer) At(x, y int) color.Color
 ```
 At returns the colour at the specified coords
 
-#### func (*Layer) Bounds
+#### func (Layer) Bounds
 
 ```go
-func (l *Layer) Bounds() image.Rectangle
+func (l Layer) Bounds() image.Rectangle
 ```
 Bounds returns the limits for the dimensions of the layer
+
+#### func (Layer) SubImage
+
+```go
+func (l Layer) SubImage(r image.Rectangle) image.Image
+```
+SubImage returns an image representing the portion of the image p visible
+through r. The returned value shares pixels with the original image
 
 #### type MaskedImage
 
@@ -238,10 +233,10 @@ type MaskedImage struct {
 
 MaskedImage represents an image that has a to-be-applied mask
 
-#### func (*MaskedImage) At
+#### func (MaskedImage) At
 
 ```go
-func (m *MaskedImage) At(x, y int) color.Color
+func (m MaskedImage) At(x, y int) color.Color
 ```
 At returns the colour at the specified coords after masking
 
@@ -443,10 +438,9 @@ String returns a flattened string
 ```go
 type TextDatum struct {
 	ForeColor, BackColor                   color.Color
-	Size, LetterSpacing, Rise              float64
+	Size, LetterSpacing, Rise              uint32
 	Bold, Italic, Underline, Strikethrough bool
 	Font, Data                             string
-	FontUnit                               uint8
 }
 ```
 
