@@ -387,7 +387,7 @@ PropertyLoop:
 				Offset:  len(g.Group),
 			}
 		}
-		l.LayerBounds.Intersect(bounds).Sub(image.Pt(g.OffsetX, g.OffsetY))
+		l.LayerBounds = l.LayerBounds.Intersect(bounds).Sub(image.Pt(g.OffsetX, g.OffsetY))
 		g.Group = append(g.Group, l.Layer)
 	}
 
