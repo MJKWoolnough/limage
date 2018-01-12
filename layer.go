@@ -28,6 +28,12 @@ func (l Layer) At(x, y int) color.Color {
 // SubImage returns an image representing the portion of the image p visible
 // through r. The returned value shares pixels with the original image
 func (l Layer) SubImage(r image.Rectangle) image.Image {
+	return l.SubImageLayer(r)
+}
+
+// SubImageLayer returns an image representing the portion of the image p
+// visible through r. The returned value shares pixels with the original image
+func (l Layer) SubImageLayer(r image.Rectangle) Layer {
 	l.LayerBounds = r.Intersect(l.LayerBounds)
 	return l
 }

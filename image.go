@@ -56,7 +56,7 @@ func (g Image) At(x, y int) color.Color {
 func (g Image) SubImage(r image.Rectangle) image.Image {
 	h := make(Image, len(g))
 	for n, l := range g {
-		h[n] = l.SubImage(r).(Layer)
+		h[n] = l.SubImageLayer(r)
 	}
 	return h
 }
