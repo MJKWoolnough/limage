@@ -48,9 +48,9 @@ const (
 
 type decoder struct {
 	reader
+	compression uint8
 	baseType    uint32
 	palette     lcolor.AlphaPalette
-	compression uint8
 }
 
 // DecodeConfig retrieves the color model and dimensions of the XCF image

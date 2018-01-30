@@ -17,8 +17,8 @@ type encoder struct {
 	writer
 
 	colourPalette  lcolor.AlphaPalette
-	colourType     uint8
 	colourFunc     colourBufFunc
+	colourType     uint8
 	colourChannels uint8
 
 	channelBuf [4][chanLen]byte
