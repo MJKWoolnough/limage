@@ -147,9 +147,11 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 	return im
 }
 
+/*
 type colourReader interface {
 	ReadByte() byte
 }
+*/
 
 type rgbaImageReader struct {
 	*image.NRGBA

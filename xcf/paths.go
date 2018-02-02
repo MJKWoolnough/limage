@@ -8,13 +8,13 @@ type paths struct {
 }
 
 type path struct {
-	name    string
-	linked  bool
-	state   byte
-	closed  bool
-	version uint32
-	tattoo  uint32
-	points  []pathPoint
+	name   string
+	linked bool
+	//state   byte
+	closed bool
+	//version uint32
+	tattoo uint32
+	points []pathPoint
 }
 
 type pathPoint struct {

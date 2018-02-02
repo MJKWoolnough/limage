@@ -35,8 +35,8 @@ const (
 	propGroupItem         = 29
 	propItemPath          = 30
 	propGroupItemFlags    = 31
-	propLockPosition      = 32
-	propFloatOpacity      = 33
+	//propLockPosition      = 32
+	propFloatOpacity = 33
 )
 
 func (d *reader) ReadBoolProperty() bool {

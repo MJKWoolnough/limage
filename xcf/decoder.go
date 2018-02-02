@@ -41,8 +41,8 @@ const (
 )
 
 const (
-	baseRGB     = 0
-	baseGrey    = 1
+	//baseRGB     = 0
+	//baseGrey    = 1
 	baseIndexed = 2
 )
 
@@ -159,7 +159,7 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 					dr.SkipUint32()
 				}
 			case propUnit:
-				if unit := dr.ReadUint32(); unit < 0 || unit > 4 {
+				if unit := dr.ReadUint32(); unit > 4 {
 					return c, ErrInvalidUnit
 				}
 			case propUserUnit:
@@ -287,8 +287,7 @@ PropertyLoop:
 				dr.SkipUint32()
 			}
 		case propUnit:
-			u := dr.ReadUint32()
-			if u < 0 || u > 4 {
+			if dr.ReadUint32() > 4 {
 				return nil, ErrInvalidUnit
 			}
 		case propUserUnit:

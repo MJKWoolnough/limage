@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	iccProfileParasiteName = "icc-profile"
-	commentParasiteName    = "gimp-comment"
-	textParasiteName       = "gimp-text-layer"
+	//iccProfileParasiteName = "icc-profile"
+	//commentParasiteName    = "gimp-comment"
+	textParasiteName = "gimp-text-layer"
 )
 
 type parasite struct {
