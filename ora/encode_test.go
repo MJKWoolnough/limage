@@ -10,6 +10,7 @@ import (
 	"github.com/MJKWoolnough/memio"
 )
 
+/*
 type colourSquare struct {
 	image.Rectangle
 	color.Color
@@ -28,6 +29,7 @@ func (c colourSquare) Bounds() image.Rectangle {
 func (c colourSquare) At(int, int) color.Color {
 	return c.Color
 }
+*/
 
 func TestEncode(t *testing.T) {
 	tests := []limage.Image{
