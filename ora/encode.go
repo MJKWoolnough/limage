@@ -123,12 +123,7 @@ func Encode(w io.Writer, m image.Image) error {
 		m = thumbnail{Image: m, scale: scale}
 	}
 
-	err = png.Encode(fw, m)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return png.Encode(fw, m)
 }
 
 func writeLayers(zw *zip.Writer, lim limage.Layer, layerNum int) (int, error) {
