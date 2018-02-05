@@ -43,66 +43,43 @@ const (
 	CompositeDestinationAtop Composite = 27
 )
 
+var compositeNames = [...]string{
+	"Normal",
+	"Dissolve",
+	"Behind",
+	"Multiply",
+	"Screen",
+	"Overlay",
+	"Difference",
+	"Addition",
+	"Subtract",
+	"Darken Only",
+	"Lighten Only",
+	"Hue",
+	"Saturation",
+	"Color",
+	"Value",
+	"Divide",
+	"Dodge",
+	"Burn",
+	"Hard Light",
+	"Soft Light",
+	"Grain Extract",
+	"Grain Merge",
+	"Luminosity",
+	"Plus",
+	"Destination In",
+	"Destination Out",
+	"Source Atop",
+	"Destination Atop",
+}
+
 // String returns the name of the composition
 func (c Composite) String() string {
-	switch c {
-	case CompositeDissolve:
-		return "Dissolve"
-	case CompositeBehind:
-		return "Behind"
-	case CompositeMultiply:
-		return "Multiply"
-	case CompositeScreen:
-		return "Screen"
-	case CompositeOverlay:
-		return "Overlay"
-	case CompositeDifference:
-		return "Difference"
-	case CompositeAddition:
-		return "Addition"
-	case CompositeSubtract:
-		return "Subtract"
-	case CompositeDarkenOnly:
-		return "Darken Only"
-	case CompositeLightenOnly:
-		return "Lighten Only"
-	case CompositeHue:
-		return "Hue"
-	case CompositeSaturation:
-		return "Saturation"
-	case CompositeColor:
-		return "Color"
-	case CompositeValue:
-		return "Value"
-	case CompositeDivide:
-		return "Divide"
-	case CompositeDodge:
-		return "Dodge"
-	case CompositeBurn:
-		return "Burn"
-	case CompositeHardLight:
-		return "Hard Light"
-	case CompositeSoftLight:
-		return "Soft Light"
-	case CompositeGrainExtract:
-		return "Grain Extract"
-	case CompositeGrainMerge:
-		return "Grain Merge"
-	case CompositeLuminosity:
-		return "Luminosity"
-	case CompositePlus:
-		return "Plus"
-	case CompositeDestinationIn:
-		return "Destination In"
-	case CompositeDestinationOut:
-		return "Destination Out"
-	case CompositeSourceAtop:
-		return "Source Atop"
-	case CompositeDestinationAtop:
-		return "Destination Atop"
-	default:
-		return "Normal"
+	if c < len(compositeNames) {
+		return compositeNames[c]
 	}
+	return compositeNames[0]
 }
 
 // Composite performs the composition of two layers
