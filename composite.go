@@ -76,7 +76,7 @@ var compositeNames = [...]string{
 
 // String returns the name of the composition
 func (c Composite) String() string {
-	if c < len(compositeNames) {
+	if int(c) < len(compositeNames) {
 		return compositeNames[c]
 	}
 	return compositeNames[0]
