@@ -3,7 +3,7 @@ package lcolor
 import (
 	"image/color"
 
-	"github.com/MJKWoolnough/limage/internal"
+	"vimagination.zapto.org/limage/internal"
 )
 
 // HSLA represents the Hue, Saturation, Lightness and Alpha of a pixel

@@ -1,10 +1,10 @@
-package limage
+package limage // import "vimagination.zapto.org/limage"
 
 import (
 	"image"
 	"image/color"
 
-	"github.com/MJKWoolnough/limage/internal"
+	"vimagination.zapto.org/limage/internal"
 )
 
 // Image represents a collection of layers

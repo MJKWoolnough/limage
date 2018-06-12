@@ -8,7 +8,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/MJKWoolnough/limage"
+	"vimagination.zapto.org/limage"
 )
 
 const mimetypeStr = "image/openraster"

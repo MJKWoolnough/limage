@@ -5,8 +5,8 @@ import (
 	"image/color"
 	"io"
 
-	"github.com/MJKWoolnough/limage"
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/limage"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 const chanLen = 64 * 64 * 1 // tile width (64) * tile height (64) * max channels (4) * bytewidth (1)

@@ -4,8 +4,8 @@ import (
 	"image/color"
 	"math/rand"
 
-	"github.com/MJKWoolnough/limage/internal"
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/limage/internal"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 // Composite determines how two layers are composed together

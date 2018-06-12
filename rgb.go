@@ -4,7 +4,7 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 // RGB is an image of RGB colours

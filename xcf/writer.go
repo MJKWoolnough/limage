@@ -3,8 +3,8 @@ package xcf
 import (
 	"io"
 
-	"github.com/MJKWoolnough/byteio"
-	"github.com/MJKWoolnough/errors"
+	"vimagination.zapto.org/byteio"
+	"vimagination.zapto.org/errors"
 )
 
 type writer struct {

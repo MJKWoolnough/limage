@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/MJKWoolnough/limage/internal"
+	"vimagination.zapto.org/limage/internal"
 )
 
 // MaskedImage represents an image that has a to-be-applied mask

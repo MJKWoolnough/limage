@@ -1,4 +1,4 @@
-package lcolor
+package lcolor // import "vimagination.zapto.org/limage/lcolor"
 
 import "image/color"
 

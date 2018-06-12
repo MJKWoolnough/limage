@@ -1,4 +1,4 @@
-package ora
+package ora // import "vimagination.zapto.org/limage/ora"
 
 import (
 	"archive/zip"
@@ -9,7 +9,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/MJKWoolnough/limage"
+	"vimagination.zapto.org/limage"
 )
 
 type decoder struct {

@@ -1,6 +1,6 @@
 package xcf
 
-import "github.com/MJKWoolnough/errors"
+import "vimagination.zapto.org/errors"
 
 type vectors struct {
 	aIndex uint32

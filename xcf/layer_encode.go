@@ -3,7 +3,7 @@ package xcf
 import (
 	"image"
 
-	"github.com/MJKWoolnough/limage"
+	"vimagination.zapto.org/limage"
 )
 
 func (e *encoder) WriteLayers(layers limage.Image, offsetX, offsetY int32, groups []uint32, pw *pointerWriter) {

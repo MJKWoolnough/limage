@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MJKWoolnough/limage"
+	"vimagination.zapto.org/limage"
 )
 
 var buf [14485]byte

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MJKWoolnough/byteio"
-	"github.com/MJKWoolnough/memio"
+	"vimagination.zapto.org/byteio"
+	"vimagination.zapto.org/memio"
 )
 
 func TestReads(t *testing.T) {

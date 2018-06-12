@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MJKWoolnough/limage"
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/limage"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 var buf [2098]byte

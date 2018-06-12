@@ -6,8 +6,8 @@ import (
 	"io"
 	"math"
 
-	"github.com/MJKWoolnough/limage"
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/limage"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 func (d *decoder) ReadImage(width, height, mode uint32) image.Image {

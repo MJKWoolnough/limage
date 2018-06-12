@@ -4,7 +4,7 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 // GrayAlpha is an image of GrayAlpha pixels

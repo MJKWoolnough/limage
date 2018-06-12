@@ -1,4 +1,4 @@
-package xcf
+package xcf // import "vimagination.zapto.org/limage/xcf"
 
 import (
 	"image"
@@ -6,10 +6,10 @@ import (
 	"io"
 	"sync"
 
-	"github.com/MJKWoolnough/errors"
-	"github.com/MJKWoolnough/limage"
-	"github.com/MJKWoolnough/limage/internal"
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/errors"
+	"vimagination.zapto.org/limage"
+	"vimagination.zapto.org/limage/internal"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 func decodeConfig(r io.Reader) (image.Config, error) {

@@ -6,8 +6,8 @@ import (
 	"image/color"
 	"testing"
 
-	"github.com/MJKWoolnough/limage"
-	"github.com/MJKWoolnough/memio"
+	"vimagination.zapto.org/limage"
+	"vimagination.zapto.org/memio"
 )
 
 /*

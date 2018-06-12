@@ -4,7 +4,7 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourChannels uint8) {

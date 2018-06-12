@@ -6,7 +6,7 @@ import (
 	"image"
 	"strconv"
 
-	"github.com/MJKWoolnough/limage"
+	"vimagination.zapto.org/limage"
 )
 
 func (d decoder) readStack(offset image.Point) (limage.Image, error) {

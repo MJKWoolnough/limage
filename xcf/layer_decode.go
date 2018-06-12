@@ -3,8 +3,8 @@ package xcf
 import (
 	"image"
 
-	"github.com/MJKWoolnough/errors"
-	"github.com/MJKWoolnough/limage"
+	"vimagination.zapto.org/errors"
+	"vimagination.zapto.org/limage"
 )
 
 type layer struct {

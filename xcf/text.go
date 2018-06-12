@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/MJKWoolnough/limage"
-	"github.com/MJKWoolnough/limage/lcolor"
+	"vimagination.zapto.org/limage"
+	"vimagination.zapto.org/limage/lcolor"
 )
 
 func parseTextData(t *parasite) (limage.TextData, error) {
