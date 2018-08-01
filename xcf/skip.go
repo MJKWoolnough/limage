@@ -54,7 +54,7 @@ func (r *reader) SkipPaths() {
 			r.SetError(ErrUnknownPathsVersion)
 			return
 		}
-		r.Skip(9 * np) // (control[1] + x[4] + y[4]) * np
+		r.Skip(12 * np) // (control[4] + x[4] + y[4]) * np
 	}
 }
 
