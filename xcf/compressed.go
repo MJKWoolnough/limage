@@ -11,7 +11,7 @@ import (
 
 type compressedImage struct {
 	tiles        [][]byte
-	sep          [4]byte
+	sep          [4]int
 	width        int
 	tile         int
 	decompressed [64 * 64 * 4]byte
@@ -22,8 +22,10 @@ func (c *compressedImage) decompressTile(x, y, bpp int) int {
 	if tile != c.tile {
 		var data memio.Buffer
 		r := rle{Reader: &byteio.StickyBigEndianReader{Reader: &data}}
+		var start int
 		for i := 0; i < bpp; i++ {
-			data = c.tiles[tile][c.sep[i]:c.sep[i+1]]
+			data = c.tiles[tile][start:c.sep[i]]
+			start = c.sep[i]
 			r.Read(c.decompressed[64*64*i : 64*64*(i+1)])
 		}
 	}
