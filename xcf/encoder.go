@@ -44,31 +44,30 @@ func Encode(w io.WriterAt, im image.Image) error {
 	b := im.Bounds()
 	e.WriteUint32(uint32(b.Dx()))
 	e.WriteUint32(uint32(b.Dy()))
-	var colourType uint32
 	switch cm := im.ColorModel(); cm {
 	case color.GrayModel, color.Gray16Model, lcolor.GrayAlphaModel:
-		colourType = 1
+		e.colourType = 1
 		e.colourFunc = (*encoder).grayAlphaToBuf
 		e.colourChannels = 2
 	default:
 		switch m := cm.(type) {
 		case color.Palette:
 			e.colourPalette = lcolor.AlphaPalette(m)
-			colourType = 2
+			e.colourType = 2
 			e.colourFunc = (*encoder).paletteAlphaToBuf
 			e.colourChannels = 2
 		case lcolor.AlphaPalette:
 			e.colourPalette = m
-			colourType = 2
+			e.colourType = 2
 			e.colourFunc = (*encoder).paletteAlphaToBuf
 			e.colourChannels = 2
 		default:
-			colourType = 0
+			e.colourType = 0
 			e.colourFunc = (*encoder).rgbAlphaToBuf
 			e.colourChannels = 4
 		}
 	}
-	e.WriteUint32(colourType)
+	e.WriteUint32(uint32(e.colourType))
 
 	// write property list
 
