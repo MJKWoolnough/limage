@@ -5,6 +5,7 @@ import (
 
 	"vimagination.zapto.org/byteio"
 	"vimagination.zapto.org/errors"
+	"vimagination.zapto.org/memio"
 )
 
 type rle struct {
@@ -124,6 +125,35 @@ func (w *writer) WriteRLEData(data []byte, run int, last byte) {
 		}
 		w.WriteUint8(last)
 	}
+}
+
+func (d *decoder) readRLE(count int, buf *memio.Buffer) error {
+	bw := byteio.BigEndianWriter{Writer: buf}
+	for count > 0 {
+		c := d.reader.ReadUint8()
+		bw.WriteUint8(c)
+		if c < 127 {
+			count -= int(c) + 1
+			bw.WriteUint8(d.ReadUint8())
+		} else if c == 127 {
+			p := d.ReadUint16()
+			bw.WriteUint16(p)
+			count -= int(p)
+			bw.WriteUint8(d.ReadUint8())
+		} else if c == 128 {
+			p := d.ReadUint16()
+			bw.WriteUint16(p)
+			count -= int(p)
+			io.CopyN(buf, d, int64(p))
+		} else {
+			count -= 256 - int(c)
+			io.CopyN(buf, d, 256-int64(c))
+		}
+	}
+	if count < 0 {
+		return ErrInvalidRLE
+	}
+	return nil
 }
 
 // Errors

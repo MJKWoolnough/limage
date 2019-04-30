@@ -8,6 +8,7 @@ import (
 
 	"vimagination.zapto.org/limage"
 	"vimagination.zapto.org/limage/lcolor"
+	"vimagination.zapto.org/memio"
 )
 
 func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
@@ -67,84 +68,133 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		return nil
 	}
 
-	var (
-		im       image.Image
-		imReader interface {
-			ReadColour(int, int, []byte)
-		}
-	)
-
 	r := image.Rect(0, 0, int(width), int(height))
-
-	switch mode {
-	case 0: // rgb
-		rgb := limage.NewRGB(r)
-		im = rgb
-		imReader = rgbImageReader{rgb}
-	case 1: // rgba
-		rgba := image.NewNRGBA(r)
-		im = rgba
-		imReader = rgbaImageReader{rgba}
-	case 2: // gray
-		g := image.NewGray(r)
-		im = g
-		imReader = grayImageReader{g}
-	case 3: // gray + alpha
-		ga := limage.NewGrayAlpha(r)
-		im = ga
-		imReader = grayAlphaImageReader{ga}
-	case 4: // indexed
-		in := image.NewPaletted(r, color.Palette(d.palette))
-		im = in
-		imReader = indexedImageReader{in}
-	case 5: // indexed + alpha
-		in := limage.NewPalettedAlpha(r, d.palette)
-		im = in
-		imReader = palettedAlphaReader{in}
-	}
 
 	var pixBuffer [64 * 64 * 4]byte
 
-	var cr io.Reader
-	if d.compression == 0 { // no compression
-		cr = &d.reader
-	} else { // rle
-		cr = &rle{Reader: d.reader.StickyBigEndianReader}
-	}
+	if d.decompress || d.compression == 0 {
+		var (
+			im       image.Image
+			imReader interface {
+				ReadColour(int, int, []byte)
+			}
+		)
+		switch mode {
+		case 0: // rgb
+			rgb := limage.NewRGB(r)
+			im = rgb
+			imReader = rgbImageReader{rgb}
+		case 1: // rgba
+			rgba := image.NewNRGBA(r)
+			im = rgba
+			imReader = rgbaImageReader{rgba}
+		case 2: // gray
+			g := image.NewGray(r)
+			im = g
+			imReader = grayImageReader{g}
+		case 3: // gray + alpha
+			ga := limage.NewGrayAlpha(r)
+			im = ga
+			imReader = grayAlphaImageReader{ga}
+		case 4: // indexed
+			in := image.NewPaletted(r, color.Palette(d.palette))
+			im = in
+			imReader = indexedImageReader{in}
+		case 5: // indexed + alpha
+			in := limage.NewPalettedAlpha(r, d.palette)
+			im = in
+			imReader = palettedAlphaReader{in}
+		}
 
-	pixel := make([]byte, bpp)
-	channels := make([][]byte, bpp)
+		var cr io.Reader
+		if d.compression == 0 { // no compression
+			cr = &d.reader
+		} else { // rle
+			cr = &rle{Reader: d.reader.StickyBigEndianReader}
+		}
 
-	for y := uint32(0); y < height; y += 64 {
-		for x := uint32(0); x < width; x += 64 {
-			d.Goto(tiles[0])
-			tiles = tiles[1:]
-			w := width - x
-			if w > 64 {
-				w = 64
-			}
-			h := height - y
-			if h > 64 {
-				h = 64
-			}
-			n := w * h
-			_, err := cr.Read(pixBuffer[:n*bpp])
-			d.SetError(err)
-			for i := uint32(0); i < bpp; i++ {
-				channels[i] = pixBuffer[n*i : n*(i+1)]
-			}
-			for j := uint32(0); j < h; j++ {
-				for i := uint32(0); i < w; i++ {
-					for k := uint32(0); k < bpp; k++ {
-						pixel[k] = channels[k][0]
-						channels[k] = channels[k][1:]
+		pixel := make([]byte, bpp)
+		channels := make([][]byte, bpp)
+
+		for y := uint32(0); y < height; y += 64 {
+			for x := uint32(0); x < width; x += 64 {
+				d.Goto(tiles[0])
+				tiles = tiles[1:]
+				w := width - x
+				if w > 64 {
+					w = 64
+				}
+				h := height - y
+				if h > 64 {
+					h = 64
+				}
+				n := w * h
+				_, err := cr.Read(pixBuffer[:n*bpp])
+				d.SetError(err)
+				for i := uint32(0); i < bpp; i++ {
+					channels[i] = pixBuffer[n*i : n*(i+1)]
+				}
+				for j := uint32(0); j < h; j++ {
+					for i := uint32(0); i < w; i++ {
+						for k := uint32(0); k < bpp; k++ {
+							pixel[k] = channels[k][0]
+							channels[k] = channels[k][1:]
+						}
+						imReader.ReadColour(int(x+i), int(y+j), pixel)
 					}
-					imReader.ReadColour(int(x+i), int(y+j), pixel)
 				}
 			}
 		}
+		return im
+	} else {
+		ci := compressedImage{
+			tiles: make([][][]byte, 0, len(tiles)),
+			width: int(width),
+			tile:  -1,
+		}
+		buf := make(memio.Buffer, 0, 64*64*4)
+		for y := uint32(0); y < height; y += 64 {
+			for x := uint32(0); x < width; x += 64 {
+				d.Goto(tiles[0])
+				tiles = tiles[1:]
+				w := width - x
+				if w > 64 {
+					w = 64
+				}
+				h := height - y
+				if h > 64 {
+					h = 64
+				}
+				n := w * h
+				ts := make([][]byte, 0, bpp)
+				for i := uint32(0); i < bpp; i++ {
+					d.SetError(d.readRLE(int(n), &buf))
+					b := make([]byte, len(buf))
+					copy(b, buf)
+					buf = buf[:0]
+					ts = append(ts, b)
+				}
+				ci.tiles = append(ci.tiles, ts)
+			}
+
+		}
+		switch mode {
+		case 0: // rgb
+			return &CompressedRGB{ci, r}
+		case 1: // rgba
+			return &CompressedNRGBA{ci, r}
+		case 2: // gray
+			return &CompressedGray{ci, r}
+		case 3: // gray + alpha
+			return &CompressedGrayAlpha{ci, r}
+		case 4: // indexed
+			return &CompressedPaletted{ci, r, color.Palette(d.palette)}
+		case 5: // indexed + alpha
+			return &CompressedPalettedAlpha{ci, r, d.palette}
+		default:
+			return nil
+		}
 	}
-	return im
 }
 
 /*

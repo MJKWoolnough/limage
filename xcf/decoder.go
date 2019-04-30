@@ -49,6 +49,7 @@ const (
 type decoder struct {
 	reader
 	compression uint8
+	decompress  bool
 	baseType    uint32
 	palette     lcolor.AlphaPalette
 }
@@ -183,6 +184,16 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 
 // Decode reads an XCF layered image from the given ReaderAt
 func Decode(r io.ReaderAt) (limage.Image, error) {
+	return decodeImage(r, true)
+}
+
+// DecodeCompressed reads an XCF layered image, as Decode, but defers decoding
+// and decompressing, doing so upon an At method
+func DecodeCompressed(r io.ReaderAt) (limage.Image, error) {
+	return decodeImage(r, false)
+}
+
+func decodeImage(r io.ReaderAt, decompress bool) (limage.Image, error) {
 	dr := newReader(r)
 
 	// check header
@@ -345,6 +356,7 @@ PropertyLoop:
 				baseType:    baseType,
 				palette:     palette,
 				compression: compression,
+				decompress:  decompress,
 			}
 			d.Goto(lptr)
 			layers[n] = d.ReadLayer()
