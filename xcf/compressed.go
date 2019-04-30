@@ -3,6 +3,7 @@ package xcf
 import (
 	"image"
 	"image/color"
+	"io"
 
 	"vimagination.zapto.org/byteio"
 	"vimagination.zapto.org/limage/lcolor"
@@ -10,23 +11,25 @@ import (
 )
 
 type compressedImage struct {
-	tiles        [][]byte
-	sep          [4]int
+	tiles        [][][]byte
 	width        int
 	tile         int
 	decompressed [64 * 64 * 4]byte
 }
 
-func (c *compressedImage) decompressTile(x, y, bpp int) int {
+func (c *compressedImage) decompressTile(x, y int) int {
 	tile := (y/64)*((c.width+63)/64) + (x / 64)
 	if tile != c.tile {
-		var data memio.Buffer
+		var (
+			n    int
+			data memio.Buffer
+		)
 		r := rle{Reader: &byteio.StickyBigEndianReader{Reader: &data}}
-		var start int
-		for i := 0; i < bpp; i++ {
-			data = c.tiles[tile][start:c.sep[i]]
-			start = c.sep[i]
-			r.Read(c.decompressed[64*64*i : 64*64*(i+1)])
+		for n, data = range c.tiles[tile] {
+			r.Read(c.decompressed[64*64*n : 64*64*(n+1)])
+			if r.Reader.Err == io.EOF {
+				r.Reader.Err = nil
+			}
 		}
 		c.tile = tile
 	}
@@ -51,7 +54,7 @@ func (c *CompressedRGB) RGBAt(x, y int) lcolor.RGB {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return lcolor.RGB{}
 	}
-	p := c.decompressTile(x, y, 3)
+	p := c.decompressTile(x, y)
 	return lcolor.RGB{
 		c.decompressed[p],
 		c.decompressed[p+64*64],
@@ -74,7 +77,7 @@ func (c *CompressedNRGBA) NRGBAAt(x, y int) color.NRGBA {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.NRGBA{}
 	}
-	p := c.decompressTile(x, y, 4)
+	p := c.decompressTile(x, y)
 	return color.NRGBA{
 		c.decompressed[p],
 		c.decompressed[p+64*64],
@@ -98,7 +101,7 @@ func (c *CompressedGray) GrayAt(x, y int) color.Gray {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.Gray{}
 	}
-	p := c.decompressTile(x, y, 1)
+	p := c.decompressTile(x, y)
 	return color.Gray{
 		c.decompressed[p],
 	}
@@ -119,7 +122,7 @@ func (c *CompressedGrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return lcolor.GrayAlpha{}
 	}
-	p := c.decompressTile(x, y, 2)
+	p := c.decompressTile(x, y)
 	return lcolor.GrayAlpha{
 		c.decompressed[p],
 		c.decompressed[p+64*64],
@@ -143,7 +146,7 @@ func (c *CompressedPaletted) At(x, y int) color.Color {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.Gray{}
 	}
-	p := c.decompressTile(x, y, 1)
+	p := c.decompressTile(x, y)
 	i := c.decompressed[p]
 	r, g, b, _ := c.Palette[i].RGBA()
 	return color.NRGBA{
@@ -171,7 +174,7 @@ func (c *CompressedPalettedAlpha) At(x, y int) color.Color {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.Gray{}
 	}
-	p := c.decompressTile(x, y, 2)
+	p := c.decompressTile(x, y)
 	r, g, b, _ := c.Palette[c.decompressed[p]].RGBA()
 	return color.NRGBA{
 		R: uint8(r >> 8),
