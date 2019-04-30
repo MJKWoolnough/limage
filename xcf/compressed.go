@@ -28,6 +28,7 @@ func (c *compressedImage) decompressTile(x, y, bpp int) int {
 			start = c.sep[i]
 			r.Read(c.decompressed[64*64*i : 64*64*(i+1)])
 		}
+		c.tile = tile
 	}
 	if x < c.width & ^63 {
 		return 64*(y%64) + (x % 64)
