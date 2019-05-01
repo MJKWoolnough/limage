@@ -2,6 +2,7 @@
 --
     import "vimagination.zapto.org/limage/xcf"
 
+Package xcf implements an image encoder and decoder for GIMPs XCF format
 
 ## Usage
 

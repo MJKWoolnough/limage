@@ -1,3 +1,4 @@
+// Package xcf implements an image encoder and decoder for GIMPs XCF format
 package xcf // import "vimagination.zapto.org/limage/xcf"
 
 import (
