@@ -99,7 +99,7 @@ PropertyLoop:
 		case propTextLayerFlags:
 			d.SkipUint32()
 		case propFloatOpacity:
-			l.Transparency = 255 - uint8(d.ReadFloat32()*256)
+			l.Transparency = 255 - uint8(d.ReadFloat32()*255)
 		default:
 			d.Skip(plength)
 		}
