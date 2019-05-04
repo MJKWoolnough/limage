@@ -34,11 +34,21 @@ func init() {
 }
 
 const (
-	fileTypeID   = "gimp xcf "
-	fileVersion0 = "file"
-	fileVersion1 = "v001"
-	fileVersion2 = "v002"
-	fileVersion3 = "v003"
+	fileTypeID    = "gimp xcf "
+	fileVersion0  = "file"
+	fileVersion1  = "v001"
+	fileVersion2  = "v002"
+	fileVersion3  = "v003"
+	fileVersion4  = "v004"
+	fileVersion5  = "v005"
+	fileVersion6  = "v006"
+	fileVersion7  = "v007"
+	fileVersion8  = "v008"
+	fileVersion9  = "v009"
+	fileVersion10 = "v010"
+	fileVersion11 = "v011"
+	fileVersion12 = "v012"
+	fileVersion13 = "v013"
 )
 
 const (
@@ -53,6 +63,8 @@ type decoder struct {
 	decompress  bool
 	baseType    uint32
 	palette     lcolor.AlphaPalette
+	precision   uint32
+	mode        uint32
 }
 
 // DecodeConfig retrieves the color model and dimensions of the XCF image
@@ -71,8 +83,11 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 	if string(header[:9]) != fileTypeID {
 		return c, ErrInvalidFileTypeID
 	}
+	var newMode bool
 	switch string(header[9:13]) {
 	case fileVersion0, fileVersion1, fileVersion2, fileVersion3:
+	case fileVersion4, fileVersion5, fileVersion6, fileVersion7, fileVersion8, fileVersion9, fileVersion10, fileVersion11, fileVersion12, fileVersion13:
+		newMode = true
 	default:
 		return c, ErrUnsupportedVersion
 	}
@@ -83,6 +98,9 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 	c.Width = int(dr.ReadUint32())
 	c.Height = int(dr.ReadUint32())
 	baseType := dr.ReadUint32()
+	if newMode {
+		dr.ReadUint32()
+	}
 	switch baseType {
 	case 0:
 		c.ColorModel = color.NRGBAModel
@@ -207,8 +225,13 @@ func decodeImage(r io.ReaderAt, decompress bool) (limage.Image, error) {
 	if string(header[:9]) != fileTypeID {
 		return nil, ErrInvalidFileTypeID
 	}
+	var mode uint32
 	switch string(header[9:13]) {
 	case fileVersion0, fileVersion1, fileVersion2, fileVersion3:
+	case fileVersion4, fileVersion5, fileVersion6, fileVersion7, fileVersion8, fileVersion9, fileVersion10:
+		mode = 1
+	case fileVersion11, fileVersion12, fileVersion13:
+		mode = 2
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -220,6 +243,10 @@ func decodeImage(r io.ReaderAt, decompress bool) (limage.Image, error) {
 	height := int(dr.ReadUint32())
 	bounds := image.Rect(0, 0, width, height)
 	baseType := dr.ReadUint32()
+	var precision uint32
+	if mode > 0 {
+		precision = dr.ReadUint32()
+	}
 
 	var (
 		palette     lcolor.AlphaPalette
@@ -317,9 +344,14 @@ PropertyLoop:
 		}
 	}
 
-	layerptrs := make([]uint32, 0, 32)
+	layerptrs := make([]uint64, 0, 32)
 	for {
-		lptr := dr.ReadUint32()
+		var lptr uint64
+		if mode < 2 {
+			lptr = uint64(dr.ReadUint32())
+		} else {
+			lptr = dr.ReadUint64()
+		}
 		if lptr == 0 {
 			break
 		}
@@ -351,13 +383,15 @@ PropertyLoop:
 	)
 	wg.Add(len(layerptrs))
 	for n, lptr := range layerptrs {
-		go func(n int, lptr uint32) {
+		go func(n int, lptr uint64) {
 			d := decoder{
 				reader:      newReader(r),
 				baseType:    baseType,
 				palette:     palette,
 				compression: compression,
 				decompress:  decompress,
+				precision:   precision,
+				mode:        mode,
 			}
 			d.Goto(lptr)
 			layers[n] = d.ReadLayer()

@@ -105,21 +105,35 @@ PropertyLoop:
 		}
 	}
 
-	hptr := d.ReadUint32()
-	mptr := d.ReadUint32()
+	var hptr, mptr uint64
+	if d.mode < 2 {
+		hptr = uint64(d.ReadUint32())
+		mptr = uint64(d.ReadUint32())
+	} else {
+		hptr = d.ReadUint64()
+		mptr = d.ReadUint64()
+	}
 
 	d.Goto(hptr)
 	// read hierarchy
 
-	if l.group { // skip reading image if its a group
-		return l
+	if !l.group { // skip reading image if its a group
+		l.Image = d.ReadImage(uint32(l.LayerBounds.Dx()), uint32(l.LayerBounds.Dy()), typ)
+		if l.Image == nil {
+			return l
+		}
 	}
-
-	l.Image = d.ReadImage(uint32(l.LayerBounds.Dx()), uint32(l.LayerBounds.Dy()), typ)
-	if l.Image == nil {
-		return l
+	if t := parasites.Get(textParasiteName); t != nil {
+		textData, err := parseTextData(t)
+		if err != nil {
+			d.SetError(ErrInvalidLayerType)
+			return l
+		}
+		l.Image = limage.Text{
+			Image:    l.Image,
+			TextData: textData,
+		}
 	}
-
 	if mptr != 0 { // read layer mask
 		d.Goto(mptr)
 		var m limage.MaskedImage
@@ -133,17 +147,6 @@ PropertyLoop:
 			return l
 		}
 		l.Image = m
-	}
-	if t := parasites.Get(textParasiteName); t != nil {
-		textData, err := parseTextData(t)
-		if err != nil {
-			d.SetError(ErrInvalidLayerType)
-			return l
-		}
-		l.Image = limage.Text{
-			Image:    l.Image,
-			TextData: textData,
-		}
 	}
 	return l
 }

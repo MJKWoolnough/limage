@@ -59,7 +59,7 @@ func (r *reader) ReadByte() byte {
 	return r.ReadUint8()
 }
 
-func (r *reader) Goto(n uint32) {
+func (r *reader) Goto(n uint64) {
 	r.rs.pos = int64(n)
 }
 

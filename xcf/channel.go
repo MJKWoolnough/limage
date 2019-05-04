@@ -41,6 +41,10 @@ PropertyLoop:
 			d.SkipByte() // r
 			d.SkipByte() // g
 			d.SkipByte() // b
+		case propFloatColour:
+			d.SkipFloat32() // r
+			d.SkipFloat32() // g
+			d.SkipFloat32() // b
 		case propSelection:
 			// selected
 		case propShowMasked:
@@ -51,7 +55,12 @@ PropertyLoop:
 
 	}
 
-	hptr := d.ReadUint32()
+	var hptr uint64
+	if d.mode < 2 {
+		hptr = uint64(d.ReadUint32())
+	} else {
+		hptr = d.ReadUint64()
+	}
 	d.Goto(hptr)
 
 	im := d.ReadImage(width, height, 2)

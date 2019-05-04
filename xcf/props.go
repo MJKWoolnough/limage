@@ -30,13 +30,19 @@ const (
 	propUserUnit          = 24
 	propVectors           = 25
 	propTextLayerFlags    = 26
-	propSamplePoints      = 27
+	propOldSamplePoints   = 27
 	propLockContent       = 28
 	propGroupItem         = 29
 	propItemPath          = 30
 	propGroupItemFlags    = 31
-	//propLockPosition      = 32
-	propFloatOpacity = 33
+	propLockPosition      = 32
+	propFloatOpacity      = 33
+	propColorTag          = 34
+	propCompositeMode     = 35
+	propCompositeSpace    = 36
+	propBlendSpace        = 37
+	propFloatColour       = 38
+	propSamplePoints      = 39
 )
 
 func (d *reader) ReadBoolProperty() bool {

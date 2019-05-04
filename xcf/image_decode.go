@@ -45,7 +45,12 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		}
 	}
 
-	lptr := d.ReadUint32()
+	var lptr uint64
+	if d.mode < 2 {
+		lptr = uint64(d.ReadUint32())
+	} else {
+		lptr = d.ReadUint64()
+	}
 
 	d.Goto(lptr)
 
@@ -57,10 +62,16 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		return nil
 	}
 
-	tiles := make([]uint32, int(math.Ceil(float64(w)/64)*math.Ceil(float64(h)/64)))
+	tiles := make([]uint64, int(math.Ceil(float64(w)/64)*math.Ceil(float64(h)/64)))
 
-	for i := range tiles {
-		tiles[i] = d.ReadUint32()
+	if d.mode < 2 {
+		for i := range tiles {
+			tiles[i] = uint64(d.ReadUint32())
+		}
+	} else {
+		for i := range tiles {
+			tiles[i] = d.ReadUint64()
+		}
 	}
 
 	if d.ReadUint32() != 0 {
