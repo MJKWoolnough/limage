@@ -86,7 +86,82 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 
 	e.WriteUint32(propMode)
 	e.WriteUint32(4)
-	e.WriteUint32(uint32(im.Mode))
+	switch im.Mode {
+	case limage.CompositeNormal:
+		e.WriteUint32(0)
+	case limage.CompositeDissolve:
+		e.WriteUint32(1)
+	case limage.CompositeBehind:
+		e.WriteUint32(2)
+	case limage.CompositeMultiply:
+		e.WriteUint32(3)
+	case limage.CompositeScreen:
+		e.WriteUint32(4)
+	case limage.CompositeOverlay:
+		e.WriteUint32(5)
+	case limage.CompositeDifference:
+		e.WriteUint32(6)
+	case limage.CompositeAddition:
+		e.WriteUint32(7)
+	case limage.CompositeSubtract:
+		e.WriteUint32(8)
+	case limage.CompositeDarkenOnly:
+		e.WriteUint32(9)
+	case limage.CompositeLightenOnly:
+		e.WriteUint32(10)
+	case limage.CompositeHue:
+		e.WriteUint32(11)
+	case limage.CompositeSaturation:
+		e.WriteUint32(12)
+	case limage.CompositeColor:
+		e.WriteUint32(13)
+	case limage.CompositeValue:
+		e.WriteUint32(14)
+	case limage.CompositeDivide:
+		e.WriteUint32(15)
+	case limage.CompositeDodge:
+		e.WriteUint32(16)
+	case limage.CompositeBurn:
+		e.WriteUint32(17)
+	case limage.CompositeHardLight:
+		e.WriteUint32(18)
+	case limage.CompositeSoftLight:
+		e.WriteUint32(19)
+	case limage.CompositeGrainExtract:
+		e.WriteUint32(20)
+	case limage.CompositeGrainMerge:
+		e.WriteUint32(21)
+	case limage.CompositeLuminosity:
+		e.WriteUint32(22)
+	case limage.CompositeColorErase:
+		e.WriteUint32(22)
+	case limage.CompositeChroma:
+		e.WriteUint32(25)
+	case limage.CompositeLightness:
+		e.WriteUint32(27)
+	case limage.CompositeVividLight:
+		e.WriteUint32(48)
+	case limage.CompositePinLight:
+		e.WriteUint32(49)
+	case limage.CompositeLinearLight:
+		e.WriteUint32(50)
+	case limage.CompositeHardMix:
+		e.WriteUint32(51)
+	case limage.CompositeExclusion:
+		e.WriteUint32(52)
+	case limage.CompositeLinearBurn:
+		e.WriteUint32(53)
+	case limage.CompositeErase:
+		e.WriteUint32(58)
+	case limage.CompositeMerge:
+		e.WriteUint32(59)
+	case limage.CompositeSplit:
+		e.WriteUint32(60)
+	case limage.CompositePassThrough:
+		e.WriteUint32(61)
+	default:
+		e.WriteUint32(0) // Error instead?
+	}
 
 	e.WriteUint32(0) // end of properties
 	e.WriteUint32(0)

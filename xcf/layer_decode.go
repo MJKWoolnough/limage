@@ -82,10 +82,87 @@ PropertyLoop:
 		case propLockAlpha:
 			d.SkipBoolProperty()
 		case propMode:
-			l.Mode = limage.Composite(d.ReadUint32())
 			if d.baseType != 0 {
-				switch l.Mode {
-				case limage.CompositeNormal, limage.CompositeBehind:
+				switch d.ReadUint32() {
+				case 2: // Behind
+					l.Mode = limage.CompositeBehind
+				default:
+					l.Mode = limage.CompositeNormal
+				}
+			} else {
+				switch d.ReadUint32() {
+				case 0, 28:
+					l.Mode = limage.CompositeNormal
+				case 1:
+					l.Mode = limage.CompositeDissolve
+				case 2, 29:
+					l.Mode = limage.CompositeBehind
+				case 3, 30:
+					l.Mode = limage.CompositeMultiply
+				case 4, 31:
+					l.Mode = limage.CompositeScreen
+				case 5, 23:
+					l.Mode = limage.CompositeOverlay
+				case 6, 32:
+					l.Mode = limage.CompositeDifference
+				case 7, 33:
+					l.Mode = limage.CompositeAddition
+				case 8, 34:
+					l.Mode = limage.CompositeSubtract
+				case 9, 35, 54:
+					l.Mode = limage.CompositeDarkenOnly
+				case 10, 36, 55:
+					l.Mode = limage.CompositeLightenOnly
+				case 11, 24, 37:
+					l.Mode = limage.CompositeHue
+				case 12, 38:
+					l.Mode = limage.CompositeSaturation
+				case 13, 26, 39:
+					l.Mode = limage.CompositeColor
+				case 14, 40:
+					l.Mode = limage.CompositeValue
+				case 15, 41:
+					l.Mode = limage.CompositeDivide
+				case 16, 42:
+					l.Mode = limage.CompositeDodge
+				case 17, 43:
+					l.Mode = limage.CompositeBurn
+				case 18, 44:
+					l.Mode = limage.CompositeHardLight
+				case 19, 45:
+					l.Mode = limage.CompositeSoftLight
+				case 20, 46:
+					l.Mode = limage.CompositeGrainExtract
+				case 21, 47:
+					l.Mode = limage.CompositeGrainMerge
+				case 22, 57:
+					l.Mode = limage.CompositeColorErase
+				case 25:
+					l.Mode = limage.CompositeChroma
+				case 27:
+					l.Mode = limage.CompositeLightness
+				case 48:
+					l.Mode = limage.CompositeVividLight
+				case 49:
+					l.Mode = limage.CompositePinLight
+				case 50:
+					l.Mode = limage.CompositeLinearLight
+				case 51:
+					l.Mode = limage.CompositeHardMix
+				case 52:
+					l.Mode = limage.CompositeExclusion
+				case 53:
+					l.Mode = limage.CompositeLinearBurn
+				case 56:
+					l.Mode = limage.CompositeLuminance
+				case 58:
+					l.Mode = limage.CompositeErase
+				case 59:
+					l.Mode = limage.CompositeMerge
+				case 60:
+					l.Mode = limage.CompositeSplit
+				case 61:
+					l.Mode = limage.CompositePassThrough
 				default:
 					l.Mode = 0
 				}
