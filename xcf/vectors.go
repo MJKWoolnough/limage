@@ -1,6 +1,6 @@
 package xcf
 
-import "vimagination.zapto.org/errors"
+import "errors"
 
 type vectors struct {
 	aIndex uint32
@@ -88,8 +88,8 @@ func (d *reader) ReadVectors() vectors {
 }
 
 // Errors
-const (
-	ErrUnknownVectorVersion errors.Error = "unknown vector version"
-	ErrUnknownStrokeType    errors.Error = "unknown stroke type"
-	ErrInvalidFloatsNumber  errors.Error = "invalids number of floats"
+var (
+	ErrUnknownVectorVersion = errors.New("unknown vector version")
+	ErrUnknownStrokeType    = errors.New("unknown stroke type")
+	ErrInvalidFloatsNumber  = errors.New("invalids number of floats")
 )

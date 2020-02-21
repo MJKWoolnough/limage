@@ -1,9 +1,9 @@
 package xcf
 
 import (
+	"errors"
 	"image"
 
-	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/limage"
 )
 
@@ -229,8 +229,8 @@ PropertyLoop:
 }
 
 // Errors
-const (
-	ErrInvalidLayerType      errors.Error = "invalid layer type"
-	ErrInvalidItemPathLength errors.Error = "invalid item path length"
-	ErrInconsistantData      errors.Error = "inconsistant data read"
+var (
+	ErrInvalidLayerType      = errors.New("invalid layer type")
+	ErrInvalidItemPathLength = errors.New("invalid item path length")
+	ErrInconsistantData      = errors.New("inconsistant data read")
 )

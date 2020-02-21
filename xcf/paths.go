@@ -1,6 +1,6 @@
 package xcf
 
-import "vimagination.zapto.org/errors"
+import "errors"
 
 type paths struct {
 	aIndex uint32
@@ -71,7 +71,7 @@ func (d *reader) ReadPaths() paths {
 }
 
 // Errors
-const (
-	ErrInconsistantClosedState errors.Error = "inconsistant closed state"
-	ErrUnknownPathsVersion     errors.Error = "unknown paths version"
+var (
+	ErrInconsistantClosedState = errors.New("inconsistant closed state")
+	ErrUnknownPathsVersion     = errors.New("unknown paths version")
 )

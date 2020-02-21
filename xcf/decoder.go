@@ -2,12 +2,12 @@
 package xcf // import "vimagination.zapto.org/limage/xcf"
 
 import (
+	"errors"
 	"image"
 	"image/color"
 	"io"
 	"sync"
 
-	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/limage"
 	"vimagination.zapto.org/limage/internal"
 	"vimagination.zapto.org/limage/lcolor"
@@ -16,7 +16,7 @@ import (
 func decodeConfig(r io.Reader) (image.Config, error) {
 	ra := internal.GetReaderAt(r)
 	if ra == nil {
-		return image.Config{}, errors.Error("need a io.ReaderAt")
+		return image.Config{}, ErrNeedReaderAt
 	}
 	return DecodeConfig(ra)
 }
@@ -24,7 +24,7 @@ func decodeConfig(r io.Reader) (image.Config, error) {
 func decode(r io.Reader) (image.Image, error) {
 	ra := internal.GetReaderAt(r)
 	if ra == nil {
-		return nil, errors.Error("need a io.ReaderAt")
+		return nil, ErrNeedReaderAt
 	}
 	return Decode(ra)
 }
@@ -462,16 +462,17 @@ PropertyLoop:
 }
 
 // Errors
-const (
-	ErrInvalidFileTypeID   errors.Error = "invalid file type identification"
-	ErrUnsupportedVersion  errors.Error = "unsupported file version"
-	ErrInvalidHeader       errors.Error = "invalid header"
-	ErrInvalidProperties   errors.Error = "invalid property list"
-	ErrInvalidOpacity      errors.Error = "opacity not in valid range"
-	ErrInvalidGuideLength  errors.Error = "invalid guide length"
-	ErrInvalidUnit         errors.Error = "invalid unit"
-	ErrInvalidSampleLength errors.Error = "invalid sample points length"
-	ErrInvalidGroup        errors.Error = "invalid or unknown group specified for layer"
-	ErrUnknownCompression  errors.Error = "unknown compression method"
-	ErrMissingAlpha        errors.Error = "non-bottom layer missing alpha channel"
+var (
+	ErrInvalidFileTypeID   = errors.New("invalid file type identification")
+	ErrUnsupportedVersion  = errors.New("unsupported file version")
+	ErrInvalidHeader       = errors.New("invalid header")
+	ErrInvalidProperties   = errors.New("invalid property list")
+	ErrInvalidOpacity      = errors.New("opacity not in valid range")
+	ErrInvalidGuideLength  = errors.New("invalid guide length")
+	ErrInvalidUnit         = errors.New("invalid unit")
+	ErrInvalidSampleLength = errors.New("invalid sample points length")
+	ErrInvalidGroup        = errors.New("invalid or unknown group specified for layer")
+	ErrUnknownCompression  = errors.New("unknown compression method")
+	ErrMissingAlpha        = errors.New("non-bottom layer missing alpha channel")
+	ErrNeedReaderAt        = errors.New("need a io.ReaderAt")
 )

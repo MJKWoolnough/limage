@@ -1,11 +1,11 @@
 package xcf
 
 import (
+	"errors"
 	"io"
 	"unicode/utf8"
 
 	"vimagination.zapto.org/byteio"
-	"vimagination.zapto.org/errors"
 )
 
 type reader struct {
@@ -70,8 +70,8 @@ func (r *reader) SetError(err error) {
 }
 
 // Errors
-const (
-	ErrInvalidString errors.Error = "string is invalid"
-	ErrStringTooLong errors.Error = "string exceeds maximum length"
-	ErrInvalidSeek   errors.Error = "invalid seek"
+var (
+	ErrInvalidString = errors.New("string is invalid")
+	ErrStringTooLong = errors.New("string exceeds maximum length")
+	ErrInvalidSeek   = errors.New("invalid seek")
 )

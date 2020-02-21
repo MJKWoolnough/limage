@@ -1,6 +1,6 @@
 package xcf
 
-import "vimagination.zapto.org/errors"
+import "errors"
 
 const (
 	propEnd               = 0
@@ -58,6 +58,6 @@ func (d *reader) ReadBoolProperty() bool {
 }
 
 // Errors
-const (
-	ErrInvalidBoolean errors.Error = "invalid boolean value"
+var (
+	ErrInvalidBoolean = errors.New("invalid boolean value")
 )

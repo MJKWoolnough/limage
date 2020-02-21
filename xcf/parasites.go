@@ -1,11 +1,11 @@
 package xcf
 
 import (
+	"errors"
 	"io"
 	"strconv"
 	"strings"
 
-	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/parser"
 )
 
@@ -258,8 +258,8 @@ func quotedString(t *parser.Tokeniser) string {
 }
 
 // Errors
-const (
-	ErrInvalidParasites errors.Error = "invalid parasites layout"
-	ErrNoOpen           errors.Error = "didn't receive Open token"
-	ErrNoName           errors.Error = "didn't receive Name token"
+var (
+	ErrInvalidParasites = errors.New("invalid parasites layout")
+	ErrNoOpen           = errors.New("didn't receive Open token")
+	ErrNoName           = errors.New("didn't receive Name token")
 )

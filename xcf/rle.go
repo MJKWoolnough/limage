@@ -1,10 +1,10 @@
 package xcf
 
 import (
+	"errors"
 	"io"
 
 	"vimagination.zapto.org/byteio"
-	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/memio"
 )
 
@@ -157,6 +157,6 @@ func (d *decoder) readRLE(count int, buf *memio.Buffer) error {
 }
 
 // Errors
-const (
-	ErrInvalidRLE errors.Error = "invalid RLE data"
+var (
+	ErrInvalidRLE = errors.New("invalid RLE data")
 )

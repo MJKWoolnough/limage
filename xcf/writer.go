@@ -1,10 +1,10 @@
 package xcf
 
 import (
+	"errors"
 	"io"
 
 	"vimagination.zapto.org/byteio"
-	"vimagination.zapto.org/errors"
 )
 
 type writer struct {
@@ -90,6 +90,6 @@ func (w *writerAtWriter) Write(p []byte) (int, error) {
 }
 
 // Errors
-const (
-	ErrTooBig errors.Error = "write too big"
+var (
+	ErrTooBig = errors.New("write too big")
 )
