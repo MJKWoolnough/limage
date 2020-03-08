@@ -39,17 +39,23 @@ func (c *compressedImage) decompressTile(x, y int) int {
 	return (c.width&63)*(y%64) + (x % 64)
 }
 
+// CompressedRGB is an image.Image for which the data remains in a compressed
+// form until read.
 type CompressedRGB struct {
 	compressedImage
 	Rect image.Rectangle
 }
 
+// ColorModel returns the RGB Color Model
 func (CompressedRGB) ColorModel() color.Model { return lcolor.RGBModel }
 
+// Bounds returns a Rect containg the boundary data for the image
 func (c *CompressedRGB) Bounds() image.Rectangle { return c.Rect }
 
+// At returns colour at the specified coords
 func (c *CompressedRGB) At(x, y int) color.Color { return c.RGBAt(x, y) }
 
+// RGBAt returns RGB colour at the specified coords
 func (c *CompressedRGB) RGBAt(x, y int) lcolor.RGB {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return lcolor.RGB{}
@@ -62,17 +68,23 @@ func (c *CompressedRGB) RGBAt(x, y int) lcolor.RGB {
 	}
 }
 
+// CompressedNRGB is an image.Image for which the data remains in a compressed
+// form until read.
 type CompressedNRGBA struct {
 	compressedImage
 	Rect image.Rectangle
 }
 
+// ColorModel returns the NRGBA Color Model
 func (CompressedNRGBA) ColorModel() color.Model { return color.NRGBAModel }
 
+// Bounds returns a Rect containg the boundary data for the image
 func (c *CompressedNRGBA) Bounds() image.Rectangle { return c.Rect }
 
+// At returns colour at the specified coords
 func (c *CompressedNRGBA) At(x, y int) color.Color { return c.NRGBAAt(x, y) }
 
+// NRGBAAt returns NRGBA colour at the specified coords
 func (c *CompressedNRGBA) NRGBAAt(x, y int) color.NRGBA {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.NRGBA{}
@@ -86,17 +98,23 @@ func (c *CompressedNRGBA) NRGBAAt(x, y int) color.NRGBA {
 	}
 }
 
+// CompressedGray is an image.Image for which the data remains in a compressed
+// form until read.
 type CompressedGray struct {
 	compressedImage
 	Rect image.Rectangle
 }
 
+// ColorModel returns the Gray Color Model
 func (CompressedGray) ColorModel() color.Model { return color.GrayModel }
 
+// Bounds returns a Rect containg the boundary data for the image
 func (c *CompressedGray) Bounds() image.Rectangle { return c.Rect }
 
+// At returns colour at the specified coords
 func (c *CompressedGray) At(x, y int) color.Color { return c.GrayAt(x, y) }
 
+// GrayAt returns Gray colour at the specified coords
 func (c *CompressedGray) GrayAt(x, y int) color.Gray {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.Gray{}
@@ -107,17 +125,23 @@ func (c *CompressedGray) GrayAt(x, y int) color.Gray {
 	}
 }
 
+// CompressedGrayAlpha is an image.Image for which the data remains in a
+// compressed form until read.
 type CompressedGrayAlpha struct {
 	compressedImage
 	Rect image.Rectangle
 }
 
+// ColorModel returns the Gray Alpha Color Model
 func (CompressedGrayAlpha) ColorModel() color.Model { return lcolor.GrayAlphaModel }
 
+// Bounds returns a Rect containg the boundary data for the image
 func (c *CompressedGrayAlpha) Bounds() image.Rectangle { return c.Rect }
 
+// At returns colour at the specified coords
 func (c *CompressedGrayAlpha) At(x, y int) color.Color { return c.GrayAlphaAt(x, y) }
 
+// GrayAlphaAt returns Gray+Alpha colour at the specified coords
 func (c *CompressedGrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return lcolor.GrayAlpha{}
@@ -129,16 +153,21 @@ func (c *CompressedGrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha {
 	}
 }
 
+// CompressedPaletted is an image.Image for which the data remains in a
+// compressed form until read.
 type CompressedPaletted struct {
 	compressedImage
 	Rect    image.Rectangle
 	Palette color.Palette
 }
 
+// ColorModel returns the Pallette of the image
 func (c *CompressedPaletted) ColorModel() color.Model { return c.Palette }
 
+// Bounds returns a Rect containg the boundary data for the image
 func (c *CompressedPaletted) Bounds() image.Rectangle { return c.Rect }
 
+// At returns colour at the specified coords
 func (c *CompressedPaletted) At(x, y int) color.Color {
 	if c.Palette == nil {
 		return nil
@@ -157,16 +186,21 @@ func (c *CompressedPaletted) At(x, y int) color.Color {
 	}
 }
 
+// CompressedPalettedAlpha is an image.Image for which the data remains in a
+// compressed form until read.
 type CompressedPalettedAlpha struct {
 	compressedImage
 	Rect    image.Rectangle
 	Palette lcolor.AlphaPalette
 }
 
+// ColorModel returns the Pallette of the image
 func (c *CompressedPalettedAlpha) ColorModel() color.Model { return c.Palette }
 
+// Bounds returns a Rect containg the boundary data for the image
 func (c *CompressedPalettedAlpha) Bounds() image.Rectangle { return c.Rect }
 
+// At returns colour at the specified coords
 func (c *CompressedPalettedAlpha) At(x, y int) color.Color {
 	if c.Palette == nil {
 		return nil
