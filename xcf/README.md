@@ -7,83 +7,84 @@ Package xcf implements an image encoder and decoder for GIMPs XCF format
 ## Usage
 
 ```go
-const (
-	ErrInvalidFileTypeID   errors.Error = "invalid file type identification"
-	ErrUnsupportedVersion  errors.Error = "unsupported file version"
-	ErrInvalidHeader       errors.Error = "invalid header"
-	ErrInvalidProperties   errors.Error = "invalid property list"
-	ErrInvalidOpacity      errors.Error = "opacity not in valid range"
-	ErrInvalidGuideLength  errors.Error = "invalid guide length"
-	ErrInvalidUnit         errors.Error = "invalid unit"
-	ErrInvalidSampleLength errors.Error = "invalid sample points length"
-	ErrInvalidGroup        errors.Error = "invalid or unknown group specified for layer"
-	ErrUnknownCompression  errors.Error = "unknown compression method"
-	ErrMissingAlpha        errors.Error = "non-bottom layer missing alpha channel"
+var (
+	ErrInvalidFileTypeID   = errors.New("invalid file type identification")
+	ErrUnsupportedVersion  = errors.New("unsupported file version")
+	ErrInvalidHeader       = errors.New("invalid header")
+	ErrInvalidProperties   = errors.New("invalid property list")
+	ErrInvalidOpacity      = errors.New("opacity not in valid range")
+	ErrInvalidGuideLength  = errors.New("invalid guide length")
+	ErrInvalidUnit         = errors.New("invalid unit")
+	ErrInvalidSampleLength = errors.New("invalid sample points length")
+	ErrInvalidGroup        = errors.New("invalid or unknown group specified for layer")
+	ErrUnknownCompression  = errors.New("unknown compression method")
+	ErrMissingAlpha        = errors.New("non-bottom layer missing alpha channel")
+	ErrNeedReaderAt        = errors.New("need a io.ReaderAt")
 )
 ```
 Errors
 
 ```go
-const (
-	ErrInvalidLayerType      errors.Error = "invalid layer type"
-	ErrInvalidItemPathLength errors.Error = "invalid item path length"
-	ErrInconsistantData      errors.Error = "inconsistant data read"
+var (
+	ErrInvalidLayerType      = errors.New("invalid layer type")
+	ErrInvalidItemPathLength = errors.New("invalid item path length")
+	ErrInconsistantData      = errors.New("inconsistant data read")
 )
 ```
 Errors
 
 ```go
-const (
-	ErrInvalidParasites errors.Error = "invalid parasites layout"
-	ErrNoOpen           errors.Error = "didn't receive Open token"
-	ErrNoName           errors.Error = "didn't receive Name token"
+var (
+	ErrInvalidParasites = errors.New("invalid parasites layout")
+	ErrNoOpen           = errors.New("didn't receive Open token")
+	ErrNoName           = errors.New("didn't receive Name token")
 )
 ```
 Errors
 
 ```go
-const (
-	ErrInconsistantClosedState errors.Error = "inconsistant closed state"
-	ErrUnknownPathsVersion     errors.Error = "unknown paths version"
+var (
+	ErrInconsistantClosedState = errors.New("inconsistant closed state")
+	ErrUnknownPathsVersion     = errors.New("unknown paths version")
 )
 ```
 Errors
 
 ```go
-const (
-	ErrInvalidString errors.Error = "string is invalid"
-	ErrStringTooLong errors.Error = "string exceeds maximum length"
-	ErrInvalidSeek   errors.Error = "invalid seek"
+var (
+	ErrInvalidString = errors.New("string is invalid")
+	ErrStringTooLong = errors.New("string exceeds maximum length")
+	ErrInvalidSeek   = errors.New("invalid seek")
 )
 ```
 Errors
 
 ```go
-const (
-	ErrUnknownVectorVersion errors.Error = "unknown vector version"
-	ErrUnknownStrokeType    errors.Error = "unknown stroke type"
-	ErrInvalidFloatsNumber  errors.Error = "invalids number of floats"
+var (
+	ErrUnknownVectorVersion = errors.New("unknown vector version")
+	ErrUnknownStrokeType    = errors.New("unknown stroke type")
+	ErrInvalidFloatsNumber  = errors.New("invalids number of floats")
 )
 ```
 Errors
 
 ```go
-const (
-	ErrInvalidBoolean errors.Error = "invalid boolean value"
+var (
+	ErrInvalidBoolean = errors.New("invalid boolean value")
 )
 ```
 Errors
 
 ```go
-const (
-	ErrInvalidRLE errors.Error = "invalid RLE data"
+var (
+	ErrInvalidRLE = errors.New("invalid RLE data")
 )
 ```
 Errors
 
 ```go
-const (
-	ErrTooBig errors.Error = "write too big"
+var (
+	ErrTooBig = errors.New("write too big")
 )
 ```
 Errors
@@ -125,30 +126,36 @@ type CompressedGray struct {
 }
 ```
 
+CompressedGray is an image.Image for which the data remains in a compressed form
+until read.
 
 #### func (*CompressedGray) At
 
 ```go
 func (c *CompressedGray) At(x, y int) color.Color
 ```
+At returns colour at the specified coords
 
 #### func (*CompressedGray) Bounds
 
 ```go
 func (c *CompressedGray) Bounds() image.Rectangle
 ```
+Bounds returns a Rect containg the boundary data for the image
 
 #### func (CompressedGray) ColorModel
 
 ```go
 func (CompressedGray) ColorModel() color.Model
 ```
+ColorModel returns the Gray Color Model
 
 #### func (*CompressedGray) GrayAt
 
 ```go
 func (c *CompressedGray) GrayAt(x, y int) color.Gray
 ```
+GrayAt returns Gray colour at the specified coords
 
 #### type CompressedGrayAlpha
 
@@ -158,30 +165,36 @@ type CompressedGrayAlpha struct {
 }
 ```
 
+CompressedGrayAlpha is an image.Image for which the data remains in a compressed
+form until read.
 
 #### func (*CompressedGrayAlpha) At
 
 ```go
 func (c *CompressedGrayAlpha) At(x, y int) color.Color
 ```
+At returns colour at the specified coords
 
 #### func (*CompressedGrayAlpha) Bounds
 
 ```go
 func (c *CompressedGrayAlpha) Bounds() image.Rectangle
 ```
+Bounds returns a Rect containg the boundary data for the image
 
 #### func (CompressedGrayAlpha) ColorModel
 
 ```go
 func (CompressedGrayAlpha) ColorModel() color.Model
 ```
+ColorModel returns the Gray Alpha Color Model
 
 #### func (*CompressedGrayAlpha) GrayAlphaAt
 
 ```go
 func (c *CompressedGrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha
 ```
+GrayAlphaAt returns Gray+Alpha colour at the specified coords
 
 #### type CompressedNRGBA
 
@@ -191,30 +204,36 @@ type CompressedNRGBA struct {
 }
 ```
 
+CompressedNRGB is an image.Image for which the data remains in a compressed form
+until read.
 
 #### func (*CompressedNRGBA) At
 
 ```go
 func (c *CompressedNRGBA) At(x, y int) color.Color
 ```
+At returns colour at the specified coords
 
 #### func (*CompressedNRGBA) Bounds
 
 ```go
 func (c *CompressedNRGBA) Bounds() image.Rectangle
 ```
+Bounds returns a Rect containg the boundary data for the image
 
 #### func (CompressedNRGBA) ColorModel
 
 ```go
 func (CompressedNRGBA) ColorModel() color.Model
 ```
+ColorModel returns the NRGBA Color Model
 
 #### func (*CompressedNRGBA) NRGBAAt
 
 ```go
 func (c *CompressedNRGBA) NRGBAAt(x, y int) color.NRGBA
 ```
+NRGBAAt returns NRGBA colour at the specified coords
 
 #### type CompressedPaletted
 
@@ -225,24 +244,29 @@ type CompressedPaletted struct {
 }
 ```
 
+CompressedPaletted is an image.Image for which the data remains in a compressed
+form until read.
 
 #### func (*CompressedPaletted) At
 
 ```go
 func (c *CompressedPaletted) At(x, y int) color.Color
 ```
+At returns colour at the specified coords
 
 #### func (*CompressedPaletted) Bounds
 
 ```go
 func (c *CompressedPaletted) Bounds() image.Rectangle
 ```
+Bounds returns a Rect containg the boundary data for the image
 
 #### func (*CompressedPaletted) ColorModel
 
 ```go
 func (c *CompressedPaletted) ColorModel() color.Model
 ```
+ColorModel returns the Pallette of the image
 
 #### type CompressedPalettedAlpha
 
@@ -253,24 +277,29 @@ type CompressedPalettedAlpha struct {
 }
 ```
 
+CompressedPalettedAlpha is an image.Image for which the data remains in a
+compressed form until read.
 
 #### func (*CompressedPalettedAlpha) At
 
 ```go
 func (c *CompressedPalettedAlpha) At(x, y int) color.Color
 ```
+At returns colour at the specified coords
 
 #### func (*CompressedPalettedAlpha) Bounds
 
 ```go
 func (c *CompressedPalettedAlpha) Bounds() image.Rectangle
 ```
+Bounds returns a Rect containg the boundary data for the image
 
 #### func (*CompressedPalettedAlpha) ColorModel
 
 ```go
 func (c *CompressedPalettedAlpha) ColorModel() color.Model
 ```
+ColorModel returns the Pallette of the image
 
 #### type CompressedRGB
 
@@ -280,27 +309,33 @@ type CompressedRGB struct {
 }
 ```
 
+CompressedRGB is an image.Image for which the data remains in a compressed form
+until read.
 
 #### func (*CompressedRGB) At
 
 ```go
 func (c *CompressedRGB) At(x, y int) color.Color
 ```
+At returns colour at the specified coords
 
 #### func (*CompressedRGB) Bounds
 
 ```go
 func (c *CompressedRGB) Bounds() image.Rectangle
 ```
+Bounds returns a Rect containg the boundary data for the image
 
 #### func (CompressedRGB) ColorModel
 
 ```go
 func (CompressedRGB) ColorModel() color.Model
 ```
+ColorModel returns the RGB Color Model
 
 #### func (*CompressedRGB) RGBAt
 
 ```go
 func (c *CompressedRGB) RGBAt(x, y int) lcolor.RGB
 ```
+RGBAt returns RGB colour at the specified coords
