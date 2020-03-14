@@ -98,7 +98,7 @@ func (h HSVA) ToNRGBA() color.NRGBA64 {
 		}
 	}
 	c := uint16(uint32(h.V) * uint32(h.S) / 0xffff)
-	return hcmaToColour(uint32(h.H), uint32(c), h.V-uint16(c), h.A)
+	return hcmaToColour(uint32(h.H), uint32(c), h.V-c, h.A)
 }
 
 func colourToHue(cl color.NRGBA64, mx uint16, c uint32) uint16 {
