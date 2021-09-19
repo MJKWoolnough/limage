@@ -1,6 +1,6 @@
 # ora
 --
-    import "github.com/MJKWoolnough/limage/ora"
+    import "vimagination.zapto.org/limage/ora"
 
 
 ## Usage
@@ -10,6 +10,12 @@ var (
 	ErrMissingStack    = errors.New("missing stack file")
 	ErrInvalidMimeType = errors.New("invalid mime type")
 	ErrInvalidStack    = errors.New("invalid stack")
+)
+```
+Errors
+
+```go
+var (
 	ErrInvalidSource = errors.New("invalid source")
 )
 ```
