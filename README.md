@@ -1,6 +1,6 @@
 # limage
 --
-    import "github.com/MJKWoolnough/limage"
+    import "vimagination.zapto.org/limage"
 
 Package limage introduces structures to read and build layered images
 
@@ -16,34 +16,48 @@ Composite determines how two layers are composed together
 
 ```go
 const (
-	CompositeNormal          Composite = 0
-	CompositeDissolve        Composite = 1
-	CompositeBehind          Composite = 2
-	CompositeMultiply        Composite = 3
-	CompositeScreen          Composite = 4
-	CompositeOverlay         Composite = 5
-	CompositeDifference      Composite = 6
-	CompositeAddition        Composite = 7
-	CompositeSubtract        Composite = 8
-	CompositeDarkenOnly      Composite = 9
-	CompositeLightenOnly     Composite = 10
-	CompositeHue             Composite = 11
-	CompositeSaturation      Composite = 12
-	CompositeColor           Composite = 13
-	CompositeValue           Composite = 14
-	CompositeDivide          Composite = 15
-	CompositeDodge           Composite = 16
-	CompositeBurn            Composite = 17
-	CompositeHardLight       Composite = 18
-	CompositeSoftLight       Composite = 19
-	CompositeGrainExtract    Composite = 20
-	CompositeGrainMerge      Composite = 21
-	CompositeLuminosity      Composite = 22
-	CompositePlus            Composite = 23
-	CompositeDestinationIn   Composite = 24
-	CompositeDestinationOut  Composite = 25
-	CompositeSourceAtop      Composite = 26
-	CompositeDestinationAtop Composite = 27
+	CompositeNormal Composite = iota
+	CompositeDissolve
+	CompositeBehind
+	CompositeMultiply
+	CompositeScreen
+	CompositeOverlay
+	CompositeDifference
+	CompositeAddition
+	CompositeSubtract
+	CompositeDarkenOnly
+	CompositeLightenOnly
+	CompositeHue
+	CompositeSaturation
+	CompositeColor
+	CompositeValue
+	CompositeDivide
+	CompositeDodge
+	CompositeBurn
+	CompositeHardLight
+	CompositeSoftLight
+	CompositeGrainExtract
+	CompositeGrainMerge
+	CompositeLuminosity
+	CompositePlus
+	CompositeDestinationIn
+	CompositeDestinationOut
+	CompositeSourceAtop
+	CompositeDestinationAtop
+	CompositeColorErase
+	CompositeChroma
+	CompositeLightness
+	CompositeVividLight
+	CompositePinLight
+	CompositeLinearLight
+	CompositeHardMix
+	CompositeExclusion
+	CompositeLinearBurn
+	CompositeLuminance
+	CompositeErase
+	CompositeMerge
+	CompositeSplit
+	CompositePassThrough
 )
 ```
 Composite constants
@@ -220,6 +234,14 @@ Bounds returns the limits for the dimensions of the layer
 func (l Layer) SubImage(r image.Rectangle) image.Image
 ```
 SubImage returns an image representing the portion of the image p visible
+through r. The returned value shares pixels with the original image
+
+#### func (Layer) SubImageLayer
+
+```go
+func (l Layer) SubImageLayer(r image.Rectangle) Layer
+```
+SubImageLayer returns an image representing the portion of the image p visible
 through r. The returned value shares pixels with the original image
 
 #### type MaskedImage
