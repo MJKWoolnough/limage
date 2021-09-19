@@ -1,6 +1,6 @@
 # lcolor
 --
-    import "github.com/MJKWoolnough/limage/lcolor"
+    import "vimagination.zapto.org/limage/lcolor"
 
 
 ## Usage
