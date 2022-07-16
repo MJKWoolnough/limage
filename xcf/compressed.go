@@ -62,9 +62,9 @@ func (c *CompressedRGB) RGBAt(x, y int) lcolor.RGB {
 	}
 	p := c.decompressTile(x, y)
 	return lcolor.RGB{
-		c.decompressed[p],
-		c.decompressed[p+64*64],
-		c.decompressed[p+64*64*2],
+		R: c.decompressed[p],
+		G: c.decompressed[p+64*64],
+		B: c.decompressed[p+64*64*2],
 	}
 }
 
@@ -148,8 +148,8 @@ func (c *CompressedGrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha {
 	}
 	p := c.decompressTile(x, y)
 	return lcolor.GrayAlpha{
-		c.decompressed[p],
-		c.decompressed[p+64*64],
+		Y: c.decompressed[p],
+		A: c.decompressed[p+64*64],
 	}
 }
 
