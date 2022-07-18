@@ -141,7 +141,9 @@ func Decode(zr *zip.Reader) (limage.Image, error) {
 			if se.Name.Local == "stack" {
 				break
 			}
-			d.skipTag()
+			if err := d.skipTag(); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return d.readStack(image.Point{})
