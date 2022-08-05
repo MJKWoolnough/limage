@@ -1,6 +1,6 @@
 module vimagination.zapto.org/limage
 
-go 1.16
+go 1.19
 
 require (
 	vimagination.zapto.org/byteio v1.0.0
