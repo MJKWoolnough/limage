@@ -174,13 +174,13 @@ func (q *quoteWriter) WriteString(s string) (int, error) {
 
 func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 	var (
-		buf  bytes.Buffer
+		data []byte
 		base limage.TextDatum
 	)
 
 	if len(text) == 1 {
 		base = text[0]
-		fmt.Fprintf(&buf, "(text %q)\n", base.Data)
+		data = fmt.Appendf(data, "(text %q)\n", base.Data)
 	} else {
 		base = limage.TextDatum{
 			BackColor: lcolor.RGB{},
@@ -189,83 +189,81 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 			Size:      18,
 		}
 
-		buf.WriteString("(markup \"<markup>")
-
-		qw := &quoteWriter{Buffer: &buf}
+		data = append(data, "(markup \"<markup>"...)
 
 		for _, td := range text {
 			var foreground, background bool
 			if r, g, b, _ := td.ForeColor.RGBA(); r != 0 || g != 0 || b != 0 {
 				foreground = true
-				fmt.Fprintf(&buf, "<span foreground=\\\"#%02X%02X%02X\\\">", r>>8, g>>8, b>>8)
+				data = fmt.Appendf(data, "<span foreground=\\\"#%02X%02X%02X\\\">", r>>8, g>>8, b>>8)
 			}
 			if r, g, b, _ := td.BackColor.RGBA(); r != 0 || g != 0 || b != 0 {
 				background = true
-				fmt.Fprintf(&buf, "<span background=\\\"#%02X%02X%02X\\\">", r, g, b)
+				data = fmt.Appendf(data, "<span background=\\\"#%02X%02X%02X\\\">", r, g, b)
 			}
 			if td.Font != "Sans" {
-				fmt.Fprintf(qw, "<span font=%q>", td.Font)
+				data = fmt.Appendf(data, "<span font=%q>", td.Font)
 			}
 			if td.Bold {
-				buf.WriteString("<b>")
+				data = append(data, "<b>"...)
 			}
 			if td.Italic {
-				buf.WriteString("<i>")
+				data = append(data, "<i>"...)
 			}
 			if td.Underline {
-				buf.WriteString("<u>")
+				data = append(data, "<u>"...)
 			}
 			if td.Strikethrough {
-				buf.WriteString("<s>")
+				data = append(data, "<s>"...)
 			}
 			if td.LetterSpacing != 0 {
-				fmt.Fprintf(&buf, "<span letter_spacing=\\\"%d\\\">", td.LetterSpacing<<10)
+				data = fmt.Appendf(data, "<span letter_spacing=\\\"%d\\\">", td.LetterSpacing<<10)
 			}
 			if td.Size != 18 {
-				fmt.Fprintf(&buf, "<span size=\\\"%d\\\">", td.Size<<10)
+				data = fmt.Appendf(data, "<span size=\\\"%d\\\">", td.Size<<10)
 			}
 			if td.Rise != 0 {
-				fmt.Fprintf(&buf, "<span rise=\\\"%d\\\">", td.Rise<<10)
+				data = fmt.Appendf(data, "<span rise=\\\"%d\\\">", td.Rise<<10)
 			}
-			qw.WriteString(html.EscapeString(td.Data))
+			data = fmt.Appendf(data, "%q", html.EscapeString(td.Data))
 			if td.Rise != 0 {
-				buf.WriteString("</span>")
+				data = append(data, "</span>"...)
 			}
 			if td.Size != 18 {
-				buf.WriteString("</span>")
+				data = append(data, "</span>"...)
 			}
 			if td.LetterSpacing != 0 {
-				buf.WriteString("</span>")
+				data = append(data, "</span>"...)
 			}
 			if td.Strikethrough {
-				buf.WriteString("</s>")
+				data = append(data, "</s>"...)
 			}
 			if td.Underline {
-				buf.WriteString("</u>")
+				data = append(data, "</u>"...)
 			}
 			if td.Italic {
-				buf.WriteString("</i>")
+				data = append(data, "</i>"...)
 			}
 			if td.Bold {
-				buf.WriteString("</b>")
+				data = append(data, "</b>"...)
 			}
 			if td.Font != "Sans" {
-				buf.WriteString("</span>")
+				data = append(data, "</span>"...)
 			}
 			if background {
-				buf.WriteString("</span>")
+				data = append(data, "</span>"...)
 			}
 			if foreground {
-				buf.WriteString("</span>")
+				data = append(data, "</span>"...)
 			}
 		}
 
-		buf.WriteString("</markup>\")\n")
+		data = append(data, "</markup>\")\n"...)
 	}
 
 	r, g, b, _ := base.ForeColor.RGBA()
 
-	fmt.Fprintf(&buf, "(font %q)\n"+
+	data = fmt.Appendf(data, "(font %q)\n"+
 		"(font-size %d.000000000)\n"+
 		"(font-size-units pixels)\n"+
 		"(antialias yes)\n"+
@@ -281,8 +279,6 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 
 	// write base
 
-	data := buf.Bytes()
-
 	e.WriteUint32(propTextLayerFlags)
 	e.WriteUint32(4)
 	e.WriteUint32(1)
@@ -290,7 +286,7 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 	e.WriteUint32(propParasites)
 	e.WriteUint32(uint32(4 + len(textParasiteName) + 1 + 4 + 4 + len(data)))
 	e.WriteString(textParasiteName)
-	e.WriteUint32(0) //flags
+	e.WriteUint32(0) // flags
 	e.WriteUint32(uint32(len(data)))
 	e.Write(data)
 }
