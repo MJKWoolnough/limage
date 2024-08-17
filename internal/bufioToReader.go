@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-// copied from bufio
+// copied from bufio.
 type bufioReader struct {
 	buf          []byte
 	rd           io.Reader
@@ -25,36 +25,43 @@ type readerAt struct {
 
 func (r *readerAt) ReadAt(p []byte, offset int64) (int, error) {
 	r.readMutex.Lock()
+
 	var (
 		n   int
 		err error
 	)
+
 	if offset != r.pos {
 		r.pos, err = r.ReadSeeker.Seek(offset, io.SeekStart)
 		if err != nil {
 			return 0, err
 		}
 	}
+
 	n, err = r.ReadSeeker.Read(p)
 	r.pos += int64(n)
 	r.readMutex.Unlock()
+
 	return n, err
 }
 
 func bufioToReader(b *bufio.Reader) io.ReaderAt {
 	br := (*bufioReader)(unsafe.Pointer(b))
+
 	if ra, ok := br.rd.(io.ReaderAt); ok {
 		return ra
 	} else if rs, ok := br.rd.(io.ReadSeeker); ok {
 		rs.Seek(0, 0)
+
 		return &readerAt{
 			ReadSeeker: rs,
 		}
 	}
+
 	return nil
 }
 
-// GetReaderAt tries to make a io.ReaderAt from an io.Reader
+// GetReaderAt tries to make a io.ReaderAt from an io.Reader.
 func GetReaderAt(r io.Reader) io.ReaderAt {
 	if bb, ok := r.(*bufio.Reader); ok {
 		return bufioToReader(bb)
@@ -63,5 +70,6 @@ func GetReaderAt(r io.Reader) io.ReaderAt {
 	} else if rs, ok := r.(io.ReadSeeker); ok {
 		return &readerAt{ReadSeeker: rs}
 	}
+
 	return nil
 }
