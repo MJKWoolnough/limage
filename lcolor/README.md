@@ -11,7 +11,7 @@ var (
 	RGBModel       = color.ModelFunc(rgbColourModel)
 )
 ```
-Color Models
+Color Models.
 
 #### type AlphaPalette
 
@@ -19,7 +19,7 @@ Color Models
 type AlphaPalette color.Palette
 ```
 
-AlphaPalette is an extension to the normal color.Palette type
+AlphaPalette is an extension to the normal color.Palette type.
 
 #### func (AlphaPalette) Convert
 
@@ -27,14 +27,14 @@ AlphaPalette is an extension to the normal color.Palette type
 func (ap AlphaPalette) Convert(c color.Color) color.Color
 ```
 Convert converts the given color to the nearest color in the palette, but
-preserves the alpha channel
+preserves the alpha channel.
 
 #### func (AlphaPalette) Index
 
 ```go
 func (ap AlphaPalette) Index(c color.Color) int
 ```
-Index returns the palette index of the nearest color
+Index returns the palette index of the nearest color.
 
 #### type GrayAlpha
 
@@ -44,21 +44,21 @@ type GrayAlpha struct {
 }
 ```
 
-GrayAlpha represents a Gray color with an Alpha channel
+GrayAlpha represents a Gray color with an Alpha channel.
 
 #### func (GrayAlpha) RGBA
 
 ```go
 func (c GrayAlpha) RGBA() (r, g, b, a uint32)
 ```
-RGBA implements the color.Color interface
+RGBA implements the color.Color interface.
 
 #### func (GrayAlpha) ToNRGBA
 
 ```go
 func (c GrayAlpha) ToNRGBA() color.NRGBA64
 ```
-ToNRGBA converts the HSV color into the RGB colorspace
+ToNRGBA converts the HSV color into the RGB colorspace.
 
 #### type HSLA
 
@@ -68,28 +68,28 @@ type HSLA struct {
 }
 ```
 
-HSLA represents the Hue, Saturation, Lightness and Alpha of a pixel
+HSLA represents the Hue, Saturation, Lightness and Alpha of a pixel.
 
 #### func  RGBToHSL
 
 ```go
 func RGBToHSL(cl color.Color) HSLA
 ```
-RGBToHSL converts
+RGBToHSL converts an RGC color.Color to HSLA format.
 
 #### func (HSLA) RGBA
 
 ```go
 func (h HSLA) RGBA() (uint32, uint32, uint32, uint32)
 ```
-RGBA implements the color.Color interface
+RGBA implements the color.Color interface.
 
 #### func (HSLA) ToNRGBA
 
 ```go
 func (h HSLA) ToNRGBA() color.NRGBA64
 ```
-ToNRGBA converts the HSL color into the RGB colorspace
+ToNRGBA converts the HSL color into the RGB colorspace.
 
 #### type HSVA
 
@@ -99,28 +99,28 @@ type HSVA struct {
 }
 ```
 
-HSVA represents the Hue, Saturation, Value and Alpha of a pixel
+HSVA represents the Hue, Saturation, Value and Alpha of a pixel.
 
 #### func  RGBToHSV
 
 ```go
 func RGBToHSV(cl color.Color) HSVA
 ```
-RGBToHSV converts a color to the HSV color space
+RGBToHSV converts a color to the HSV color space.
 
 #### func (HSVA) RGBA
 
 ```go
 func (h HSVA) RGBA() (uint32, uint32, uint32, uint32)
 ```
-RGBA implements the color.Color interface
+RGBA implements the color.Color interface.
 
 #### func (HSVA) ToNRGBA
 
 ```go
 func (h HSVA) ToNRGBA() color.NRGBA64
 ```
-ToNRGBA converts the HSV color into the RGB colorspace
+ToNRGBA converts the HSV color into the RGB colorspace.
 
 #### type IndexedAlpha
 
@@ -130,7 +130,7 @@ type IndexedAlpha struct {
 }
 ```
 
-IndexedAlpha is the combination of a palette index and an Alpha channel
+IndexedAlpha is the combination of a palette index and an Alpha channel.
 
 #### type RGB
 
@@ -140,14 +140,14 @@ type RGB struct {
 }
 ```
 
-RGB is a standard colour type whose Alpha channel is always full
+RGB is a standard colour type whose Alpha channel is always full.
 
 #### func (RGB) RGBA
 
 ```go
 func (rgb RGB) RGBA() (r, g, b, a uint32)
 ```
-RGBA implements the color.Color interface
+RGBA implements the color.Color interface.
 
 #### func (RGB) ToNRGBA
 
@@ -155,4 +155,4 @@ RGBA implements the color.Color interface
 func (rgb RGB) ToNRGBA() color.NRGBA64
 ```
 ToNRGBA returns itself as a non-alpha-premultiplied value As the alpha is always
-full, this only returns the normal values
+full, this only returns the normal values.
