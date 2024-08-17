@@ -19,13 +19,17 @@ func (d *decoder) ReadLayer() layer {
 		l         layer
 		parasites parasites
 	)
+
 	l.LayerBounds.Max.X = int(d.ReadUint32())
 	l.LayerBounds.Max.Y = int(d.ReadUint32())
 	typ := d.ReadUint32()
+
 	if typ>>1 != d.baseType {
 		d.SetError(ErrInvalidLayerType)
+
 		return l
 	}
+
 	l.alpha = typ&1 == 1
 	l.Name = d.ReadString()
 
@@ -34,12 +38,14 @@ PropertyLoop:
 	for {
 		typ := d.ReadUint32()
 		plength := d.ReadUint32()
+
 		switch typ {
 		// general properties
 		case propEnd:
 			if plength != 0 {
 				d.SetError(ErrInvalidProperties)
 			}
+
 			break PropertyLoop
 		case propLinked:
 			d.SkipBoolProperty()
@@ -50,6 +56,7 @@ PropertyLoop:
 			if o > 255 {
 				d.SetError(ErrInvalidOpacity)
 			}
+
 			l.Transparency = 255 - uint8(o)
 		case propParasites:
 			parasites = d.ReadParasites(plength)
@@ -58,7 +65,7 @@ PropertyLoop:
 		case propVisible:
 			l.Invisible = !d.ReadBoolProperty()
 
-		//layer properties
+		// layer properties
 		case propActiveLayer:
 			// active layer
 		case propApplyMask:
@@ -73,7 +80,9 @@ PropertyLoop:
 			if plength&3 != 0 {
 				d.SetError(ErrInvalidItemPathLength)
 			}
+
 			l.itemPath = make([]rune, plength>>2)
+
 			for i := uint32(0); i < plength>>2; i++ {
 				l.itemPath[i] = rune(d.ReadUint32())
 			}
@@ -183,6 +192,7 @@ PropertyLoop:
 	}
 
 	var hptr, mptr uint64
+
 	if d.mode < 2 {
 		hptr = uint64(d.ReadUint32())
 		mptr = uint64(d.ReadUint32())
@@ -195,8 +205,7 @@ PropertyLoop:
 	// read hierarchy
 
 	if !l.group { // skip reading image if its a group
-		l.Image = d.ReadImage(uint32(l.LayerBounds.Dx()), uint32(l.LayerBounds.Dy()), typ)
-		if l.Image == nil {
+		if l.Image = d.ReadImage(uint32(l.LayerBounds.Dx()), uint32(l.LayerBounds.Dy()), typ); l.Image == nil {
 			return l
 		}
 	}
@@ -204,31 +213,40 @@ PropertyLoop:
 		textData, err := parseTextData(t)
 		if err != nil {
 			d.SetError(ErrInvalidLayerType)
+
 			return l
 		}
+
 		l.Image = limage.Text{
 			Image:    l.Image,
 			TextData: textData,
 		}
 	}
+
 	if mptr != 0 { // read layer mask
 		d.Goto(mptr)
+
 		var m limage.MaskedImage
+
 		m.Image = l.Image
-		m.Mask = d.ReadChannel()
-		if m.Mask == nil {
+
+		if m.Mask = d.ReadChannel(); m.Mask == nil {
 			return l
 		}
+
 		if !l.LayerBounds.Eq(m.Mask.Bounds()) {
 			d.SetError(ErrInconsistantData)
+
 			return l
 		}
+
 		l.Image = m
 	}
+
 	return l
 }
 
-// Errors
+// Errors.
 var (
 	ErrInvalidLayerType      = errors.New("invalid layer type")
 	ErrInvalidItemPathLength = errors.New("invalid item path length")

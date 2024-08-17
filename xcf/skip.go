@@ -36,13 +36,17 @@ func (r *reader) SkipParasite() {
 
 func (r *reader) SkipPaths() {
 	r.SkipUint32() // aIndex
+
 	n := r.ReadUint32()
+
 	for i := uint32(0); i < n; i++ {
 		r.SkipString()       // name
 		r.SkipBoolProperty() // linked
 		r.SkipByte()         // state
 		r.SkipBoolProperty() // closed
+
 		np := r.ReadUint32()
+
 		switch r.ReadUint32() { // version
 		case 1:
 		case 2:
@@ -52,8 +56,10 @@ func (r *reader) SkipPaths() {
 			r.SkipUint32() // tattoo
 		default:
 			r.SetError(ErrUnknownPathsVersion)
+
 			return
 		}
+
 		r.Skip(12 * np) // (control[4] + x[4] + y[4]) * np
 	}
 }
@@ -61,28 +67,39 @@ func (r *reader) SkipPaths() {
 func (r *reader) SkipVectors() {
 	if r.ReadUint32() != 1 { // version
 		r.SetError(ErrUnknownVectorVersion)
+
 		return
 	}
+
 	r.SkipUint32() // aIndex
+
 	n := r.ReadUint32()
+
 	for i := uint32(0); i < n; i++ {
 		r.SkipString()       // name
 		r.SkipUint32()       // tattoo
 		r.SkipBoolProperty() // visible
 		r.SkipBoolProperty() // linked
+
 		m := r.ReadUint32()
 		k := r.ReadUint32()
+
 		for j := uint32(0); j < m; j++ {
 			r.SkipParasite()
 		}
+
 		for j := uint32(0); j < k; j++ {
 			if r.ReadUint32() != 1 { // stroke type
 				r.SetError(ErrUnknownStrokeType)
+
 				return
 			}
+
 			r.SkipBoolProperty() // closed
+
 			nf := r.ReadUint32()
 			np := r.ReadUint32()
+
 			switch nf {
 			case 2, 3, 4, 5, 6:
 				/*
@@ -95,6 +112,7 @@ func (r *reader) SkipVectors() {
 				r.Skip(np * (nf*4 + 1))
 			default:
 				r.SetError(ErrInvalidFloatsNumber)
+
 				return
 			}
 		}

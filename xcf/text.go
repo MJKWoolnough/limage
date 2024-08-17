@@ -3,6 +3,7 @@ package xcf
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"html"
 	"image/color"
@@ -20,12 +21,15 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var (
 		textData    string
 		defaultText limage.TextDatum
 	)
+
 	defaultText.BackColor = color.Alpha{}
 	defaultText.ForeColor = color.Gray{}
+
 	for _, tg := range tags {
 		switch tg.Name {
 		case "text":
@@ -50,6 +54,7 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 		case "color":
 			if len(tg.Values) == 1 {
 				t, _ := tg.Values[0].(tag)
+
 				if t.Name == "color-rgb" && len(t.Values) != 3 {
 					r, _ := t.Values[0].(float64)
 					g, _ := t.Values[1].(float64)
@@ -65,23 +70,29 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 		case "hinting":
 		}
 	}
+
 	if defaultText.Data != "" {
 		return limage.TextData{defaultText}, nil
 	}
+
 	xd := xml.NewDecoder(strings.NewReader(textData))
 	stack := limage.TextData{defaultText}
 	td := make(limage.TextData, 0, 32)
+
 	for {
 		t, err := xd.Token()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
+
 			return nil, err
 		}
+
 		switch t := t.(type) {
 		case xml.StartElement:
 			nt := stack[len(stack)-1]
+
 			switch t.Name.Local {
 			case "markup":
 			case "span":
@@ -95,12 +106,14 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 							if err != nil {
 								return nil, err
 							}
+
 							nt.ForeColor = color.RGBA{uint8(n >> 16), uint8((n >> 8) & 255), uint8(n & 255), 255}
 						} else if len(a.Value) == 4 && a.Value[0] == '#' {
 							n, err := strconv.ParseUint(a.Value[1:], 16, 32)
 							if err != nil {
 								return nil, err
 							}
+
 							r := (n >> 4) & 240
 							r |= r >> 4
 							g := n & 240
@@ -114,18 +127,21 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 						if err != nil {
 							return nil, err
 						}
+
 						nt.Size = uint32(s) >> 10
 					case "letter_spacing":
 						ls, err := strconv.ParseUint(a.Value, 10, 32)
 						if err != nil {
 							return nil, err
 						}
+
 						nt.LetterSpacing = uint32(ls) >> 10
 					case "rise":
 						r, err := strconv.ParseUint(a.Value, 10, 32)
 						if err != nil {
 							return nil, err
 						}
+
 						nt.Rise = uint32(r) >> 10
 					}
 				}
@@ -138,6 +154,7 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 			case "u":
 				nt.Underline = true
 			}
+
 			stack = append(stack, nt)
 		case xml.CharData:
 			nt := stack[len(stack)-1]
@@ -147,6 +164,7 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 			stack = stack[:len(stack)-1]
 		}
 	}
+
 	return td, nil
 }
 
@@ -169,6 +187,7 @@ func (q *quoteWriter) WriteString(s string) (int, error) {
 			q.Buffer.WriteRune(r)
 		}
 	}
+
 	return len(s), nil
 }
 
@@ -193,66 +212,87 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 
 		for _, td := range text {
 			var foreground, background bool
+
 			if r, g, b, _ := td.ForeColor.RGBA(); r != 0 || g != 0 || b != 0 {
 				foreground = true
 				data = fmt.Appendf(data, "<span foreground=\\\"#%02X%02X%02X\\\">", r>>8, g>>8, b>>8)
 			}
+
 			if r, g, b, _ := td.BackColor.RGBA(); r != 0 || g != 0 || b != 0 {
 				background = true
 				data = fmt.Appendf(data, "<span background=\\\"#%02X%02X%02X\\\">", r, g, b)
 			}
+
 			if td.Font != "Sans" {
 				data = fmt.Appendf(data, "<span font=%q>", td.Font)
 			}
+
 			if td.Bold {
 				data = append(data, "<b>"...)
 			}
+
 			if td.Italic {
 				data = append(data, "<i>"...)
 			}
+
 			if td.Underline {
 				data = append(data, "<u>"...)
 			}
+
 			if td.Strikethrough {
 				data = append(data, "<s>"...)
 			}
+
 			if td.LetterSpacing != 0 {
 				data = fmt.Appendf(data, "<span letter_spacing=\\\"%d\\\">", td.LetterSpacing<<10)
 			}
+
 			if td.Size != 18 {
 				data = fmt.Appendf(data, "<span size=\\\"%d\\\">", td.Size<<10)
 			}
+
 			if td.Rise != 0 {
 				data = fmt.Appendf(data, "<span rise=\\\"%d\\\">", td.Rise<<10)
 			}
+
 			data = fmt.Appendf(data, "%q", html.EscapeString(td.Data))
+
 			if td.Rise != 0 {
 				data = append(data, "</span>"...)
 			}
+
 			if td.Size != 18 {
 				data = append(data, "</span>"...)
 			}
+
 			if td.LetterSpacing != 0 {
 				data = append(data, "</span>"...)
 			}
+
 			if td.Strikethrough {
 				data = append(data, "</s>"...)
 			}
+
 			if td.Underline {
 				data = append(data, "</u>"...)
 			}
+
 			if td.Italic {
 				data = append(data, "</i>"...)
 			}
+
 			if td.Bold {
 				data = append(data, "</b>"...)
 			}
+
 			if td.Font != "Sans" {
 				data = append(data, "</span>"...)
 			}
+
 			if background {
 				data = append(data, "</span>"...)
 			}
+
 			if foreground {
 				data = append(data, "</span>"...)
 			}

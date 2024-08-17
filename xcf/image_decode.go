@@ -46,6 +46,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 	}
 
 	var lptr uint64
+
 	if d.mode < 2 {
 		lptr = uint64(d.ReadUint32())
 	} else {
@@ -59,6 +60,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 
 	if w != width || h != height {
 		d.SetError(ErrInconsistantData)
+
 		return nil
 	}
 
@@ -90,6 +92,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 				ReadColour(int, int, []byte)
 			}
 		)
+
 		switch mode {
 		case 0: // rgb
 			rgb := limage.NewRGB(r)
@@ -118,6 +121,7 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		}
 
 		var cr io.Reader
+
 		if d.compression == 0 { // no compression
 			cr = &d.reader
 		} else { // rle
@@ -131,31 +135,39 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 			for x := uint32(0); x < width; x += 64 {
 				d.Goto(tiles[0])
 				tiles = tiles[1:]
+
 				w := width - x
 				if w > 64 {
 					w = 64
 				}
+
 				h := height - y
 				if h > 64 {
 					h = 64
 				}
+
 				n := w * h
 				_, err := cr.Read(pixBuffer[:n*bpp])
+
 				d.SetError(err)
+
 				for i := uint32(0); i < bpp; i++ {
 					channels[i] = pixBuffer[n*i : n*(i+1)]
 				}
+
 				for j := uint32(0); j < h; j++ {
 					for i := uint32(0); i < w; i++ {
 						for k := uint32(0); k < bpp; k++ {
 							pixel[k] = channels[k][0]
 							channels[k] = channels[k][1:]
 						}
+
 						imReader.ReadColour(int(x+i), int(y+j), pixel)
 					}
 				}
 			}
 		}
+
 		return im
 	} else {
 		ci := compressedImage{
@@ -163,32 +175,43 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 			width: int(width),
 			tile:  -1,
 		}
+
 		buf := make(memio.Buffer, 0, 64*64*4)
+
 		for y := uint32(0); y < height; y += 64 {
 			for x := uint32(0); x < width; x += 64 {
 				d.Goto(tiles[0])
+
 				tiles = tiles[1:]
+
 				w := width - x
 				if w > 64 {
 					w = 64
 				}
+
 				h := height - y
 				if h > 64 {
 					h = 64
 				}
+
 				n := w * h
 				ts := make([][]byte, 0, bpp)
+
 				for i := uint32(0); i < bpp; i++ {
 					d.SetError(d.readRLE(int(n), &buf))
+
 					b := make([]byte, len(buf))
+
 					copy(b, buf)
+
 					buf = buf[:0]
 					ts = append(ts, b)
 				}
+
 				ci.tiles = append(ci.tiles, ts)
 			}
-
 		}
+
 		switch mode {
 		case 0: // rgb
 			return &CompressedRGB{ci, r}

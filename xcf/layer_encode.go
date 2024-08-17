@@ -9,6 +9,7 @@ import (
 func (e *encoder) WriteLayers(layers limage.Image, offsetX, offsetY int32, groups []uint32, pw *pointerWriter) {
 	for n, layer := range layers {
 		nGroups := append(groups, uint32(n))
+
 		e.WriteLayer(layer, offsetX+int32(layer.LayerBounds.Min.X), offsetY+int32(layer.LayerBounds.Min.Y), nGroups, pw)
 	}
 }
@@ -22,6 +23,7 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 		text  limage.TextData
 		group limage.Image
 	)
+
 	if mim, ok := im.Image.(limage.MaskedImage); ok {
 		mask = mim.Mask
 		img = mim.Image
@@ -45,6 +47,7 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 
 	b := im.Bounds()
 	dx, dy := uint32(b.Dx()), uint32(b.Dy())
+
 	e.WriteUint32(dx)
 	e.WriteUint32(dy)
 	e.WriteUint32(uint32(e.colourType)<<1 | 1)
@@ -56,6 +59,7 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 
 	e.WriteUint32(propVisible)
 	e.WriteUint32(4)
+
 	if im.Invisible {
 		e.WriteUint32(0)
 	} else {
@@ -70,6 +74,7 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 	if len(groups) > 1 {
 		e.WriteUint32(propItemPath)
 		e.WriteUint32(4 * uint32(len(groups)))
+
 		for _, g := range groups {
 			e.WriteUint32(g)
 		}
@@ -86,6 +91,7 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 
 	e.WriteUint32(propMode)
 	e.WriteUint32(4)
+
 	switch im.Mode {
 	case limage.CompositeNormal:
 		e.WriteUint32(0)
@@ -169,15 +175,18 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 	// write layer
 
 	ptrs := e.ReservePointers(2)
+
 	ptrs.WritePointer(uint32(e.pos))
 
 	e.WriteImage(img, e.colourFunc, e.colourChannels)
+
 	if mask != nil {
 		ptrs.WritePointer(uint32(e.pos))
 		e.WriteChannel(mask)
 	} else {
 		ptrs.WritePointer(0)
 	}
+
 	if group != nil {
 		e.WriteLayers(group, offsetX, offsetY, groups, pw)
 	}

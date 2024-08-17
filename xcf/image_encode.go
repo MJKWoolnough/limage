@@ -33,6 +33,7 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 	if dx&63 > 0 { // last tile not as wide
 		nx++
 	}
+
 	if dy&63 > 0 { // last tile not as high
 		ny++
 	}
@@ -44,16 +45,21 @@ func (e *encoder) WriteImage(im image.Image, colourFunc colourBufFunc, colourCha
 	for y := bounds.Min.Y; y < bounds.Max.Y; y += 64 {
 		for x := bounds.Min.X; x < bounds.Max.X; x += 64 {
 			l := uint16(0)
+
 			for j := y; j < y+64 && j < bounds.Max.Y; j++ {
 				for i := x; i < x+64 && i < bounds.Max.X; i++ {
 					colourFunc(e, im.At(i, j))
+
 					for n := uint8(0); n < colourChannels; n++ {
 						e.channelBuf[n][l] = e.colourBuf[n]
 					}
+
 					l++
 				}
 			}
+
 			w.WritePointer(uint32(e.pos))
+
 			for n := uint8(0); n < colourChannels; n++ {
 				e.WriteRLE(e.channelBuf[n][:l])
 			}

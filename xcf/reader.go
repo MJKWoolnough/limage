@@ -21,6 +21,7 @@ type readSeeker struct {
 func (r *readSeeker) Read(p []byte) (int, error) {
 	n, err := r.ReadAt(p, r.pos)
 	r.pos += int64(n)
+
 	return n, err
 }
 
@@ -28,7 +29,9 @@ func newReader(r io.ReaderAt) reader {
 	nr := reader{
 		rs: &readSeeker{ReaderAt: r},
 	}
+
 	nr.StickyBigEndianReader = &byteio.StickyBigEndianReader{Reader: nr.rs}
+
 	return nr
 }
 
@@ -40,18 +43,24 @@ func (r *reader) ReadString() string {
 		return ""
 	} else if length > maxString {
 		r.SetError(ErrStringTooLong)
+
 		return ""
 	}
+
 	b := make([]byte, length)
-	_, err := io.ReadFull(r, b)
-	if err != nil {
+
+	if _, err := io.ReadFull(r, b); err != nil {
 		r.Err = err
+
 		return ""
 	}
+
 	if b[length-1] != 0 || !utf8.Valid(b[:length-1]) {
 		r.SetError(ErrInvalidString)
+
 		return ""
 	}
+
 	return string(b[:length-1])
 }
 
@@ -69,7 +78,7 @@ func (r *reader) SetError(err error) {
 	}
 }
 
-// Errors
+// Errors.
 var (
 	ErrInvalidString = errors.New("string is invalid")
 	ErrStringTooLong = errors.New("string exceeds maximum length")

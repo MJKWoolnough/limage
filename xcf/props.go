@@ -53,11 +53,12 @@ func (d *reader) ReadBoolProperty() bool {
 		return true
 	default:
 		d.SetError(ErrInvalidBoolean)
+
 		return false
 	}
 }
 
-// Errors
+// Errors.
 var (
 	ErrInvalidBoolean = errors.New("invalid boolean value")
 )

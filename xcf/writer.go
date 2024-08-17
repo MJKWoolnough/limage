@@ -26,8 +26,11 @@ func (w writer) WriteAt(p []byte, off int64) (int, error) {
 	if w.Err != nil {
 		return 0, w.Err
 	}
+
 	var n int
+
 	n, w.Err = w.WriterAt.WriteAt(p, off)
+
 	return n, w.Err
 }
 
@@ -51,6 +54,7 @@ func (p *pointerWriter) WritePointer(ptr uint32) {
 	if p.toWrite > 0 {
 		p.bw.WriteUint32(ptr)
 		p.toWrite--
+
 		if p.bw.Err != nil {
 			p.obw.Err = p.bw.Err
 		}
@@ -68,13 +72,17 @@ func (w writer) ReservePointers(n uint32) *pointerWriter {
 		toWrite: n,
 		obw:     w.StickyBigEndianWriter,
 	}
+
 	w.pos += int64(n) * 4
+
 	return p
 }
 
 func (w writer) ReservePointerList(n uint32) *pointerWriter {
 	pw := w.ReservePointers(n)
+
 	w.WriteUint32(0)
+
 	return pw
 }
 
@@ -86,10 +94,11 @@ type writerAtWriter struct {
 func (w *writerAtWriter) Write(p []byte) (int, error) {
 	n, err := w.WriteAt(p, w.pos)
 	w.pos += int64(n)
+
 	return n, err
 }
 
-// Errors
+// Errors.
 var (
 	ErrTooBig = errors.New("write too big")
 )

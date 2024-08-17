@@ -1,6 +1,7 @@
 package xcf
 
 import (
+	"errors"
 	"image"
 	"image/color"
 	"io"
@@ -18,24 +19,29 @@ type compressedImage struct {
 }
 
 func (c *compressedImage) decompressTile(x, y int) int {
-	tile := (y/64)*((c.width+63)/64) + (x / 64)
-	if tile != c.tile {
+	if tile := (y/64)*((c.width+63)/64) + (x / 64); tile != c.tile {
 		var (
 			n    int
 			data memio.Buffer
 		)
+
 		r := rle{Reader: &byteio.StickyBigEndianReader{Reader: &data}}
+
 		for n, data = range c.tiles[tile] {
 			r.Read(c.decompressed[64*64*n : 64*64*(n+1)])
-			if r.Reader.Err == io.EOF {
+
+			if errors.Is(r.Reader.Err, io.EOF) {
 				r.Reader.Err = nil
 			}
 		}
+
 		c.tile = tile
 	}
+
 	if x < c.width & ^63 {
 		return 64*(y%64) + (x % 64)
 	}
+
 	return (c.width&63)*(y%64) + (x % 64)
 }
 
@@ -46,21 +52,23 @@ type CompressedRGB struct {
 	Rect image.Rectangle
 }
 
-// ColorModel returns the RGB Color Model
+// ColorModel returns the RGB Color Model.
 func (CompressedRGB) ColorModel() color.Model { return lcolor.RGBModel }
 
-// Bounds returns a Rect containg the boundary data for the image
+// Bounds returns a Rect containg the boundary data for the image.
 func (c *CompressedRGB) Bounds() image.Rectangle { return c.Rect }
 
-// At returns colour at the specified coords
+// At returns colour at the specified coords.
 func (c *CompressedRGB) At(x, y int) color.Color { return c.RGBAt(x, y) }
 
-// RGBAt returns RGB colour at the specified coords
+// RGBAt returns RGB colour at the specified coords.
 func (c *CompressedRGB) RGBAt(x, y int) lcolor.RGB {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return lcolor.RGB{}
 	}
+
 	p := c.decompressTile(x, y)
+
 	return lcolor.RGB{
 		R: c.decompressed[p],
 		G: c.decompressed[p+64*64],
@@ -75,21 +83,23 @@ type CompressedNRGBA struct {
 	Rect image.Rectangle
 }
 
-// ColorModel returns the NRGBA Color Model
+// ColorModel returns the NRGBA Color Model.
 func (CompressedNRGBA) ColorModel() color.Model { return color.NRGBAModel }
 
-// Bounds returns a Rect containg the boundary data for the image
+// Bounds returns a Rect containg the boundary data for the image.
 func (c *CompressedNRGBA) Bounds() image.Rectangle { return c.Rect }
 
-// At returns colour at the specified coords
+// At returns colour at the specified coords.
 func (c *CompressedNRGBA) At(x, y int) color.Color { return c.NRGBAAt(x, y) }
 
-// NRGBAAt returns NRGBA colour at the specified coords
+// NRGBAAt returns NRGBA colour at the specified coords.
 func (c *CompressedNRGBA) NRGBAAt(x, y int) color.NRGBA {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.NRGBA{}
 	}
+
 	p := c.decompressTile(x, y)
+
 	return color.NRGBA{
 		c.decompressed[p],
 		c.decompressed[p+64*64],
@@ -105,21 +115,23 @@ type CompressedGray struct {
 	Rect image.Rectangle
 }
 
-// ColorModel returns the Gray Color Model
+// ColorModel returns the Gray Color Model.
 func (CompressedGray) ColorModel() color.Model { return color.GrayModel }
 
-// Bounds returns a Rect containg the boundary data for the image
+// Bounds returns a Rect containg the boundary data for the image.
 func (c *CompressedGray) Bounds() image.Rectangle { return c.Rect }
 
-// At returns colour at the specified coords
+// At returns colour at the specified coords.
 func (c *CompressedGray) At(x, y int) color.Color { return c.GrayAt(x, y) }
 
-// GrayAt returns Gray colour at the specified coords
+// GrayAt returns Gray colour at the specified coords.
 func (c *CompressedGray) GrayAt(x, y int) color.Gray {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.Gray{}
 	}
+
 	p := c.decompressTile(x, y)
+
 	return color.Gray{
 		c.decompressed[p],
 	}
@@ -132,21 +144,23 @@ type CompressedGrayAlpha struct {
 	Rect image.Rectangle
 }
 
-// ColorModel returns the Gray Alpha Color Model
+// ColorModel returns the Gray Alpha Color Model.
 func (CompressedGrayAlpha) ColorModel() color.Model { return lcolor.GrayAlphaModel }
 
-// Bounds returns a Rect containg the boundary data for the image
+// Bounds returns a Rect containg the boundary data for the image.
 func (c *CompressedGrayAlpha) Bounds() image.Rectangle { return c.Rect }
 
-// At returns colour at the specified coords
+// At returns colour at the specified coords.
 func (c *CompressedGrayAlpha) At(x, y int) color.Color { return c.GrayAlphaAt(x, y) }
 
-// GrayAlphaAt returns Gray+Alpha colour at the specified coords
+// GrayAlphaAt returns Gray+Alpha colour at the specified coords.
 func (c *CompressedGrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha {
 	if !(image.Point{x, y}).In(c.Rect) {
 		return lcolor.GrayAlpha{}
 	}
+
 	p := c.decompressTile(x, y)
+
 	return lcolor.GrayAlpha{
 		Y: c.decompressed[p],
 		A: c.decompressed[p+64*64],
@@ -161,23 +175,26 @@ type CompressedPaletted struct {
 	Palette color.Palette
 }
 
-// ColorModel returns the Pallette of the image
+// ColorModel returns the Pallette of the image.
 func (c *CompressedPaletted) ColorModel() color.Model { return c.Palette }
 
-// Bounds returns a Rect containg the boundary data for the image
+// Bounds returns a Rect containg the boundary data for the image.
 func (c *CompressedPaletted) Bounds() image.Rectangle { return c.Rect }
 
-// At returns colour at the specified coords
+// At returns colour at the specified coords.
 func (c *CompressedPaletted) At(x, y int) color.Color {
 	if c.Palette == nil {
 		return nil
 	}
+
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.Gray{}
 	}
+
 	p := c.decompressTile(x, y)
 	i := c.decompressed[p]
 	r, g, b, _ := c.Palette[i].RGBA()
+
 	return color.NRGBA{
 		R: uint8(r >> 8),
 		G: uint8(g >> 8),
@@ -200,16 +217,19 @@ func (c *CompressedPalettedAlpha) ColorModel() color.Model { return c.Palette }
 // Bounds returns a Rect containg the boundary data for the image
 func (c *CompressedPalettedAlpha) Bounds() image.Rectangle { return c.Rect }
 
-// At returns colour at the specified coords
+// At returns colour at the specified coords.
 func (c *CompressedPalettedAlpha) At(x, y int) color.Color {
 	if c.Palette == nil {
 		return nil
 	}
+
 	if !(image.Point{x, y}).In(c.Rect) {
 		return color.Gray{}
 	}
+
 	p := c.decompressTile(x, y)
 	r, g, b, _ := c.Palette[c.decompressed[p]].RGBA()
+
 	return color.NRGBA{
 		R: uint8(r >> 8),
 		G: uint8(g >> 8),

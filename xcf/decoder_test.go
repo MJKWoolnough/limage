@@ -3,6 +3,7 @@ package xcf
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -24,7 +25,7 @@ func openFile(str string) (io.ReaderAt, error) {
 	}
 	n, err := gz.Read(buf[:])
 	if err != nil {
-		if err != io.EOF {
+		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
 	}
@@ -154,7 +155,8 @@ func TestDecoder(t *testing.T) {
 						},
 						limage.Layer{
 							Name: "Red",
-							Image: singleColourImage{Colour: color.NRGBA{R: 255, A: 255},
+							Image: singleColourImage{
+								Colour: color.NRGBA{R: 255, A: 255},
 								Width:  30,
 								Height: 30,
 							},
