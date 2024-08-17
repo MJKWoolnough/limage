@@ -13,9 +13,10 @@ import (
 
 const mimetypeStr = "image/openraster"
 
-// Encode encodes the given image as an ORA file to the given Writer
+// Encode encodes the given image as an ORA file to the given Writer.
 func Encode(w io.Writer, m image.Image) error {
 	var lim limage.Layer
+
 	switch im := m.(type) {
 	case limage.Layer:
 		lim.Image = im.Image
@@ -26,6 +27,7 @@ func Encode(w io.Writer, m image.Image) error {
 			Image: m,
 		}
 	}
+
 	b := m.Bounds()
 	lim.LayerBounds.Max.X = b.Dx()
 	lim.LayerBounds.Max.Y = b.Dy()
@@ -33,32 +35,26 @@ func Encode(w io.Writer, m image.Image) error {
 	zw := zip.NewWriter(w)
 	defer zw.Close()
 
-	// Write MIME
 	fw, err := zw.CreateHeader(&zip.FileHeader{
 		Name:   "mimetype",
 		Method: zip.Store,
 	})
 	if err != nil {
 		return err
-	}
-	if _, err = fw.Write([]byte(mimetypeStr)); err != nil {
+	} else if _, err = fw.Write([]byte(mimetypeStr)); err != nil {
+		return err
+	} else if _, err = writeLayers(zw, lim, 0); err != nil {
+		return err
+	} else if fw, err = zw.Create("stack.xml"); err != nil {
+		return err
+	} else if _, err = fw.Write([]byte(xml.Header)); err != nil {
 		return err
 	}
 
-	// Write Layer images
-	if _, err = writeLayers(zw, lim, 0); err != nil {
-		return err
-	}
-
-	// Write Stack
-	if fw, err = zw.Create("stack.xml"); err != nil {
-		return err
-	}
-	if _, err = fw.Write([]byte(xml.Header)); err != nil {
-		return err
-	}
 	e := xml.NewEncoder(fw)
+
 	e.Indent("", "	")
+
 	if err = e.EncodeToken(xml.StartElement{
 		Name: xml.Name{
 			Local: "image",
@@ -83,43 +79,29 @@ func Encode(w io.Writer, m image.Image) error {
 
 	if _, err = writeStack(e, lim, 0); err != nil {
 		return err
-	}
-
-	if err = e.EncodeToken(xml.EndElement{
+	} else if err = e.EncodeToken(xml.EndElement{
 		Name: xml.Name{
 			Local: "image",
 		},
 	}); err != nil {
 		return err
-	}
-
-	if err = e.Flush(); err != nil {
+	} else if err = e.Flush(); err != nil {
 		return err
-	}
-
-	// Write Merged Image
-	fw, err = zw.Create("mergedimage.png")
-	if err != nil {
+	} else if fw, err = zw.Create("mergedimage.png"); err != nil {
 		return err
-	}
-	err = png.Encode(fw, m)
-	if err != nil {
+	} else if err = png.Encode(fw, m); err != nil {
 		return err
-	}
-
-	// Write Thumbnail
-	fw, err = zw.Create("Thumbnails/thumbnail.png")
-	if err != nil {
+	} else if fw, err = zw.Create("Thumbnails/thumbnail.png"); err != nil {
 		return err
-	}
-
-	if lim.LayerBounds.Max.X > 256 || lim.LayerBounds.Max.Y > 256 {
+	} else if lim.LayerBounds.Max.X > 256 || lim.LayerBounds.Max.Y > 256 {
 		var scale float64
+
 		if lim.LayerBounds.Max.X > lim.LayerBounds.Max.Y {
 			scale = float64(lim.LayerBounds.Max.X) / 256
 		} else {
 			scale = float64(lim.LayerBounds.Max.Y) / 256
 		}
+
 		m = thumbnail{Image: m, scale: scale}
 	}
 
@@ -131,6 +113,7 @@ func writeLayers(zw *zip.Writer, lim limage.Layer, layerNum int) (int, error) {
 		err error
 		f   io.Writer
 	)
+
 	switch im := lim.Image.(type) {
 	case limage.Image:
 		layerNum, err = writeGroup(zw, im, layerNum)
@@ -139,65 +122,77 @@ func writeLayers(zw *zip.Writer, lim limage.Layer, layerNum int) (int, error) {
 	// case limage.Text, *limage.Text: // text is not yet in the spec
 	default:
 		layerNum++
+
 		f, err = zw.Create("data/" + strconv.Itoa(layerNum) + ".png")
 		if err != nil {
 			return 0, err
 		}
+
 		err = png.Encode(f, lim.Image)
 		if err != nil {
 			return 0, err
 		}
 	}
+
 	return layerNum, err
 }
 
 func writeGroup(zw *zip.Writer, lim limage.Image, layerNum int) (int, error) {
 	var err error
+
 	for _, l := range lim {
 		layerNum, err = writeLayers(zw, l, layerNum)
 		if err != nil {
 			return 0, err
 		}
 	}
+
 	return layerNum, nil
 }
 
 func writeStack(e *xml.Encoder, lim limage.Layer, layerNum int) (int, error) {
 	attrs := make([]xml.Attr, 0, 7)
 	b := lim.Bounds().Min
+
 	if lim.Name != "" {
 		attrs = append(attrs, xml.Attr{
 			Name:  xml.Name{Local: "name"},
 			Value: lim.Name,
 		})
 	}
+
 	if b.X > 0 {
 		attrs = append(attrs, xml.Attr{
 			Name:  xml.Name{Local: "x"},
 			Value: strconv.Itoa(b.X),
 		})
 	}
+
 	if b.Y > 0 {
 		attrs = append(attrs, xml.Attr{
 			Name:  xml.Name{Local: "y"},
 			Value: strconv.Itoa(b.Y),
 		})
 	}
+
 	if lim.Invisible {
 		attrs = append(attrs, xml.Attr{
 			Name:  xml.Name{Local: "visibility"},
 			Value: "hidden",
 		})
 	}
+
 	if lim.Transparency != 0 {
 		attrs = append(attrs, xml.Attr{
 			Name:  xml.Name{Local: "visibility"},
 			Value: strconv.FormatFloat(float64(255-lim.Transparency)/255, 'f', -1, 64),
 		})
 	}
+
 	var op string
+
 	switch lim.Mode {
-	//case limage.CompositeNormal:
+	// case limage.CompositeNormal:
 	//	op = "svg:src-over"
 	case limage.CompositeMultiply:
 		op = "svg:multiply"
@@ -238,13 +233,16 @@ func writeStack(e *xml.Encoder, lim limage.Layer, layerNum int) (int, error) {
 	case limage.CompositeDestinationAtop:
 		op = "svg:dst-atop"
 	}
+
 	if op != "" {
 		attrs = append(attrs, xml.Attr{
 			Name:  xml.Name{Local: "composite-op"},
 			Value: op,
 		})
 	}
+
 	var err error
+
 	switch im := lim.Image.(type) {
 	case limage.Image:
 		layerNum, err = writeGroupStack(e, im, attrs, layerNum)
@@ -257,16 +255,17 @@ func writeStack(e *xml.Encoder, lim limage.Layer, layerNum int) (int, error) {
 			Name:  xml.Name{Local: "src"},
 			Value: "data/" + strconv.Itoa(layerNum) + ".png",
 		})
-		err = e.EncodeToken(xml.StartElement{
+
+		if err = e.EncodeToken(xml.StartElement{
 			Name: xml.Name{Local: "layer"},
 			Attr: attrs,
-		})
-		if err == nil {
+		}); err == nil {
 			err = e.EncodeToken(xml.EndElement{
 				Name: xml.Name{Local: "layer"},
 			})
 		}
 	}
+
 	return layerNum, err
 }
 
@@ -278,11 +277,13 @@ func writeGroupStack(e *xml.Encoder, lim limage.Image, attrs []xml.Attr, layerNu
 	if err != nil {
 		return 0, err
 	}
+
 	for _, l := range lim {
 		layerNum, err = writeStack(e, l, layerNum)
 		if err != nil {
 			return 0, err
 		}
 	}
+
 	return layerNum, e.EncodeToken(xml.EndElement{Name: xml.Name{Local: "stack"}})
 }

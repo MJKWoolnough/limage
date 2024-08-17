@@ -11,12 +11,14 @@ import (
 
 func (d decoder) readStack(offset image.Point) (limage.Image, error) {
 	i := make(limage.Image, 0, 32)
+
 Loop:
 	for {
 		t, err := d.x.Token()
 		if err != nil {
 			return nil, err
 		}
+
 		switch t := t.(type) {
 		case xml.StartElement:
 			switch t.Name.Local {
@@ -25,6 +27,7 @@ Loop:
 				if err != nil {
 					return nil, err
 				}
+
 				i = append(i, l)
 			default:
 				if err := d.skipTag(); err != nil {
@@ -35,11 +38,15 @@ Loop:
 			break Loop
 		}
 	}
+
 	if len(i) != cap(i) {
 		j := make(limage.Image, len(i))
+
 		copy(j, i)
+
 		i = j
 	}
+
 	return i, nil
 }
 
@@ -48,6 +55,7 @@ func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer
 		l      limage.Layer
 		source string
 	)
+
 	for _, a := range s.Attr {
 		switch a.Name.Local {
 		case "name":
@@ -57,18 +65,21 @@ func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer
 			if err != nil {
 				return l, err
 			}
+
 			l.LayerBounds.Min.X = offset
 		case "y":
 			offset, err := strconv.Atoi(a.Value)
 			if err != nil {
 				return l, err
 			}
+
 			l.LayerBounds.Min.Y = offset
 		case "opacity":
 			o, err := strconv.ParseFloat(a.Value, 64)
 			if err != nil {
 				return l, err
 			}
+
 			l.Transparency = uint8(255 * (1 - o))
 		case "visibility":
 			l.Invisible = a.Value == "hidden"
@@ -119,8 +130,10 @@ func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer
 			source = a.Value
 		}
 	}
+
 	if s.Name.Local == "stack" {
 		var err error
+
 		l.Image, err = d.readStack(offset.Add(l.LayerBounds.Min))
 		if err != nil {
 			return l, err
@@ -132,32 +145,41 @@ func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer
 				if err != nil {
 					return l, err
 				}
+
 				l.Image, _, err = image.Decode(fr)
 				if err != nil {
 					return l, err
 				}
+
 				fr.Close()
+
 				break
 			}
 		}
+
 		if l.Image == nil {
 			return l, ErrInvalidSource
 		}
+
 		if err := d.skipTag(); err != nil {
 			return l, err
 		}
 	}
+
 	l.LayerBounds = l.Image.Bounds().Add(l.LayerBounds.Min).Intersect(image.Rectangle{Max: d.limits.Add(offset)}).Sub(offset)
+
 	return l, nil
 }
 
 func (d decoder) skipTag() error {
 	toSkip := 0
+
 	for {
 		t, err := d.x.Token()
 		if err != nil {
 			return err
 		}
+
 		switch t.(type) {
 		case xml.StartElement:
 			toSkip++
@@ -165,12 +187,13 @@ func (d decoder) skipTag() error {
 			if toSkip == 0 {
 				return nil
 			}
+
 			toSkip--
 		}
 	}
 }
 
-// Errors
+// Errors.
 var (
 	ErrInvalidSource = errors.New("invalid source")
 )

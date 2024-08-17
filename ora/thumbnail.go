@@ -16,6 +16,7 @@ func (t thumbnail) Bounds() image.Rectangle {
 	b.Min.Y = int(float64(b.Min.Y) / t.scale)
 	b.Max.X = int(float64(b.Max.X) / t.scale)
 	b.Max.Y = int(float64(b.Max.Y) / t.scale)
+
 	return b
 }
 

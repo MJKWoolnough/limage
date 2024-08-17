@@ -20,6 +20,7 @@ type decoder struct {
 
 func (d *decoder) getStack() (stack *zip.File, err error) {
 	err = ErrMissingStack
+
 	for _, f := range d.zr.File {
 		switch f.Name {
 		case "stack.xml":
@@ -31,6 +32,7 @@ func (d *decoder) getStack() (stack *zip.File, err error) {
 			}
 		}
 	}
+
 	return stack, err
 }
 
@@ -38,16 +40,22 @@ func checkMime(mimetype *zip.File) bool {
 	if mimetype.UncompressedSize64 != uint64(len(mimetypeStr)) {
 		return false
 	}
+
 	mr, err := mimetype.Open()
 	if err != nil {
 		return false
 	}
+
 	var mime [len(mimetypeStr)]byte
+
 	_, err = io.ReadFull(mr, mime[:])
+
 	mr.Close()
+
 	if err != nil {
 		return false
 	}
+
 	return string(mime[:]) == mimetypeStr
 }
 
@@ -55,14 +63,17 @@ func (d *decoder) getDimensions() error {
 	for {
 		t, err := d.x.Token()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return ErrInvalidStack
 			}
+
 			return err
 		}
+
 		if se, ok := t.(xml.StartElement); ok {
 			if se.Name.Local == "image" {
 				var w, h bool
+
 				for _, attr := range se.Attr {
 					switch attr.Name.Local {
 					case "w":
@@ -72,15 +83,19 @@ func (d *decoder) getDimensions() error {
 						d.limits.Y, err = strconv.Atoi(attr.Value)
 						h = true
 					}
+
 					if err != nil {
 						return err
 					}
 				}
+
 				if !w || !h {
 					return ErrInvalidStack
 				}
+
 				return nil
 			}
+
 			return ErrInvalidStack
 		}
 	}
@@ -88,22 +103,28 @@ func (d *decoder) getDimensions() error {
 
 // DecodeConfig retrieves the color model and dimensions of the ORA image.
 //
-// It accepts a *zip.Reader and it is the callers responsibility to handle it
+// It accepts a *zip.Reader and it is the callers responsibility to handle it.
 func DecodeConfig(zr *zip.Reader) (image.Config, error) {
 	d := decoder{zr: zr}
+
 	stack, err := d.getStack()
 	if err != nil {
 		return image.Config{}, err
 	}
+
 	s, err := stack.Open()
 	if err != nil {
 		return image.Config{}, err
 	}
+
 	d.x = xml.NewDecoder(s)
+
 	if err := d.getDimensions(); err != nil {
 		return image.Config{}, err
 	}
+
 	s.Close()
+
 	return image.Config{
 		ColorModel: color.NRGBAModel,
 		Width:      d.limits.X,
@@ -113,43 +134,53 @@ func DecodeConfig(zr *zip.Reader) (image.Config, error) {
 
 // Decode reads an ORA layered image from the given Reader
 //
-// It accepts a *zip.Reader and it is the callers responsibility to handle it
+// It accepts a *zip.Reader and it is the callers responsibility to handle it.
 func Decode(zr *zip.Reader) (limage.Image, error) {
 	d := decoder{zr: zr}
+
 	stack, err := d.getStack()
 	if err != nil {
 		return nil, err
 	}
+
 	s, err := stack.Open()
 	if err != nil {
 		return nil, err
 	}
+
 	defer s.Close()
+
 	d.x = xml.NewDecoder(s)
+
 	if err := d.getDimensions(); err != nil {
 		return nil, err
 	}
-	for { // skip to first stack tag
+
+	for { // skip to first stack tag.
 		t, err := d.x.Token()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil, io.ErrUnexpectedEOF
 			}
+
 			return nil, err
 		}
+
 		if se, ok := t.(xml.StartElement); ok {
 			if se.Name.Local == "stack" {
 				break
 			}
+
 			if err := d.skipTag(); err != nil {
 				return nil, err
 			}
 		}
 	}
+
 	return d.readStack(image.Point{})
 }
 
-// Errors
+// Errors.
 var (
 	ErrMissingStack    = errors.New("missing stack file")
 	ErrInvalidMimeType = errors.New("invalid mime type")
