@@ -12,14 +12,14 @@ var (
 	ErrInvalidStack    = errors.New("invalid stack")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
 	ErrInvalidSource = errors.New("invalid source")
 )
 ```
-Errors
+Errors.
 
 #### func  Decode
 
@@ -28,7 +28,7 @@ func Decode(zr *zip.Reader) (limage.Image, error)
 ```
 Decode reads an ORA layered image from the given Reader
 
-It accepts a *zip.Reader and it is the callers responsibility to handle it
+It accepts a *zip.Reader and it is the callers responsibility to handle it.
 
 #### func  DecodeConfig
 
@@ -37,11 +37,11 @@ func DecodeConfig(zr *zip.Reader) (image.Config, error)
 ```
 DecodeConfig retrieves the color model and dimensions of the ORA image.
 
-It accepts a *zip.Reader and it is the callers responsibility to handle it
+It accepts a *zip.Reader and it is the callers responsibility to handle it.
 
 #### func  Encode
 
 ```go
 func Encode(w io.Writer, m image.Image) error
 ```
-Encode encodes the given image as an ORA file to the given Writer
+Encode encodes the given image as an ORA file to the given Writer.
