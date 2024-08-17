@@ -22,7 +22,7 @@ var (
 	ErrNeedReaderAt        = errors.New("need a io.ReaderAt")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
@@ -31,7 +31,7 @@ var (
 	ErrInconsistantData      = errors.New("inconsistant data read")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
@@ -40,7 +40,7 @@ var (
 	ErrNoName           = errors.New("didn't receive Name token")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
@@ -48,7 +48,7 @@ var (
 	ErrUnknownPathsVersion     = errors.New("unknown paths version")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
@@ -57,7 +57,7 @@ var (
 	ErrInvalidSeek   = errors.New("invalid seek")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
@@ -66,35 +66,35 @@ var (
 	ErrInvalidFloatsNumber  = errors.New("invalids number of floats")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
 	ErrInvalidBoolean = errors.New("invalid boolean value")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
 	ErrInvalidRLE = errors.New("invalid RLE data")
 )
 ```
-Errors
+Errors.
 
 ```go
 var (
 	ErrTooBig = errors.New("write too big")
 )
 ```
-Errors
+Errors.
 
 #### func  Decode
 
 ```go
 func Decode(r io.ReaderAt) (limage.Image, error)
 ```
-Decode reads an XCF layered image from the given ReaderAt
+Decode reads an XCF layered image from the given ReaderAt.
 
 #### func  DecodeCompressed
 
@@ -102,21 +102,21 @@ Decode reads an XCF layered image from the given ReaderAt
 func DecodeCompressed(r io.ReaderAt) (limage.Image, error)
 ```
 DecodeCompressed reads an XCF layered image, as Decode, but defers decoding and
-decompressing, doing so upon an At method
+decompressing, doing so upon an At method.
 
 #### func  DecodeConfig
 
 ```go
 func DecodeConfig(r io.ReaderAt) (image.Config, error)
 ```
-DecodeConfig retrieves the color model and dimensions of the XCF image
+DecodeConfig retrieves the color model and dimensions of the XCF image.
 
 #### func  Encode
 
 ```go
 func Encode(w io.WriterAt, im image.Image) error
 ```
-Encode encodes the given image as an XCF file to the given WriterAt
+Encode encodes the given image as an XCF file to the given WriterAt.
 
 #### type CompressedGray
 
@@ -134,28 +134,28 @@ until read.
 ```go
 func (c *CompressedGray) At(x, y int) color.Color
 ```
-At returns colour at the specified coords
+At returns colour at the specified coords.
 
 #### func (*CompressedGray) Bounds
 
 ```go
 func (c *CompressedGray) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image
+Bounds returns a Rect containg the boundary data for the image.
 
 #### func (CompressedGray) ColorModel
 
 ```go
 func (CompressedGray) ColorModel() color.Model
 ```
-ColorModel returns the Gray Color Model
+ColorModel returns the Gray Color Model.
 
 #### func (*CompressedGray) GrayAt
 
 ```go
 func (c *CompressedGray) GrayAt(x, y int) color.Gray
 ```
-GrayAt returns Gray colour at the specified coords
+GrayAt returns Gray colour at the specified coords.
 
 #### type CompressedGrayAlpha
 
@@ -173,28 +173,28 @@ form until read.
 ```go
 func (c *CompressedGrayAlpha) At(x, y int) color.Color
 ```
-At returns colour at the specified coords
+At returns colour at the specified coords.
 
 #### func (*CompressedGrayAlpha) Bounds
 
 ```go
 func (c *CompressedGrayAlpha) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image
+Bounds returns a Rect containg the boundary data for the image.
 
 #### func (CompressedGrayAlpha) ColorModel
 
 ```go
 func (CompressedGrayAlpha) ColorModel() color.Model
 ```
-ColorModel returns the Gray Alpha Color Model
+ColorModel returns the Gray Alpha Color Model.
 
 #### func (*CompressedGrayAlpha) GrayAlphaAt
 
 ```go
 func (c *CompressedGrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha
 ```
-GrayAlphaAt returns Gray+Alpha colour at the specified coords
+GrayAlphaAt returns Gray+Alpha colour at the specified coords.
 
 #### type CompressedNRGBA
 
@@ -212,28 +212,28 @@ until read.
 ```go
 func (c *CompressedNRGBA) At(x, y int) color.Color
 ```
-At returns colour at the specified coords
+At returns colour at the specified coords.
 
 #### func (*CompressedNRGBA) Bounds
 
 ```go
 func (c *CompressedNRGBA) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image
+Bounds returns a Rect containg the boundary data for the image.
 
 #### func (CompressedNRGBA) ColorModel
 
 ```go
 func (CompressedNRGBA) ColorModel() color.Model
 ```
-ColorModel returns the NRGBA Color Model
+ColorModel returns the NRGBA Color Model.
 
 #### func (*CompressedNRGBA) NRGBAAt
 
 ```go
 func (c *CompressedNRGBA) NRGBAAt(x, y int) color.NRGBA
 ```
-NRGBAAt returns NRGBA colour at the specified coords
+NRGBAAt returns NRGBA colour at the specified coords.
 
 #### type CompressedPaletted
 
@@ -252,21 +252,21 @@ form until read.
 ```go
 func (c *CompressedPaletted) At(x, y int) color.Color
 ```
-At returns colour at the specified coords
+At returns colour at the specified coords.
 
 #### func (*CompressedPaletted) Bounds
 
 ```go
 func (c *CompressedPaletted) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image
+Bounds returns a Rect containg the boundary data for the image.
 
 #### func (*CompressedPaletted) ColorModel
 
 ```go
 func (c *CompressedPaletted) ColorModel() color.Model
 ```
-ColorModel returns the Pallette of the image
+ColorModel returns the Pallette of the image.
 
 #### type CompressedPalettedAlpha
 
@@ -285,7 +285,7 @@ compressed form until read.
 ```go
 func (c *CompressedPalettedAlpha) At(x, y int) color.Color
 ```
-At returns colour at the specified coords
+At returns colour at the specified coords.
 
 #### func (*CompressedPalettedAlpha) Bounds
 
@@ -317,25 +317,25 @@ until read.
 ```go
 func (c *CompressedRGB) At(x, y int) color.Color
 ```
-At returns colour at the specified coords
+At returns colour at the specified coords.
 
 #### func (*CompressedRGB) Bounds
 
 ```go
 func (c *CompressedRGB) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image
+Bounds returns a Rect containg the boundary data for the image.
 
 #### func (CompressedRGB) ColorModel
 
 ```go
 func (CompressedRGB) ColorModel() color.Model
 ```
-ColorModel returns the RGB Color Model
+ColorModel returns the RGB Color Model.
 
 #### func (*CompressedRGB) RGBAt
 
 ```go
 func (c *CompressedRGB) RGBAt(x, y int) lcolor.RGB
 ```
-RGBAt returns RGB colour at the specified coords
+RGBAt returns RGB colour at the specified coords.
