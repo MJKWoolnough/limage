@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -24,7 +25,7 @@ func openFile(str string) (*zip.Reader, error) {
 	}
 	n, err := gz.Read(buf[:])
 	if err != nil {
-		if err != io.EOF {
+		if !errors.Is(err, io.EOF) {
 			return nil, err
 		}
 	}
@@ -154,7 +155,8 @@ func TestDecoder(t *testing.T) {
 						},
 						limage.Layer{
 							Name: "Red",
-							Image: singleColourImage{Colour: color.RGBA64{R: 65535, A: 65535},
+							Image: singleColourImage{
+								Colour: color.RGBA64{R: 65535, A: 65535},
 								Width:  30,
 								Height: 30,
 							},
