@@ -2,7 +2,7 @@
 --
     import "vimagination.zapto.org/limage"
 
-Package limage introduces structures to read and build layered images
+Package limage introduces structures to read and build layered images.
 
 ## Usage
 
@@ -12,7 +12,7 @@ Package limage introduces structures to read and build layered images
 type Composite uint32
 ```
 
-Composite determines how two layers are composed together
+Composite determines how two layers are composed together.
 
 ```go
 const (
@@ -60,21 +60,21 @@ const (
 	CompositePassThrough
 )
 ```
-Composite constants
+Composite constants.
 
 #### func (Composite) Composite
 
 ```go
 func (c Composite) Composite(b, t color.Color) color.Color
 ```
-Composite performs the composition of two layers
+Composite performs the composition of two layers.
 
 #### func (Composite) String
 
 ```go
 func (c Composite) String() string
 ```
-String returns the name of the composition
+String returns the name of the composition.
 
 #### type GrayAlpha
 
@@ -86,28 +86,28 @@ type GrayAlpha struct {
 }
 ```
 
-GrayAlpha is an image of GrayAlpha pixels
+GrayAlpha is an image of GrayAlpha pixels.
 
 #### func  NewGrayAlpha
 
 ```go
 func NewGrayAlpha(r image.Rectangle) *GrayAlpha
 ```
-NewGrayAlpha create a new GrayAlpha image with the given bounds
+NewGrayAlpha create a new GrayAlpha image with the given bounds.
 
 #### func (*GrayAlpha) At
 
 ```go
 func (g *GrayAlpha) At(x, y int) color.Color
 ```
-At returns the color for the pixel at the specified coords
+At returns the color for the pixel at the specified coords.
 
 #### func (*GrayAlpha) Bounds
 
 ```go
 func (g *GrayAlpha) Bounds() image.Rectangle
 ```
-Bounds returns the limits of the image
+Bounds returns the limits of the image.
 
 #### func (*GrayAlpha) ColorModel
 
@@ -115,21 +115,21 @@ Bounds returns the limits of the image
 func (g *GrayAlpha) ColorModel() color.Model
 ```
 ColorModel returns a color model to transform arbitrary colours into a GrayAlpha
-color
+color.
 
 #### func (*GrayAlpha) GrayAlphaAt
 
 ```go
 func (g *GrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha
 ```
-GrayAlphaAt returns a GrayAlpha colr for the specified coords
+GrayAlphaAt returns a GrayAlpha colr for the specified coords.
 
 #### func (*GrayAlpha) Opaque
 
 ```go
 func (g *GrayAlpha) Opaque() bool
 ```
-Opaque returns true if all pixels have full alpha
+Opaque returns true if all pixels have full alpha.
 
 #### func (*GrayAlpha) PixOffset
 
@@ -137,7 +137,7 @@ Opaque returns true if all pixels have full alpha
 func (g *GrayAlpha) PixOffset(x, y int) int
 ```
 PixOffset returns the index of the element of Pix corresponding to the given
-coords
+coords.
 
 #### func (*GrayAlpha) Set
 
@@ -145,21 +145,21 @@ coords
 func (g *GrayAlpha) Set(x, y int, c color.Color)
 ```
 Set converts the given colour to a GrayAlpha colour and sets it at the given
-coords
+coords.
 
 #### func (*GrayAlpha) SetGrayAlpha
 
 ```go
 func (g *GrayAlpha) SetGrayAlpha(x, y int, ga lcolor.GrayAlpha)
 ```
-SetGrayAlpha sets the colour at the given coords
+SetGrayAlpha sets the colour at the given coords.
 
 #### func (*GrayAlpha) SubImage
 
 ```go
 func (g *GrayAlpha) SubImage(r image.Rectangle) image.Image
 ```
-SubImage retuns the Image viewable through the given bounds
+SubImage retuns the Image viewable through the given bounds.
 
 #### type Image
 
@@ -167,21 +167,21 @@ SubImage retuns the Image viewable through the given bounds
 type Image []Layer
 ```
 
-Image represents a collection of layers
+Image represents a collection of layers.
 
 #### func (Image) At
 
 ```go
 func (g Image) At(x, y int) color.Color
 ```
-At returns the colour at the specified coords
+At returns the colour at the specified coords.
 
 #### func (Image) Bounds
 
 ```go
 func (g Image) Bounds() image.Rectangle
 ```
-Bounds returns the limits for the dimensions of the group
+Bounds returns the limits for the dimensions of the group.
 
 #### func (Image) ColorModel
 
@@ -189,7 +189,7 @@ Bounds returns the limits for the dimensions of the group
 func (g Image) ColorModel() color.Model
 ```
 ColorModel represents the color model of the group. It uses the first layer to
-determine the color model
+determine the color model.
 
 #### func (Image) SubImage
 
@@ -197,14 +197,14 @@ determine the color model
 func (g Image) SubImage(r image.Rectangle) image.Image
 ```
 SubImage returns an image representing the portion of the image p visible
-through r. The returned value shares pixels with the original image
+through r. The returned value shares pixels with the original image.
 
 #### type Layer
 
 ```go
 type Layer struct {
 	Name         string
-	LayerBounds  image.Rectangle // Bounds within the layer group
+	LayerBounds  image.Rectangle // Bounds within the layer group.
 	Mode         Composite
 	Invisible    bool
 	Transparency uint8
@@ -212,21 +212,21 @@ type Layer struct {
 }
 ```
 
-Layer represents a single layer of a multilayered image
+Layer represents a single layer of a multilayered image.
 
 #### func (Layer) At
 
 ```go
 func (l Layer) At(x, y int) color.Color
 ```
-At returns the colour at the specified coords
+At returns the colour at the specified coords.
 
 #### func (Layer) Bounds
 
 ```go
 func (l Layer) Bounds() image.Rectangle
 ```
-Bounds returns the limits for the dimensions of the layer
+Bounds returns the limits for the dimensions of the layer.
 
 #### func (Layer) SubImage
 
@@ -234,7 +234,7 @@ Bounds returns the limits for the dimensions of the layer
 func (l Layer) SubImage(r image.Rectangle) image.Image
 ```
 SubImage returns an image representing the portion of the image p visible
-through r. The returned value shares pixels with the original image
+through r. The returned value shares pixels with the original image.
 
 #### func (Layer) SubImageLayer
 
@@ -242,7 +242,7 @@ through r. The returned value shares pixels with the original image
 func (l Layer) SubImageLayer(r image.Rectangle) Layer
 ```
 SubImageLayer returns an image representing the portion of the image p visible
-through r. The returned value shares pixels with the original image
+through r. The returned value shares pixels with the original image.
 
 #### type MaskedImage
 
@@ -253,14 +253,14 @@ type MaskedImage struct {
 }
 ```
 
-MaskedImage represents an image that has a to-be-applied mask
+MaskedImage represents an image that has a to-be-applied mask.
 
 #### func (MaskedImage) At
 
 ```go
 func (m MaskedImage) At(x, y int) color.Color
 ```
-At returns the colour at the specified coords after masking
+At returns the colour at the specified coords after masking.
 
 #### type PalettedAlpha
 
@@ -273,56 +273,56 @@ type PalettedAlpha struct {
 }
 ```
 
-PalettedAlpha represents a paletted image with an alpha channel
+PalettedAlpha represents a paletted image with an alpha channel.
 
 #### func  NewPalettedAlpha
 
 ```go
 func NewPalettedAlpha(r image.Rectangle, p lcolor.AlphaPalette) *PalettedAlpha
 ```
-NewPalettedAlpha creates a new image that uses a palette with an alpha channel
+NewPalettedAlpha creates a new image that uses a palette with an alpha channel.
 
 #### func (*PalettedAlpha) At
 
 ```go
 func (p *PalettedAlpha) At(x, y int) color.Color
 ```
-At returns the color of the pixel at the given coords
+At returns the color of the pixel at the given coords.
 
 #### func (*PalettedAlpha) Bounds
 
 ```go
 func (p *PalettedAlpha) Bounds() image.Rectangle
 ```
-Bounds returns the limits of the image
+Bounds returns the limits of the image.
 
 #### func (*PalettedAlpha) ColorModel
 
 ```go
 func (p *PalettedAlpha) ColorModel() color.Model
 ```
-ColorModel a color model to tranform arbitrary colors to one in the palette
+ColorModel a color model to tranform arbitrary colors to one in the palette.
 
 #### func (*PalettedAlpha) IndexAlphaAt
 
 ```go
 func (p *PalettedAlpha) IndexAlphaAt(x, y int) lcolor.IndexedAlpha
 ```
-IndexAlphaAt returns the palette index and Alpha component of the given coords
+IndexAlphaAt returns the palette index and Alpha component of the given coords.
 
 #### func (*PalettedAlpha) Opaque
 
 ```go
 func (p *PalettedAlpha) Opaque() bool
 ```
-Opaque returns true if the image is completely opaque
+Opaque returns true if the image is completely opaque.
 
 #### func (*PalettedAlpha) PixOffset
 
 ```go
 func (p *PalettedAlpha) PixOffset(x, y int) int
 ```
-PixOffset returns the index of the Pix array corresponding to the given coords
+PixOffset returns the index of the Pix array corresponding to the given coords.
 
 #### func (*PalettedAlpha) Set
 
@@ -330,21 +330,21 @@ PixOffset returns the index of the Pix array corresponding to the given coords
 func (p *PalettedAlpha) Set(x, y int, c color.Color)
 ```
 Set converts the given colour to the closest in the palette and sets it at the
-given coords
+given coords.
 
 #### func (*PalettedAlpha) SetIndexAlpha
 
 ```go
 func (p *PalettedAlpha) SetIndexAlpha(x, y int, ia lcolor.IndexedAlpha)
 ```
-SetIndexAlpha directly set the index and alpha channels to the given coords
+SetIndexAlpha directly set the index and alpha channels to the given coords.
 
 #### func (*PalettedAlpha) SubImage
 
 ```go
 func (p *PalettedAlpha) SubImage(r image.Rectangle) image.Image
 ```
-SubImage retuns the Image viewable through the given bounds
+SubImage retuns the Image viewable through the given bounds.
 
 #### type RGB
 
@@ -356,28 +356,28 @@ type RGB struct {
 }
 ```
 
-RGB is an image of RGB colours
+RGB is an image of RGB colours.
 
 #### func  NewRGB
 
 ```go
 func NewRGB(r image.Rectangle) *RGB
 ```
-NewRGB create a new RGB image with the given bounds
+NewRGB create a new RGB image with the given bounds.
 
 #### func (*RGB) At
 
 ```go
 func (r *RGB) At(x, y int) color.Color
 ```
-At returns the colour at the given coords
+At returns the colour at the given coords.
 
 #### func (*RGB) Bounds
 
 ```go
 func (r *RGB) Bounds() image.Rectangle
 ```
-Bounds returns the limits of the image
+Bounds returns the limits of the image.
 
 #### func (*RGB) ColorModel
 
@@ -385,7 +385,7 @@ Bounds returns the limits of the image
 func (r *RGB) ColorModel() color.Model
 ```
 ColorModel returns a colour model that converts arbitrary colours to the RGB
-space
+space.
 
 #### func (*RGB) Opaque
 
@@ -399,35 +399,35 @@ Opaque just returns true as the alpha channel is fixed.
 ```go
 func (r *RGB) PixOffset(x, y int) int
 ```
-PixOffset returns the index of the Pix array correspinding to the given coords
+PixOffset returns the index of the Pix array correspinding to the given coords.
 
 #### func (*RGB) RGBAt
 
 ```go
 func (r *RGB) RGBAt(x, y int) lcolor.RGB
 ```
-RGBAt returns the exact RGB colour at the given coords
+RGBAt returns the exact RGB colour at the given coords.
 
 #### func (*RGB) Set
 
 ```go
 func (r *RGB) Set(x, y int, c color.Color)
 ```
-Set converts the given colour to the RGB space and sets it at the given coords
+Set converts the given colour to the RGB space and sets it at the given coords.
 
 #### func (*RGB) SetRGB
 
 ```go
 func (r *RGB) SetRGB(x, y int, rgb lcolor.RGB)
 ```
-SetRGB directly set an RGB colour to the given coords
+SetRGB directly set an RGB colour to the given coords.
 
 #### func (*RGB) SubImage
 
 ```go
 func (r *RGB) SubImage(rt image.Rectangle) image.Image
 ```
-SubImage retuns the Image viewable through the given bounds
+SubImage retuns the Image viewable through the given bounds.
 
 #### type Text
 
@@ -438,7 +438,7 @@ type Text struct {
 }
 ```
 
-Text represents a text layer
+Text represents a text layer.
 
 #### type TextData
 
@@ -446,14 +446,14 @@ Text represents a text layer
 type TextData []TextDatum
 ```
 
-TextData represents the stylised text
+TextData represents the stylised text.
 
 #### func (TextData) String
 
 ```go
 func (t TextData) String() string
 ```
-String returns a flattened string
+String returns a flattened string.
 
 #### type TextDatum
 
@@ -466,4 +466,4 @@ type TextDatum struct {
 }
 ```
 
-TextDatum is a collection of styling for a single piece of text
+TextDatum is a collection of styling for a single piece of text.
