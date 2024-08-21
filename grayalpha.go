@@ -41,7 +41,7 @@ func (g *GrayAlpha) ColorModel() color.Model {
 	return lcolor.GrayAlphaModel
 }
 
-// GrayAlphaAt returns a GrayAlpha colr for the specified coords.
+// GrayAlphaAt returns a GrayAlpha color for the specified coords.
 func (g *GrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha {
 	if !(image.Point{x, y}.In(g.Rect)) {
 		return lcolor.GrayAlpha{}
@@ -86,7 +86,7 @@ func (g *GrayAlpha) SetGrayAlpha(x, y int, ga lcolor.GrayAlpha) {
 	g.Pix[g.PixOffset(x, y)] = ga
 }
 
-// SubImage retuns the Image viewable through the given bounds.
+// SubImage returns the Image viewable through the given bounds.
 func (g *GrayAlpha) SubImage(r image.Rectangle) image.Image {
 	r = r.Intersect(g.Rect)
 

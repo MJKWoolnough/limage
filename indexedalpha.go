@@ -49,7 +49,7 @@ func (p *PalettedAlpha) Bounds() image.Rectangle {
 	return p.Rect
 }
 
-// ColorModel a color model to tranform arbitrary colors to one in the palette.
+// ColorModel a color model to transform arbitrary colors to one in the palette.
 func (p *PalettedAlpha) ColorModel() color.Model {
 	return p.Palette
 }
@@ -104,7 +104,7 @@ func (p *PalettedAlpha) SetIndexAlpha(x, y int, ia lcolor.IndexedAlpha) {
 	p.Pix[p.PixOffset(x, y)] = ia
 }
 
-// SubImage retuns the Image viewable through the given bounds.
+// SubImage returns the Image viewable through the given bounds.
 func (p *PalettedAlpha) SubImage(r image.Rectangle) image.Image {
 	r = r.Intersect(p.Rect)
 

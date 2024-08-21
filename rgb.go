@@ -55,7 +55,7 @@ func (r *RGB) Opaque() bool {
 	return true
 }
 
-// PixOffset returns the index of the Pix array correspinding to the given
+// PixOffset returns the index of the Pix array corresponding to the given
 // coords.
 func (r *RGB) PixOffset(x, y int) int {
 	return (y-r.Rect.Min.Y)*r.Stride + x - r.Rect.Min.X
@@ -85,7 +85,7 @@ func (r *RGB) SetRGB(x, y int, rgb lcolor.RGB) {
 	r.Pix[r.PixOffset(x, y)] = rgb
 }
 
-// SubImage retuns the Image viewable through the given bounds.
+// SubImage returns the Image viewable through the given bounds.
 func (r *RGB) SubImage(rt image.Rectangle) image.Image {
 	rt = rt.Intersect(r.Rect)
 
