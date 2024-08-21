@@ -122,7 +122,7 @@ color.
 ```go
 func (g *GrayAlpha) GrayAlphaAt(x, y int) lcolor.GrayAlpha
 ```
-GrayAlphaAt returns a GrayAlpha colr for the specified coords.
+GrayAlphaAt returns a GrayAlpha color for the specified coords.
 
 #### func (*GrayAlpha) Opaque
 
@@ -159,7 +159,7 @@ SetGrayAlpha sets the colour at the given coords.
 ```go
 func (g *GrayAlpha) SubImage(r image.Rectangle) image.Image
 ```
-SubImage retuns the Image viewable through the given bounds.
+SubImage returns the Image viewable through the given bounds.
 
 #### type Image
 
@@ -301,7 +301,7 @@ Bounds returns the limits of the image.
 ```go
 func (p *PalettedAlpha) ColorModel() color.Model
 ```
-ColorModel a color model to tranform arbitrary colors to one in the palette.
+ColorModel a color model to transform arbitrary colors to one in the palette.
 
 #### func (*PalettedAlpha) IndexAlphaAt
 
@@ -344,7 +344,7 @@ SetIndexAlpha directly set the index and alpha channels to the given coords.
 ```go
 func (p *PalettedAlpha) SubImage(r image.Rectangle) image.Image
 ```
-SubImage retuns the Image viewable through the given bounds.
+SubImage returns the Image viewable through the given bounds.
 
 #### type RGB
 
@@ -399,7 +399,7 @@ Opaque just returns true as the alpha channel is fixed.
 ```go
 func (r *RGB) PixOffset(x, y int) int
 ```
-PixOffset returns the index of the Pix array correspinding to the given coords.
+PixOffset returns the index of the Pix array corresponding to the given coords.
 
 #### func (*RGB) RGBAt
 
@@ -427,7 +427,7 @@ SetRGB directly set an RGB colour to the given coords.
 ```go
 func (r *RGB) SubImage(rt image.Rectangle) image.Image
 ```
-SubImage retuns the Image viewable through the given bounds.
+SubImage returns the Image viewable through the given bounds.
 
 #### type Text
 
