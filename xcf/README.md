@@ -28,7 +28,7 @@ Errors.
 var (
 	ErrInvalidLayerType      = errors.New("invalid layer type")
 	ErrInvalidItemPathLength = errors.New("invalid item path length")
-	ErrInconsistantData      = errors.New("inconsistant data read")
+	ErrInconsistantData      = errors.New("inconsistent data read")
 )
 ```
 Errors.
@@ -44,7 +44,7 @@ Errors.
 
 ```go
 var (
-	ErrInconsistantClosedState = errors.New("inconsistant closed state")
+	ErrInconsistantClosedState = errors.New("inconsistent closed state")
 	ErrUnknownPathsVersion     = errors.New("unknown paths version")
 )
 ```
@@ -141,7 +141,7 @@ At returns colour at the specified coords.
 ```go
 func (c *CompressedGray) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image.
+Bounds returns a Rect containing the boundary data for the image.
 
 #### func (CompressedGray) ColorModel
 
@@ -180,7 +180,7 @@ At returns colour at the specified coords.
 ```go
 func (c *CompressedGrayAlpha) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image.
+Bounds returns a Rect containing the boundary data for the image.
 
 #### func (CompressedGrayAlpha) ColorModel
 
@@ -219,7 +219,7 @@ At returns colour at the specified coords.
 ```go
 func (c *CompressedNRGBA) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image.
+Bounds returns a Rect containing the boundary data for the image.
 
 #### func (CompressedNRGBA) ColorModel
 
@@ -259,14 +259,14 @@ At returns colour at the specified coords.
 ```go
 func (c *CompressedPaletted) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image.
+Bounds returns a Rect containing the boundary data for the image.
 
 #### func (*CompressedPaletted) ColorModel
 
 ```go
 func (c *CompressedPaletted) ColorModel() color.Model
 ```
-ColorModel returns the Pallette of the image.
+ColorModel returns the Palette of the image.
 
 #### type CompressedPalettedAlpha
 
@@ -292,14 +292,14 @@ At returns colour at the specified coords.
 ```go
 func (c *CompressedPalettedAlpha) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image
+Bounds returns a Rect containing the boundary data for the image
 
 #### func (*CompressedPalettedAlpha) ColorModel
 
 ```go
 func (c *CompressedPalettedAlpha) ColorModel() color.Model
 ```
-ColorModel returns the Pallette of the image
+ColorModel returns the Palette of the image
 
 #### type CompressedRGB
 
@@ -324,7 +324,7 @@ At returns colour at the specified coords.
 ```go
 func (c *CompressedRGB) Bounds() image.Rectangle
 ```
-Bounds returns a Rect containg the boundary data for the image.
+Bounds returns a Rect containing the boundary data for the image.
 
 #### func (CompressedRGB) ColorModel
 
