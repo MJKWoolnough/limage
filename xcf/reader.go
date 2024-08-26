@@ -10,24 +10,12 @@ import (
 
 type reader struct {
 	*byteio.StickyBigEndianReader
-	rs *readSeeker
-}
-
-type readSeeker struct {
-	io.ReaderAt
-	pos int64
-}
-
-func (r *readSeeker) Read(p []byte) (int, error) {
-	n, err := r.ReadAt(p, r.pos)
-	r.pos += int64(n)
-
-	return n, err
+	rs *io.SectionReader
 }
 
 func newReader(r io.ReaderAt) reader {
 	nr := reader{
-		rs: &readSeeker{ReaderAt: r},
+		rs: io.NewSectionReader(r, 0, maxString),
 	}
 
 	nr.StickyBigEndianReader = &byteio.StickyBigEndianReader{Reader: nr.rs}
@@ -69,7 +57,7 @@ func (r *reader) ReadByte() byte {
 }
 
 func (r *reader) Goto(n uint64) {
-	r.rs.pos = int64(n)
+	r.rs.Seek(int64(n), io.SeekStart)
 }
 
 func (r *reader) SetError(err error) {
