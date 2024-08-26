@@ -1,7 +1,9 @@
 package xcf
 
+import "io"
+
 func (r *reader) Skip(n uint32) {
-	r.rs.pos += int64(n)
+	r.rs.Seek(int64(n), io.SeekCurrent)
 }
 
 func (r *reader) SkipBoolProperty() {
