@@ -362,7 +362,7 @@ PropertyLoop:
 			}
 		case propUserUnit:
 			dr.SkipFloat32() // factor
-			dr.SkipUint32()  // number of decimal igits
+			dr.SkipUint32()  // number of decimal digits
 			dr.SkipString()  // id
 			dr.SkipString()  // symbol
 			dr.SkipString()  // abbr.

@@ -55,7 +55,7 @@ type CompressedRGB struct {
 // ColorModel returns the RGB Color Model.
 func (CompressedRGB) ColorModel() color.Model { return lcolor.RGBModel }
 
-// Bounds returns a Rect containg the boundary data for the image.
+// Bounds returns a Rect containing the boundary data for the image.
 func (c *CompressedRGB) Bounds() image.Rectangle { return c.Rect }
 
 // At returns colour at the specified coords.
@@ -86,7 +86,7 @@ type CompressedNRGBA struct {
 // ColorModel returns the NRGBA Color Model.
 func (CompressedNRGBA) ColorModel() color.Model { return color.NRGBAModel }
 
-// Bounds returns a Rect containg the boundary data for the image.
+// Bounds returns a Rect containing the boundary data for the image.
 func (c *CompressedNRGBA) Bounds() image.Rectangle { return c.Rect }
 
 // At returns colour at the specified coords.
@@ -118,7 +118,7 @@ type CompressedGray struct {
 // ColorModel returns the Gray Color Model.
 func (CompressedGray) ColorModel() color.Model { return color.GrayModel }
 
-// Bounds returns a Rect containg the boundary data for the image.
+// Bounds returns a Rect containing the boundary data for the image.
 func (c *CompressedGray) Bounds() image.Rectangle { return c.Rect }
 
 // At returns colour at the specified coords.
@@ -147,7 +147,7 @@ type CompressedGrayAlpha struct {
 // ColorModel returns the Gray Alpha Color Model.
 func (CompressedGrayAlpha) ColorModel() color.Model { return lcolor.GrayAlphaModel }
 
-// Bounds returns a Rect containg the boundary data for the image.
+// Bounds returns a Rect containing the boundary data for the image.
 func (c *CompressedGrayAlpha) Bounds() image.Rectangle { return c.Rect }
 
 // At returns colour at the specified coords.
@@ -175,10 +175,10 @@ type CompressedPaletted struct {
 	Palette color.Palette
 }
 
-// ColorModel returns the Pallette of the image.
+// ColorModel returns the Palette of the image.
 func (c *CompressedPaletted) ColorModel() color.Model { return c.Palette }
 
-// Bounds returns a Rect containg the boundary data for the image.
+// Bounds returns a Rect containing the boundary data for the image.
 func (c *CompressedPaletted) Bounds() image.Rectangle { return c.Rect }
 
 // At returns colour at the specified coords.
@@ -211,10 +211,10 @@ type CompressedPalettedAlpha struct {
 	Palette lcolor.AlphaPalette
 }
 
-// ColorModel returns the Pallette of the image
+// ColorModel returns the Palette of the image
 func (c *CompressedPalettedAlpha) ColorModel() color.Model { return c.Palette }
 
-// Bounds returns a Rect containg the boundary data for the image
+// Bounds returns a Rect containing the boundary data for the image
 func (c *CompressedPalettedAlpha) Bounds() image.Rectangle { return c.Rect }
 
 // At returns colour at the specified coords.

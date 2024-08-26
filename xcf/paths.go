@@ -87,6 +87,6 @@ func (d *reader) ReadPaths() paths {
 
 // Errors.
 var (
-	ErrInconsistantClosedState = errors.New("inconsistant closed state")
+	ErrInconsistantClosedState = errors.New("inconsistent closed state")
 	ErrUnknownPathsVersion     = errors.New("unknown paths version")
 )

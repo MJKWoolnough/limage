@@ -250,5 +250,5 @@ PropertyLoop:
 var (
 	ErrInvalidLayerType      = errors.New("invalid layer type")
 	ErrInvalidItemPathLength = errors.New("invalid item path length")
-	ErrInconsistantData      = errors.New("inconsistant data read")
+	ErrInconsistantData      = errors.New("inconsistent data read")
 )
