@@ -45,6 +45,16 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 		group = *i
 	}
 
+	writeProperties(e, im, offsetX, offsetY, groups, group, text)
+	e.WriteUint32(0)
+	writeLayer(e, img, mask)
+
+	if group != nil {
+		e.WriteLayers(group, offsetX, offsetY, groups, pw)
+	}
+}
+
+func writeProperties(e *encoder, im limage.Layer, offsetX, offsetY int32, groups []uint32, group limage.Image, text limage.TextData) {
 	b := im.Bounds()
 	dx, dy := uint32(b.Dx()), uint32(b.Dy())
 
@@ -92,88 +102,91 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 	e.WriteUint32(propMode)
 	e.WriteUint32(4)
 
-	switch im.Mode {
-	case limage.CompositeNormal:
-		e.WriteUint32(0)
-	case limage.CompositeDissolve:
-		e.WriteUint32(1)
-	case limage.CompositeBehind:
-		e.WriteUint32(2)
-	case limage.CompositeMultiply:
-		e.WriteUint32(3)
-	case limage.CompositeScreen:
-		e.WriteUint32(4)
-	case limage.CompositeOverlay:
-		e.WriteUint32(5)
-	case limage.CompositeDifference:
-		e.WriteUint32(6)
-	case limage.CompositeAddition:
-		e.WriteUint32(7)
-	case limage.CompositeSubtract:
-		e.WriteUint32(8)
-	case limage.CompositeDarkenOnly:
-		e.WriteUint32(9)
-	case limage.CompositeLightenOnly:
-		e.WriteUint32(10)
-	case limage.CompositeHue:
-		e.WriteUint32(11)
-	case limage.CompositeSaturation:
-		e.WriteUint32(12)
-	case limage.CompositeColor:
-		e.WriteUint32(13)
-	case limage.CompositeValue:
-		e.WriteUint32(14)
-	case limage.CompositeDivide:
-		e.WriteUint32(15)
-	case limage.CompositeDodge:
-		e.WriteUint32(16)
-	case limage.CompositeBurn:
-		e.WriteUint32(17)
-	case limage.CompositeHardLight:
-		e.WriteUint32(18)
-	case limage.CompositeSoftLight:
-		e.WriteUint32(19)
-	case limage.CompositeGrainExtract:
-		e.WriteUint32(20)
-	case limage.CompositeGrainMerge:
-		e.WriteUint32(21)
-	case limage.CompositeLuminosity:
-		e.WriteUint32(22)
-	case limage.CompositeColorErase:
-		e.WriteUint32(22)
-	case limage.CompositeChroma:
-		e.WriteUint32(25)
-	case limage.CompositeLightness:
-		e.WriteUint32(27)
-	case limage.CompositeVividLight:
-		e.WriteUint32(48)
-	case limage.CompositePinLight:
-		e.WriteUint32(49)
-	case limage.CompositeLinearLight:
-		e.WriteUint32(50)
-	case limage.CompositeHardMix:
-		e.WriteUint32(51)
-	case limage.CompositeExclusion:
-		e.WriteUint32(52)
-	case limage.CompositeLinearBurn:
-		e.WriteUint32(53)
-	case limage.CompositeErase:
-		e.WriteUint32(58)
-	case limage.CompositeMerge:
-		e.WriteUint32(59)
-	case limage.CompositeSplit:
-		e.WriteUint32(60)
-	case limage.CompositePassThrough:
-		e.WriteUint32(61)
-	default:
-		e.WriteUint32(0) // Error instead?
-	}
+	e.WriteUint32(modeID(im.Mode))
 
 	e.WriteUint32(0) // end of properties
-	e.WriteUint32(0)
+}
 
-	// write layer
+func modeID(mode limage.Composite) uint32 {
+	switch mode {
+	case limage.CompositeNormal:
+		return 0
+	case limage.CompositeDissolve:
+		return 1
+	case limage.CompositeBehind:
+		return 2
+	case limage.CompositeMultiply:
+		return 3
+	case limage.CompositeScreen:
+		return 4
+	case limage.CompositeOverlay:
+		return 5
+	case limage.CompositeDifference:
+		return 6
+	case limage.CompositeAddition:
+		return 7
+	case limage.CompositeSubtract:
+		return 8
+	case limage.CompositeDarkenOnly:
+		return 9
+	case limage.CompositeLightenOnly:
+		return 10
+	case limage.CompositeHue:
+		return 11
+	case limage.CompositeSaturation:
+		return 12
+	case limage.CompositeColor:
+		return 13
+	case limage.CompositeValue:
+		return 14
+	case limage.CompositeDivide:
+		return 15
+	case limage.CompositeDodge:
+		return 16
+	case limage.CompositeBurn:
+		return 17
+	case limage.CompositeHardLight:
+		return 18
+	case limage.CompositeSoftLight:
+		return 19
+	case limage.CompositeGrainExtract:
+		return 20
+	case limage.CompositeGrainMerge:
+		return 21
+	case limage.CompositeLuminosity:
+		return 22
+	case limage.CompositeColorErase:
+		return 22
+	case limage.CompositeChroma:
+		return 25
+	case limage.CompositeLightness:
+		return 27
+	case limage.CompositeVividLight:
+		return 48
+	case limage.CompositePinLight:
+		return 49
+	case limage.CompositeLinearLight:
+		return 50
+	case limage.CompositeHardMix:
+		return 51
+	case limage.CompositeExclusion:
+		return 52
+	case limage.CompositeLinearBurn:
+		return 53
+	case limage.CompositeErase:
+		return 58
+	case limage.CompositeMerge:
+		return 59
+	case limage.CompositeSplit:
+		return 60
+	case limage.CompositePassThrough:
+		return 61
+	default:
+		return 0 // Error instead?
+	}
+}
 
+func writeLayer(e *encoder, img image.Image, mask *image.Gray) {
 	ptrs := e.ReservePointers(2)
 
 	ptrs.WritePointer(uint32(e.pos))
@@ -185,9 +198,5 @@ func (e *encoder) WriteLayer(im limage.Layer, offsetX, offsetY int32, groups []u
 		e.WriteChannel(mask)
 	} else {
 		ptrs.WritePointer(0)
-	}
-
-	if group != nil {
-		e.WriteLayers(group, offsetX, offsetY, groups, pw)
 	}
 }
