@@ -77,39 +77,16 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 
 	dr := newReader(r)
 
-	// check header
-
-	var header [14]byte
-
-	dr.Read(header[:])
-
-	if dr.Err != nil {
-		return c, dr.Err
-	}
-
-	if string(header[:9]) != fileTypeID {
-		return c, ErrInvalidFileTypeID
-	}
-
-	var newMode bool
-
-	switch string(header[9:13]) {
-	case fileVersion0, fileVersion1, fileVersion2, fileVersion3:
-	case fileVersion4, fileVersion5, fileVersion6, fileVersion7, fileVersion8, fileVersion9, fileVersion10, fileVersion11, fileVersion12, fileVersion13:
-		newMode = true
-	default:
-		return c, ErrUnsupportedVersion
-	}
-
-	if header[13] != 0 {
-		return c, ErrInvalidHeader
+	mode, err := readHeader(dr)
+	if err != nil {
+		return image.Config{}, err
 	}
 
 	c.Width = int(dr.ReadUint32())
 	c.Height = int(dr.ReadUint32())
 	baseType := dr.ReadUint32()
 
-	if newMode {
+	if mode == 2 {
 		dr.ReadUint32()
 	}
 
@@ -119,104 +96,12 @@ func DecodeConfig(r io.ReaderAt) (image.Config, error) {
 	case 1:
 		c.ColorModel = lcolor.GrayAlphaModel
 	case 2:
-	PropertyLoop:
-		for {
-			typ := dr.ReadUint32()
-			plength := dr.ReadUint32()
-
-			switch typ {
-			case propEnd:
-				if plength != 0 {
-					return c, ErrInvalidProperties
-				}
-
-				break PropertyLoop
-
-			// the one we care about
-			case propColorMap:
-				if baseType != baseIndexed {
-					dr.Skip(plength) // skip
-				}
-
-				palette := make(lcolor.AlphaPalette, dr.ReadUint32())
-
-				for n := range palette {
-					r := dr.ReadUint8()
-					g := dr.ReadUint8()
-					b := dr.ReadUint8()
-					palette[n] = lcolor.RGB{
-						R: r,
-						G: g,
-						B: b,
-					}
-				}
-
-				c.ColorModel = palette
-
-				break PropertyLoop
-
-			// general properties
-			case propLinked:
-				dr.SkipBoolProperty()
-			case propLockContent:
-				dr.SkipBoolProperty()
-			case propOpacity:
-				if o := dr.ReadUint32(); o > 255 {
-					return c, ErrInvalidOpacity
-				}
-			case propParasites:
-				dr.SkipParasites(plength)
-			case propTattoo:
-				dr.SkipUint32()
-			case propVisible:
-				dr.SkipBoolProperty()
-			case propCompression:
-				if dr.ReadUint8() > 1 {
-					return c, ErrUnknownCompression
-				}
-			case propGuides:
-				ng := plength / 5
-
-				if ng*5 != plength {
-					return c, ErrInvalidGuideLength
-				}
-
-				for n := uint32(0); n < ng; n++ {
-					dr.SkipUint32()
-					dr.SkipBoolProperty()
-				}
-			case propPaths:
-				dr.SkipPaths()
-			case propResolution:
-				dr.SkipFloat32()
-				dr.SkipFloat32()
-			case propSamplePoints:
-				if plength&1 == 1 {
-					return c, ErrInvalidSampleLength
-				}
-
-				for i := uint32(0); i < plength>>1; i++ {
-					dr.SkipUint32()
-					dr.SkipUint32()
-				}
-			case propUnit:
-				if unit := dr.ReadUint32(); unit > 4 {
-					return c, ErrInvalidUnit
-				}
-			case propUserUnit:
-				dr.SkipFloat32()
-				dr.SkipUint32()
-				dr.SkipString()
-				dr.SkipString()
-				dr.SkipString()
-				dr.SkipString()
-				dr.SkipString()
-			case propVectors:
-				dr.SkipVectors()
-			default:
-				dr.Skip(plength)
-			}
+		palette, _, err := readImageProperties(dr, 2)
+		if err != nil {
+			return c, err
 		}
+
+		c.ColorModel = palette
 	}
 
 	return c, dr.Err
@@ -233,37 +118,19 @@ func DecodeCompressed(r io.ReaderAt) (limage.Image, error) {
 	return decodeImage(r, false)
 }
 
+type groupOffset struct {
+	Group            limage.Image
+	OffsetX, OffsetY int
+	Parent           *limage.Image
+	Offset           int
+}
+
 func decodeImage(r io.ReaderAt, decompress bool) (limage.Image, error) {
 	dr := newReader(r)
 
-	// check header
-
-	var header [14]byte
-
-	dr.Read(header[:])
-
-	if dr.Err != nil {
-		return nil, dr.Err // wrap?
-	}
-
-	if string(header[:9]) != fileTypeID {
-		return nil, ErrInvalidFileTypeID
-	}
-
-	var mode uint32
-
-	switch string(header[9:13]) {
-	case fileVersion0, fileVersion1, fileVersion2, fileVersion3:
-	case fileVersion4, fileVersion5, fileVersion6, fileVersion7, fileVersion8, fileVersion9, fileVersion10:
-		mode = 1
-	case fileVersion11, fileVersion12, fileVersion13:
-		mode = 2
-	default:
-		return nil, ErrUnsupportedVersion
-	}
-
-	if header[13] != 0 {
-		return nil, ErrInvalidHeader
+	mode, err := readHeader(dr)
+	if err != nil {
+		return nil, err
 	}
 
 	width := int(dr.ReadUint32())
@@ -277,12 +144,71 @@ func decodeImage(r io.ReaderAt, decompress bool) (limage.Image, error) {
 		precision = dr.ReadUint32()
 	}
 
+	palette, compression, err := readImageProperties(dr, baseType)
+	if err != nil {
+		return nil, err
+	}
+
+	layerptrs := readLayerPointers(dr, mode)
+
+	if dr.Err != nil {
+		return nil, dr.Err
+	}
+
+	layers := readLayers(dr, r, layerptrs, baseType, palette, compression, precision, mode, decompress)
+
+	if dr.Err != nil {
+		return nil, dr.Err
+	}
+
+	groups, err := makeGroups(layers, bounds)
+	if err != nil {
+		return nil, err
+	}
+
+	im := makeImage(groups)
+
+	return im, nil
+}
+
+func readHeader(dr reader) (uint32, error) {
+	var header [14]byte
+
+	dr.Read(header[:])
+
+	if dr.Err != nil {
+		return 0, dr.Err // wrap?
+	}
+
+	if string(header[:9]) != fileTypeID {
+		return 0, ErrInvalidFileTypeID
+	}
+
+	var mode uint32
+
+	switch string(header[9:13]) {
+	case fileVersion0, fileVersion1, fileVersion2, fileVersion3:
+	case fileVersion4, fileVersion5, fileVersion6, fileVersion7, fileVersion8, fileVersion9, fileVersion10:
+		mode = 1
+	case fileVersion11, fileVersion12, fileVersion13:
+		mode = 2
+	default:
+		return 0, ErrUnsupportedVersion
+	}
+
+	if header[13] != 0 {
+		return 0, ErrInvalidHeader
+	}
+
+	return mode, nil
+}
+
+func readImageProperties(dr reader, baseType uint32) (lcolor.AlphaPalette, uint8, error) {
 	var (
 		palette     lcolor.AlphaPalette
 		compression uint8
 	)
 
-	// read image properties
 PropertyLoop:
 	for {
 		typ := dr.ReadUint32()
@@ -291,7 +217,7 @@ PropertyLoop:
 		switch typ {
 		case propEnd:
 			if plength != 0 {
-				return nil, ErrInvalidProperties
+				return nil, 0, ErrInvalidProperties
 			}
 
 			break PropertyLoop
@@ -303,7 +229,7 @@ PropertyLoop:
 			dr.ReadBoolProperty()
 		case propOpacity:
 			if o := dr.ReadUint32(); o > 255 {
-				return nil, ErrInvalidOpacity
+				return nil, 0, ErrInvalidOpacity
 			}
 		case propParasites:
 			dr.ReadParasites(plength)
@@ -329,13 +255,13 @@ PropertyLoop:
 			}
 		case propCompression:
 			if compression = dr.ReadUint8(); compression > 1 {
-				return nil, ErrUnknownCompression
+				return nil, 0, ErrUnknownCompression
 			}
 		case propGuides:
 			ng := plength / 5
 
 			if ng*5 != plength {
-				return nil, ErrInvalidGuideLength
+				return nil, 0, ErrInvalidGuideLength
 			}
 
 			for n := uint32(0); n < ng; n++ {
@@ -349,7 +275,7 @@ PropertyLoop:
 			dr.SkipFloat32() // y
 		case propSamplePoints:
 			if plength&1 == 1 {
-				return nil, ErrInvalidSampleLength
+				return nil, 0, ErrInvalidSampleLength
 			}
 
 			for i := uint32(0); i < plength>>1; i++ {
@@ -358,7 +284,7 @@ PropertyLoop:
 			}
 		case propUnit:
 			if dr.ReadUint32() > 4 {
-				return nil, ErrInvalidUnit
+				return nil, 0, ErrInvalidUnit
 			}
 		case propUserUnit:
 			dr.SkipFloat32() // factor
@@ -375,6 +301,10 @@ PropertyLoop:
 		}
 	}
 
+	return palette, compression, nil
+}
+
+func readLayerPointers(dr reader, mode uint32) []uint64 {
 	layerptrs := make([]uint64, 0, 32)
 
 	for {
@@ -387,29 +317,14 @@ PropertyLoop:
 		}
 
 		if lptr == 0 {
-			break
+			return layerptrs
 		}
 
 		layerptrs = append(layerptrs, lptr)
 	}
+}
 
-	if dr.Err != nil {
-		return nil, dr.Err
-	}
-
-	type groupOffset struct {
-		Group            limage.Image
-		OffsetX, OffsetY int
-		Parent           *limage.Image
-		Offset           int
-	}
-
-	var (
-		groups = make(map[string]*groupOffset)
-		n      rune
-		alpha  = true
-	)
-
+func readLayers(dr reader, r io.ReaderAt, layerptrs []uint64, baseType uint32, palette lcolor.AlphaPalette, compression uint8, precision, mode uint32, decompress bool) []layer {
 	layers := make([]layer, len(layerptrs))
 
 	var (
@@ -447,9 +362,15 @@ PropertyLoop:
 
 	wg.Wait()
 
-	if dr.Err != nil {
-		return nil, dr.Err
-	}
+	return layers
+}
+
+func makeGroups(layers []layer, bounds image.Rectangle) (map[string]*groupOffset, error) {
+	var (
+		groups = make(map[string]*groupOffset)
+		n      rune
+		alpha  = true
+	)
 
 	groups[""] = &groupOffset{Group: make(limage.Image, 0, 32)}
 
@@ -484,6 +405,10 @@ PropertyLoop:
 		g.Group = append(g.Group, l.Layer)
 	}
 
+	return groups, nil
+}
+
+func makeImage(groups map[string]*groupOffset) limage.Image {
 	var im limage.Image
 
 	for _, g := range groups {
@@ -508,7 +433,7 @@ PropertyLoop:
 		}
 	}
 
-	return im, nil
+	return im
 }
 
 // Errors.
