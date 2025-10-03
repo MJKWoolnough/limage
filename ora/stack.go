@@ -51,10 +51,55 @@ Loop:
 }
 
 func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer, error) {
-	var (
-		l      limage.Layer
-		source string
-	)
+	var l limage.Layer
+
+	source, err := processLayerAttrs(&l, s)
+	if err != nil {
+		return l, err
+	}
+
+	if s.Name.Local == "stack" {
+		var err error
+
+		l.Image, err = d.readStack(offset.Add(l.LayerBounds.Min))
+		if err != nil {
+			return l, err
+		}
+	} else {
+		for _, f := range d.zr.File {
+			if f.Name == source {
+				fr, err := f.Open()
+				if err != nil {
+					return l, err
+				}
+
+				l.Image, _, err = image.Decode(fr)
+				if err != nil {
+					return l, err
+				}
+
+				fr.Close()
+
+				break
+			}
+		}
+
+		if l.Image == nil {
+			return l, ErrInvalidSource
+		}
+
+		if err := d.skipTag(); err != nil {
+			return l, err
+		}
+	}
+
+	l.LayerBounds = l.Image.Bounds().Add(l.LayerBounds.Min).Intersect(image.Rectangle{Max: d.limits.Add(offset)}).Sub(offset)
+
+	return l, nil
+}
+
+func processLayerAttrs(l *limage.Layer, s xml.StartElement) (string, error) {
+	var source string
 
 	for _, a := range s.Attr {
 		switch a.Name.Local {
@@ -63,21 +108,21 @@ func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer
 		case "x":
 			offset, err := strconv.Atoi(a.Value)
 			if err != nil {
-				return l, err
+				return "", err
 			}
 
 			l.LayerBounds.Min.X = offset
 		case "y":
 			offset, err := strconv.Atoi(a.Value)
 			if err != nil {
-				return l, err
+				return "", err
 			}
 
 			l.LayerBounds.Min.Y = offset
 		case "opacity":
 			o, err := strconv.ParseFloat(a.Value, 64)
 			if err != nil {
-				return l, err
+				return "", err
 			}
 
 			l.Transparency = uint8(255 * (1 - o))
@@ -131,44 +176,7 @@ func (d decoder) readLayer(s xml.StartElement, offset image.Point) (limage.Layer
 		}
 	}
 
-	if s.Name.Local == "stack" {
-		var err error
-
-		l.Image, err = d.readStack(offset.Add(l.LayerBounds.Min))
-		if err != nil {
-			return l, err
-		}
-	} else {
-		for _, f := range d.zr.File {
-			if f.Name == source {
-				fr, err := f.Open()
-				if err != nil {
-					return l, err
-				}
-
-				l.Image, _, err = image.Decode(fr)
-				if err != nil {
-					return l, err
-				}
-
-				fr.Close()
-
-				break
-			}
-		}
-
-		if l.Image == nil {
-			return l, ErrInvalidSource
-		}
-
-		if err := d.skipTag(); err != nil {
-			return l, err
-		}
-	}
-
-	l.LayerBounds = l.Image.Bounds().Add(l.LayerBounds.Min).Intersect(image.Rectangle{Max: d.limits.Add(offset)}).Sub(offset)
-
-	return l, nil
+	return source, nil
 }
 
 func (d decoder) skipTag() error {
