@@ -22,6 +22,47 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 		return nil, err
 	}
 
+	textData, defaultText := parseText(tags)
+
+	if defaultText.Data != "" {
+		return limage.TextData{defaultText}, nil
+	}
+
+	xd := xml.NewDecoder(strings.NewReader(textData))
+	stack := limage.TextData{defaultText}
+	td := make(limage.TextData, 0, 32)
+
+	for {
+		t, err := xd.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+
+			return nil, err
+		}
+
+		switch t := t.(type) {
+		case xml.StartElement:
+			nt, err := processText(t, stack[len(stack)-1])
+			if err != nil {
+				return nil, err
+			}
+
+			stack = append(stack, nt)
+		case xml.CharData:
+			nt := stack[len(stack)-1]
+			nt.Data = string(t)
+			td = append(td, nt)
+		case xml.EndElement:
+			stack = stack[:len(stack)-1]
+		}
+	}
+
+	return td, nil
+}
+
+func parseText(tags []tag) (string, limage.TextDatum) {
 	var (
 		textData    string
 		defaultText limage.TextDatum
@@ -71,101 +112,73 @@ func parseTextData(t *parasite) (limage.TextData, error) {
 		}
 	}
 
-	if defaultText.Data != "" {
-		return limage.TextData{defaultText}, nil
-	}
+	return textData, defaultText
+}
 
-	xd := xml.NewDecoder(strings.NewReader(textData))
-	stack := limage.TextData{defaultText}
-	td := make(limage.TextData, 0, 32)
-
-	for {
-		t, err := xd.Token()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-
-			return nil, err
-		}
-
-		switch t := t.(type) {
-		case xml.StartElement:
-			nt := stack[len(stack)-1]
-
-			switch t.Name.Local {
-			case "markup":
-			case "span":
-				for _, a := range t.Attr {
-					switch a.Name.Local {
-					case "font":
-						nt.Font = a.Value
-					case "foreground":
-						if len(a.Value) == 7 && a.Value[0] == '#' {
-							n, err := strconv.ParseUint(a.Value[1:], 16, 32)
-							if err != nil {
-								return nil, err
-							}
-
-							nt.ForeColor = color.RGBA{uint8(n >> 16), uint8((n >> 8) & 255), uint8(n & 255), 255}
-						} else if len(a.Value) == 4 && a.Value[0] == '#' {
-							n, err := strconv.ParseUint(a.Value[1:], 16, 32)
-							if err != nil {
-								return nil, err
-							}
-
-							r := (n >> 4) & 240
-							r |= r >> 4
-							g := n & 240
-							g |= g >> 4
-							b := n & 15
-							b |= b << 4
-							nt.ForeColor = color.RGBA{uint8(r), uint8(g), uint8(b), 255}
-						}
-					case "size":
-						s, err := strconv.ParseUint(a.Value, 10, 32)
-						if err != nil {
-							return nil, err
-						}
-
-						nt.Size = uint32(s) >> 10
-					case "letter_spacing":
-						ls, err := strconv.ParseUint(a.Value, 10, 32)
-						if err != nil {
-							return nil, err
-						}
-
-						nt.LetterSpacing = uint32(ls) >> 10
-					case "rise":
-						r, err := strconv.ParseUint(a.Value, 10, 32)
-						if err != nil {
-							return nil, err
-						}
-
-						nt.Rise = uint32(r) >> 10
+func processText(t xml.StartElement, nt limage.TextDatum) (limage.TextDatum, error) {
+	switch t.Name.Local {
+	case "markup":
+	case "span":
+		for _, a := range t.Attr {
+			switch a.Name.Local {
+			case "font":
+				nt.Font = a.Value
+			case "foreground":
+				if len(a.Value) == 7 && a.Value[0] == '#' {
+					n, err := strconv.ParseUint(a.Value[1:], 16, 32)
+					if err != nil {
+						return nt, err
 					}
-				}
-			case "b":
-				nt.Bold = true
-			case "i":
-				nt.Italic = true
-			case "s":
-				nt.Strikethrough = true
-			case "u":
-				nt.Underline = true
-			}
 
-			stack = append(stack, nt)
-		case xml.CharData:
-			nt := stack[len(stack)-1]
-			nt.Data = string(t)
-			td = append(td, nt)
-		case xml.EndElement:
-			stack = stack[:len(stack)-1]
+					nt.ForeColor = color.RGBA{uint8(n >> 16), uint8((n >> 8) & 255), uint8(n & 255), 255}
+				} else if len(a.Value) == 4 && a.Value[0] == '#' {
+					n, err := strconv.ParseUint(a.Value[1:], 16, 32)
+					if err != nil {
+						return nt, err
+					}
+
+					r := (n >> 4) & 240
+					r |= r >> 4
+					g := n & 240
+					g |= g >> 4
+					b := n & 15
+					b |= b << 4
+					nt.ForeColor = color.RGBA{uint8(r), uint8(g), uint8(b), 255}
+				}
+			case "size":
+				s, err := strconv.ParseUint(a.Value, 10, 32)
+				if err != nil {
+					return nt, err
+				}
+
+				nt.Size = uint32(s) >> 10
+			case "letter_spacing":
+				ls, err := strconv.ParseUint(a.Value, 10, 32)
+				if err != nil {
+					return nt, err
+				}
+
+				nt.LetterSpacing = uint32(ls) >> 10
+			case "rise":
+				r, err := strconv.ParseUint(a.Value, 10, 32)
+				if err != nil {
+					return nt, err
+				}
+
+				nt.Rise = uint32(r) >> 10
+			}
 		}
+	case "b":
+		nt.Bold = true
+	case "i":
+		nt.Italic = true
+	case "s":
+		nt.Strikethrough = true
+	case "u":
+		nt.Underline = true
 	}
 
-	return td, nil
+	return nt, nil
 }
 
 type quoteWriter struct {
@@ -202,100 +215,14 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 		data = fmt.Appendf(data, "(text %q)\n", base.Data)
 	} else {
 		base = limage.TextDatum{
-			BackColor: lcolor.RGB{},
-			ForeColor: lcolor.RGB{},
-			Font:      "Sans",
-			Size:      18,
+			Font: "Sans",
+			Size: 18,
 		}
 
 		data = append(data, "(markup \"<markup>"...)
 
 		for _, td := range text {
-			var foreground, background bool
-
-			if r, g, b, _ := td.ForeColor.RGBA(); r != 0 || g != 0 || b != 0 {
-				foreground = true
-				data = fmt.Appendf(data, "<span foreground=\\\"#%02X%02X%02X\\\">", r>>8, g>>8, b>>8)
-			}
-
-			if r, g, b, _ := td.BackColor.RGBA(); r != 0 || g != 0 || b != 0 {
-				background = true
-				data = fmt.Appendf(data, "<span background=\\\"#%02X%02X%02X\\\">", r, g, b)
-			}
-
-			if td.Font != "Sans" {
-				data = fmt.Appendf(data, "<span font=%q>", td.Font)
-			}
-
-			if td.Bold {
-				data = append(data, "<b>"...)
-			}
-
-			if td.Italic {
-				data = append(data, "<i>"...)
-			}
-
-			if td.Underline {
-				data = append(data, "<u>"...)
-			}
-
-			if td.Strikethrough {
-				data = append(data, "<s>"...)
-			}
-
-			if td.LetterSpacing != 0 {
-				data = fmt.Appendf(data, "<span letter_spacing=\\\"%d\\\">", td.LetterSpacing<<10)
-			}
-
-			if td.Size != 18 {
-				data = fmt.Appendf(data, "<span size=\\\"%d\\\">", td.Size<<10)
-			}
-
-			if td.Rise != 0 {
-				data = fmt.Appendf(data, "<span rise=\\\"%d\\\">", td.Rise<<10)
-			}
-
-			data = fmt.Appendf(data, "%q", html.EscapeString(td.Data))
-
-			if td.Rise != 0 {
-				data = append(data, "</span>"...)
-			}
-
-			if td.Size != 18 {
-				data = append(data, "</span>"...)
-			}
-
-			if td.LetterSpacing != 0 {
-				data = append(data, "</span>"...)
-			}
-
-			if td.Strikethrough {
-				data = append(data, "</s>"...)
-			}
-
-			if td.Underline {
-				data = append(data, "</u>"...)
-			}
-
-			if td.Italic {
-				data = append(data, "</i>"...)
-			}
-
-			if td.Bold {
-				data = append(data, "</b>"...)
-			}
-
-			if td.Font != "Sans" {
-				data = append(data, "</span>"...)
-			}
-
-			if background {
-				data = append(data, "</span>"...)
-			}
-
-			if foreground {
-				data = append(data, "</span>"...)
-			}
+			data = writeTextMarkup(td, data)
 		}
 
 		data = append(data, "</markup>\")\n"...)
@@ -329,4 +256,66 @@ func (e *encoder) WriteText(text limage.TextData, dx, dy uint32) {
 	e.WriteUint32(0) // flags
 	e.WriteUint32(uint32(len(data)))
 	e.Write(data)
+}
+
+func writeTextMarkup(td limage.TextDatum, data []byte) []byte {
+	closers := make([]string, 0)
+
+	if r, g, b, _ := td.ForeColor.RGBA(); r != 0 || g != 0 || b != 0 {
+		data = fmt.Appendf(data, "<span foreground=\\\"#%02X%02X%02X\\\">", r>>8, g>>8, b>>8)
+		closers = append(closers, "</span>")
+	}
+
+	if r, g, b, _ := td.BackColor.RGBA(); r != 0 || g != 0 || b != 0 {
+		data = fmt.Appendf(data, "<span background=\\\"#%02X%02X%02X\\\">", r, g, b)
+		closers = append(closers, "</span>")
+	}
+
+	if td.Font != "Sans" {
+		data = fmt.Appendf(data, "<span font=%q>", td.Font)
+		closers = append(closers, "</span>")
+	}
+
+	if td.Bold {
+		data = append(data, "<b>"...)
+		closers = append(closers, "</b>")
+	}
+
+	if td.Italic {
+		data = append(data, "<i>"...)
+		closers = append(closers, "</i>")
+	}
+
+	if td.Underline {
+		data = append(data, "<u>"...)
+		closers = append(closers, "</u>")
+	}
+
+	if td.Strikethrough {
+		data = append(data, "<s>"...)
+		closers = append(closers, "</s>")
+	}
+
+	if td.LetterSpacing != 0 {
+		data = fmt.Appendf(data, "<span letter_spacing=\\\"%d\\\">", td.LetterSpacing<<10)
+		closers = append(closers, "</span>")
+	}
+
+	if td.Size != 18 {
+		data = fmt.Appendf(data, "<span size=\\\"%d\\\">", td.Size<<10)
+		closers = append(closers, "</span>")
+	}
+
+	if td.Rise != 0 {
+		data = fmt.Appendf(data, "<span rise=\\\"%d\\\">", td.Rise<<10)
+		closers = append(closers, "</span>")
+	}
+
+	data = fmt.Appendf(data, "%q", html.EscapeString(td.Data))
+
+	for i := len(closers) - 1; i >= 0; i-- {
+		data = append(data, closers[i]...)
+	}
+
+	return data
 }
