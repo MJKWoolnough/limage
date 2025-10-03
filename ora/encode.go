@@ -15,19 +15,7 @@ const mimetypeStr = "image/openraster"
 
 // Encode encodes the given image as an ORA file to the given Writer.
 func Encode(w io.Writer, m image.Image) error {
-	var lim limage.Layer
-
-	switch im := m.(type) {
-	case limage.Layer:
-		lim.Image = im.Image
-	case *limage.Layer:
-		lim.Image = im.Image
-	default:
-		lim = limage.Layer{
-			Image: m,
-		}
-	}
-
+	lim := toLayer(m)
 	b := m.Bounds()
 	lim.LayerBounds.Max.X = b.Dx()
 	lim.LayerBounds.Max.Y = b.Dy()
@@ -77,7 +65,30 @@ func Encode(w io.Writer, m image.Image) error {
 		return err
 	}
 
-	if _, err = writeStack(e, lim, 0); err != nil {
+	return writeImage(e, zw, m, lim)
+}
+
+func toLayer(m image.Image) limage.Layer {
+	switch im := m.(type) {
+	case limage.Layer:
+		return limage.Layer{
+			Image: im.Image,
+		}
+	case *limage.Layer:
+		return limage.Layer{
+			Image: im.Image,
+		}
+	default:
+		return limage.Layer{
+			Image: m,
+		}
+	}
+}
+
+func writeImage(e *xml.Encoder, zw *zip.Writer, m image.Image, lim limage.Layer) error {
+	var fw io.Writer
+
+	if _, err := writeStack(e, lim, 0); err != nil {
 		return err
 	} else if err = e.EncodeToken(xml.EndElement{
 		Name: xml.Name{
