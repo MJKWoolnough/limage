@@ -17,54 +17,80 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 
 	if twidth != width || theight != height {
 		d.SetError(ErrInconsistantData)
+
 		return nil
 	}
 
 	bpp := d.ReadUint32()
-
-	switch mode {
-	case 2, 4:
-		if bpp != 1 {
-			d.SetError(ErrInconsistantData)
-			return nil
-		}
-	case 3, 5:
-		if bpp != 2 {
-			d.SetError(ErrInconsistantData)
-			return nil
-		}
-	case 0:
-		if bpp != 3 {
-			d.SetError(ErrInconsistantData)
-			return nil
-		}
-	case 1:
-		if bpp != 4 {
-			d.SetError(ErrInconsistantData)
-			return nil
-		}
+	if !d.validBPP(mode, bpp) {
+		return nil
 	}
 
-	var lptr uint64
+	d.Goto(d.readLayerPointer())
 
-	if d.mode < 2 {
-		lptr = uint64(d.ReadUint32())
-	} else {
-		lptr = d.ReadUint64()
-	}
-
-	d.Goto(lptr)
-
-	w := d.ReadUint32()
-	h := d.ReadUint32()
-
-	if w != width || h != height {
+	if w, h := d.ReadUint32(), d.ReadUint32(); w != width || h != height {
 		d.SetError(ErrInconsistantData)
 
 		return nil
 	}
 
-	tiles := make([]uint64, int(math.Ceil(float64(w)/64)*math.Ceil(float64(h)/64)))
+	tiles := d.readTiles(width, height)
+
+	if d.ReadUint32() != 0 {
+		d.SetError(ErrInconsistantData)
+		return nil
+	}
+
+	r := image.Rect(0, 0, int(width), int(height))
+
+	if d.decompress || d.compression == 0 {
+		return d.readAndDecompressImage(mode, r, bpp, width, height, tiles)
+	}
+
+	return d.readCompressedImage(mode, r, bpp, width, height, tiles)
+}
+
+func (d *decoder) validBPP(mode, bpp uint32) bool {
+	switch mode {
+	case 2, 4:
+		if bpp != 1 {
+			d.SetError(ErrInconsistantData)
+
+			return false
+		}
+	case 3, 5:
+		if bpp != 2 {
+			d.SetError(ErrInconsistantData)
+
+			return false
+		}
+	case 0:
+		if bpp != 3 {
+			d.SetError(ErrInconsistantData)
+
+			return false
+		}
+	case 1:
+		if bpp != 4 {
+			d.SetError(ErrInconsistantData)
+
+			return false
+		}
+	}
+
+	return true
+}
+
+func (d *decoder) readLayerPointer() uint64 {
+	if d.mode < 2 {
+		return uint64(d.ReadUint32())
+	}
+
+	return d.ReadUint64()
+}
+
+func (d *decoder) readTiles(width, height uint32) []uint64 {
+	tiles := make([]uint64, int(math.Ceil(float64(width)/64)*math.Ceil(float64(height)/64)))
 
 	if d.mode < 2 {
 		for i := range tiles {
@@ -76,158 +102,155 @@ func (d *decoder) ReadImage(width, height, mode uint32) image.Image {
 		}
 	}
 
-	if d.ReadUint32() != 0 {
-		d.SetError(ErrInconsistantData)
-		return nil
-	}
+	return tiles
+}
 
-	r := image.Rect(0, 0, int(width), int(height))
-
+func (d *decoder) readAndDecompressImage(mode uint32, r image.Rectangle, bpp, width, height uint32, tiles []uint64) image.Image {
 	var pixBuffer [64 * 64 * 4]byte
 
-	if d.decompress || d.compression == 0 {
-		var (
-			im       image.Image
-			imReader interface {
-				ReadColour(int, int, []byte)
+	var (
+		im       image.Image
+		imReader interface {
+			ReadColour(int, int, []byte)
+		}
+	)
+
+	switch mode {
+	case 0: // rgb
+		rgb := limage.NewRGB(r)
+		im = rgb
+		imReader = rgbImageReader{rgb}
+	case 1: // rgba
+		rgba := image.NewNRGBA(r)
+		im = rgba
+		imReader = rgbaImageReader{rgba}
+	case 2: // gray
+		g := image.NewGray(r)
+		im = g
+		imReader = grayImageReader{g}
+	case 3: // gray + alpha
+		ga := limage.NewGrayAlpha(r)
+		im = ga
+		imReader = grayAlphaImageReader{ga}
+	case 4: // indexed
+		in := image.NewPaletted(r, color.Palette(d.palette))
+		im = in
+		imReader = indexedImageReader{in}
+	case 5: // indexed + alpha
+		in := limage.NewPalettedAlpha(r, d.palette)
+		im = in
+		imReader = palettedAlphaReader{in}
+	}
+
+	var cr io.Reader
+
+	if d.compression == 0 { // no compression
+		cr = &d.reader
+	} else { // rle
+		cr = &rle{Reader: d.reader.StickyBigEndianReader}
+	}
+
+	pixel := make([]byte, bpp)
+	channels := make([][]byte, bpp)
+
+	for y := uint32(0); y < height; y += 64 {
+		for x := uint32(0); x < width; x += 64 {
+			d.Goto(tiles[0])
+			tiles = tiles[1:]
+
+			w := width - x
+			if w > 64 {
+				w = 64
 			}
-		)
 
-		switch mode {
-		case 0: // rgb
-			rgb := limage.NewRGB(r)
-			im = rgb
-			imReader = rgbImageReader{rgb}
-		case 1: // rgba
-			rgba := image.NewNRGBA(r)
-			im = rgba
-			imReader = rgbaImageReader{rgba}
-		case 2: // gray
-			g := image.NewGray(r)
-			im = g
-			imReader = grayImageReader{g}
-		case 3: // gray + alpha
-			ga := limage.NewGrayAlpha(r)
-			im = ga
-			imReader = grayAlphaImageReader{ga}
-		case 4: // indexed
-			in := image.NewPaletted(r, color.Palette(d.palette))
-			im = in
-			imReader = indexedImageReader{in}
-		case 5: // indexed + alpha
-			in := limage.NewPalettedAlpha(r, d.palette)
-			im = in
-			imReader = palettedAlphaReader{in}
-		}
+			h := height - y
+			if h > 64 {
+				h = 64
+			}
 
-		var cr io.Reader
+			n := w * h
+			_, err := cr.Read(pixBuffer[:n*bpp])
 
-		if d.compression == 0 { // no compression
-			cr = &d.reader
-		} else { // rle
-			cr = &rle{Reader: d.reader.StickyBigEndianReader}
-		}
+			d.SetError(err)
 
-		pixel := make([]byte, bpp)
-		channels := make([][]byte, bpp)
+			for i := uint32(0); i < bpp; i++ {
+				channels[i] = pixBuffer[n*i : n*(i+1)]
+			}
 
-		for y := uint32(0); y < height; y += 64 {
-			for x := uint32(0); x < width; x += 64 {
-				d.Goto(tiles[0])
-				tiles = tiles[1:]
-
-				w := width - x
-				if w > 64 {
-					w = 64
-				}
-
-				h := height - y
-				if h > 64 {
-					h = 64
-				}
-
-				n := w * h
-				_, err := cr.Read(pixBuffer[:n*bpp])
-
-				d.SetError(err)
-
-				for i := uint32(0); i < bpp; i++ {
-					channels[i] = pixBuffer[n*i : n*(i+1)]
-				}
-
-				for j := uint32(0); j < h; j++ {
-					for i := uint32(0); i < w; i++ {
-						for k := uint32(0); k < bpp; k++ {
-							pixel[k] = channels[k][0]
-							channels[k] = channels[k][1:]
-						}
-
-						imReader.ReadColour(int(x+i), int(y+j), pixel)
+			for j := uint32(0); j < h; j++ {
+				for i := uint32(0); i < w; i++ {
+					for k := uint32(0); k < bpp; k++ {
+						pixel[k] = channels[k][0]
+						channels[k] = channels[k][1:]
 					}
+
+					imReader.ReadColour(int(x+i), int(y+j), pixel)
 				}
 			}
 		}
+	}
 
-		return im
-	} else {
-		ci := compressedImage{
-			tiles: make([][][]byte, 0, len(tiles)),
-			width: int(width),
-			tile:  -1,
-		}
+	return im
+}
 
-		buf := make(memio.Buffer, 0, 64*64*4)
+func (d *decoder) readCompressedImage(mode uint32, r image.Rectangle, bpp, width, height uint32, tiles []uint64) image.Image {
+	ci := compressedImage{
+		tiles: make([][][]byte, 0, len(tiles)),
+		width: int(width),
+		tile:  -1,
+	}
 
-		for y := uint32(0); y < height; y += 64 {
-			for x := uint32(0); x < width; x += 64 {
-				d.Goto(tiles[0])
+	buf := make(memio.Buffer, 0, 64*64*4)
 
-				tiles = tiles[1:]
+	for y := uint32(0); y < height; y += 64 {
+		for x := uint32(0); x < width; x += 64 {
+			d.Goto(tiles[0])
 
-				w := width - x
-				if w > 64 {
-					w = 64
-				}
+			tiles = tiles[1:]
 
-				h := height - y
-				if h > 64 {
-					h = 64
-				}
-
-				n := w * h
-				ts := make([][]byte, 0, bpp)
-
-				for i := uint32(0); i < bpp; i++ {
-					d.SetError(d.readRLE(int(n), &buf))
-
-					b := make([]byte, len(buf))
-
-					copy(b, buf)
-
-					buf = buf[:0]
-					ts = append(ts, b)
-				}
-
-				ci.tiles = append(ci.tiles, ts)
+			w := width - x
+			if w > 64 {
+				w = 64
 			}
-		}
 
-		switch mode {
-		case 0: // rgb
-			return &CompressedRGB{ci, r}
-		case 1: // rgba
-			return &CompressedNRGBA{ci, r}
-		case 2: // gray
-			return &CompressedGray{ci, r}
-		case 3: // gray + alpha
-			return &CompressedGrayAlpha{ci, r}
-		case 4: // indexed
-			return &CompressedPaletted{ci, r, color.Palette(d.palette)}
-		case 5: // indexed + alpha
-			return &CompressedPalettedAlpha{ci, r, d.palette}
-		default:
-			return nil
+			h := height - y
+			if h > 64 {
+				h = 64
+			}
+
+			n := w * h
+			ts := make([][]byte, 0, bpp)
+
+			for i := uint32(0); i < bpp; i++ {
+				d.SetError(d.readRLE(int(n), &buf))
+
+				b := make([]byte, len(buf))
+
+				copy(b, buf)
+
+				buf = buf[:0]
+				ts = append(ts, b)
+			}
+
+			ci.tiles = append(ci.tiles, ts)
 		}
+	}
+
+	switch mode {
+	case 0: // rgb
+		return &CompressedRGB{ci, r}
+	case 1: // rgba
+		return &CompressedNRGBA{ci, r}
+	case 2: // gray
+		return &CompressedGray{ci, r}
+	case 3: // gray + alpha
+		return &CompressedGrayAlpha{ci, r}
+	case 4: // indexed
+		return &CompressedPaletted{ci, r, color.Palette(d.palette)}
+	case 5: // indexed + alpha
+		return &CompressedPalettedAlpha{ci, r, d.palette}
+	default:
+		return nil
 	}
 }
 
