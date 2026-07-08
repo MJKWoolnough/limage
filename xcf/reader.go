@@ -52,10 +52,6 @@ func (r *reader) ReadString() string {
 	return string(b[:length-1])
 }
 
-func (r *reader) ReadByte() byte {
-	return r.ReadUint8()
-}
-
 func (r *reader) Goto(n uint64) {
 	r.rs.Seek(int64(n), io.SeekStart)
 }
