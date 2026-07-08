@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/MJKWoolnough/limage/actions/workflows/go-checks.yml/badge.svg)](https://github.com/MJKWoolnough/limage/actions)
 [![Go Reference](https://pkg.go.dev/badge/vimagination.zapto.org/limage.svg)](https://pkg.go.dev/vimagination.zapto.org/limage)
-[![Go Report Card](https://goreportcard.com/badge/vimagination.zapto.org/limage)](https://goreportcard.com/report/vimagination.zapto.org/limage)
 
 --
     import "vimagination.zapto.org/limage"
